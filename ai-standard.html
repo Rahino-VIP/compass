@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مربی هوشمند | قطب‌نمای راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root { 
+            --primary: #1e3a8a; --primary-light: #3b82f6; --primary-fade: rgba(30, 58, 138, 0.05);
+            --accent: #d97706; --accent-light: #f59e0b;
+            --bg-color: #f8fafc; --surface: #ffffff;
+            --text-main: #0f172a; --text-muted: #64748b;
+            --border: #e2e8f0; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+            --shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        [data-theme="dark"] {
+            --primary: #3b82f6; --primary-fade: rgba(59, 130, 246, 0.1);
+            --accent: #f59e0b; --bg-color: #0f172a; --surface: #1e293b;
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+            --border: #334155; --shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 50px; transition: 0.3s; }
+        
+        .app-container { max-width: 600px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 🎩 هدر ناوبری */
+        .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .back-btn { background: var(--surface); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; box-shadow: var(--shadow); }
+        .page-title { font-size: 18px; font-weight: 900; color: var(--primary); }
+
+        /* 🗂️ پنل‌های مختلف (حالت‌های صفحه) */
+        .panel { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 30px 20px; box-shadow: var(--shadow); text-align: center; margin-bottom: 20px; }
+        .panel.active { display: block; animation: slideUp 0.5s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* آیکون‌های بزرگ پنل‌ها */
+        .panel-icon { font-size: 60px; margin-bottom: 15px; display: block; }
+        .panel-title { font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 10px; }
+        .panel-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 25px; line-height: 1.8; }
+
+        /* 📝 فرم اعتراف */
+        .slider-box { background: var(--primary-fade); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid var(--border); text-align: right; }
+        .slider-header { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; margin-bottom: 10px; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); }
+        textarea.modern-input { width: 100%; padding: 15px; border-radius: 16px; border: 2px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 14px; resize: none; outline: none; margin-bottom: 20px; }
+        textarea.modern-input:focus { border-color: var(--primary); }
+
+        .btn-primary { background: linear-gradient(135deg, var(--primary), #312e81); color: white; width: 100%; padding: 18px; border-radius: 16px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(30, 58, 138, 0.2); transition: 0.2s; }
+        .btn-primary:hover { transform: translateY(-2px); }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        /* 📊 داشبورد نتیجه (گلس‌مورفیسم) */
+        .result-dashboard { display: none; }
+        .result-dashboard.active { display: block; animation: fadeIn 0.5s; }
+        
+        .chart-container { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 15px; margin-bottom: 25px; box-shadow: var(--shadow); }
+        
+        .ai-chat-box { background: rgba(30, 58, 138, 0.03); border: 1px solid rgba(30, 58, 138, 0.1); border-radius: 24px; padding: 25px; text-align: right; position: relative; backdrop-filter: blur(10px); margin-bottom: 30px; }
+        [data-theme="dark"] .ai-chat-box { background: rgba(59, 130, 246, 0.05); }
+        .ai-avatar { position: absolute; top: -20px; right: 20px; background: var(--surface); border: 2px solid var(--border); width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .ai-text { font-size: 15px; line-height: 2; color: var(--text-main); margin-top: 15px; white-space: pre-wrap; }
+        .ai-text strong { color: var(--accent); font-weight: 900; background: rgba(217, 119, 6, 0.1); padding: 0 4px; border-radius: 4px; }
+
+        /* 👑 تله مارکتینگ VIP */
+        .upsell-box { background: linear-gradient(135deg, rgba(217, 119, 6, 0.1), rgba(245, 158, 11, 0.05)); border: 1px solid rgba(217, 119, 6, 0.3); border-radius: 24px; padding: 30px 20px; text-align: center; position: relative; overflow: hidden; margin-top: 20px; }
+        .upsell-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; backdrop-filter: blur(3px); z-index: 1; }
+        .upsell-content { position: relative; z-index: 2; }
+        .upsell-icon { font-size: 40px; margin-bottom: 10px; display: block; text-shadow: 0 5px 15px rgba(217, 119, 6, 0.4); }
+        .upsell-title { font-size: 18px; font-weight: 900; color: var(--accent); margin-bottom: 10px; }
+        .upsell-desc { font-size: 13px; color: var(--text-main); font-weight: bold; margin-bottom: 20px; line-height: 1.8; }
+        .btn-gold { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; padding: 15px 25px; border-radius: 14px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 10px 20px rgba(217, 119, 6, 0.3); }
+
+        .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
+        .spinner { font-size: 50px; animation: spin 1.5s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="loader-overlay" id="mainLoader">
+        <div class="spinner">🧠</div>
+        <h3 style="color: var(--primary);">در حال بررسی پایگاه داده...</h3>
+    </div>
+
+    <div class="app-container" id="appContent" style="display: none;">
+        
+        <div class="nav-header">
+            <a href="menu.html" class="back-btn">🔙</a>
+            <div class="page-title">تحلیل‌گر سیستم (هفتگی)</div>
+            <div style="width: 40px;"></div> 
+        </div>
+
+        <div class="panel" id="panelInsufficient">
+            <span class="panel-icon">📉</span>
+            <h2 class="panel-title">اطلاعاتت کافی نیست!</h2>
+            <p class="panel-desc">رفیق، برای اینکه سیستم بتونه یه تحلیل دقیق و بدون خطا از الگوی مطالعه‌ت داشته باشه، به حداقل <b>۶ روز گزارش پیوسته</b> در یک هفته نیاز داره.<br><br>پیوستگیت رو حفظ کن تا مربی برات سنگ‌تمام بذاره.</p>
+            <button class="btn-primary" onclick="window.location.href='report.html'">ثبت گزارش جدید</button>
+        </div>
+
+        <div class="panel" id="panelForm">
+            <span class="panel-icon">📝</span>
+            <h2 class="panel-title">ارزیابی قبل از تحلیل</h2>
+            <p class="panel-desc">قبل از اینکه هوش مصنوعی پرونده‌ت رو باز کنه، می‌خوام خودت به عملکرد این هفته‌ت نمره بدی و اگر حرفی داری برامون بنویسی.</p>
+            
+            <div class="slider-box">
+                <div class="slider-header">
+                    <span>نمره‌ی تو به این هفته:</span>
+                    <span id="scoreVal" style="color: var(--primary); font-size: 18px;">5</span>
+                </div>
+                <input type="range" id="selfScore" min="1" max="10" value="5" oninput="document.getElementById('scoreVal').innerText = this.value">
+            </div>
+
+            <textarea class="modern-input" id="selfNote" rows="4" placeholder="مهم‌ترین چیزی که این هفته ذهنت رو درگیر کرد یا مانعت شد چی بود؟ (هرچی دوست داری بنویس...)"></textarea>
+
+            <button class="btn-primary" id="btnSubmitForm" onclick="submitAnalysisRequest()">صدور دستور تحلیل 🚀</button>
+        </div>
+
+        <div class="panel" id="panelPending">
+            <span class="panel-icon" style="animation: pulse 2s infinite;">⏳</span>
+            <h2 class="panel-title">پرونده‌ت رو میز مربیه!</h2>
+            <p class="panel-desc">درخواست شما در صف پردازش سیستم قرار گرفت. تحلیل‌گر در حال شخم زدن داده‌ها و پیدا کردن الگوهاست.<br><br>این فرآیند ممکن است <b>تا ۱۵ دقیقه</b> طول بکشد. می‌تونی از این صفحه بری و بعداً دوباره سر بزنی.</p>
+            <button class="btn-primary" onclick="window.location.href='menu.html'" style="background: transparent; color: var(--text-muted); border: 2px solid var(--border); box-shadow: none;">بازگشت به منوی اصلی</button>
+        </div>
+
+        <div class="result-dashboard" id="panelResult">
+            
+            <div style="font-size: 15px; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                <span style="display: block; width: 5px; height: 15px; background: var(--accent); border-radius: 10px;"></span> نمودار عملکرد هفته
+            </div>
+            <div class="chart-container">
+                <canvas id="comboChart"></canvas>
+            </div>
+
+            <div class="ai-chat-box">
+                <div class="ai-avatar">🤖</div>
+                <div class="ai-text" id="aiResponseText">
+                    </div>
+            </div>
+
+            <div class="upsell-box">
+                <div class="upsell-content">
+                    <span class="upsell-icon">👑</span>
+                    <h3 class="upsell-title">تحلیل کارنامه و بودجه‌بندی!</h3>
+                    <p class="upsell-desc">رفیق، این فقط تحلیل رفتار و ساعت مطالعه‌ت بود. می‌خوای مربی <b>کارنامه آزمونت</b> رو هم تحلیل کنه، تله‌های تستیت رو دربیاره و بگه دقیقاً کجای برنامه مشکل داری؟</p>
+                    <button class="btn-gold" onclick="alert('برای ارتقای طرح خود به پشتیبانی پیام دهید.')">ارتقا به طرح VIP (مشاوره)</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // 🔗 تنظیمات اتصال
+        // ==========================================
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+
+        const userId = localStorage.getItem('qotbnama_user_id');
+        if (!userId) window.location.href = 'index.html';
+
+        let lastSevenReports = [];
+
+        window.onload = async function() {
+            await checkSystemState();
+        };
+
+        // ==========================================
+        // 🧠 بررسی وضعیت سیستم در لحظه ورود
+        // ==========================================
+        async function checkSystemState() {
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                
+                // 1. چک کردن اینکه آیا تحلیلی برای این هفته (7 روز اخیر) درخواست داده یا نه؟
+                let sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                let isoDate = sevenDaysAgo.toISOString();
+
+                const aiRes = await fetch(`${cleanUrl}/rest/v1/ai_analyses?chat_id=eq.${userId}&created_at=gte.${isoDate}&order=created_at.desc&limit=1`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                const aiData = await aiRes.json();
+
+                if (aiData.length > 0) {
+                    let analysis = aiData[0];
+                    if (analysis.status === 'pending') {
+                        showPanel('panelPending');
+                    } else if (analysis.status === 'completed') {
+                        showResultDashboard(analysis.reports_data, analysis.ai_response);
+                    }
+                } else {
+                    // 2. اگر درخواستی نداده بود، چک می‌کنیم چندتا گزارش داره
+                    const repRes = await fetch(`${cleanUrl}/rest/v1/daily_reports?chat_id=eq.${userId}&order=report_date.desc&limit=7`, {
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                    });
+                    lastSevenReports = await repRes.json();
+
+                    if (lastSevenReports.length < 6) {
+                        showPanel('panelInsufficient');
+                    } else {
+                        showPanel('panelForm');
+                    }
+                }
+
+                document.getElementById('mainLoader').style.display = 'none';
+                document.getElementById('appContent').style.display = 'block';
+
+            } catch (error) {
+                alert("⚠️ خطا در برقراری ارتباط با سرور.");
+                window.location.href = 'menu.html';
+            }
+        }
+
+        // ==========================================
+        // 🚀 ارسال درخواست جدید به صف
+        // ==========================================
+        async function submitAnalysisRequest() {
+            const btn = document.getElementById('btnSubmitForm');
+            btn.innerText = "در حال ارسال پرونده... ⏳";
+            btn.disabled = true;
+
+            const score = document.getElementById('selfScore').value;
+            const note = document.getElementById('selfNote').value.trim();
+
+            const payload = {
+                chat_id: userId,
+                request_date: new Date().toISOString(),
+                student_score: parseInt(score),
+                student_note: note,
+                reports_data: lastSevenReports, // فرستادن کل دیتای 7 روز برای اسکریپت
+                status: 'pending'
+            };
+
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                const response = await fetch(`${cleanUrl}/rest/v1/ai_analyses`, {
+                    method: 'POST',
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("Server Error");
+
+                // انتقال به پنل انتظار
+                showPanel('panelPending');
+
+            } catch (error) {
+                alert("⚠️ مشکلی در ارسال درخواست پیش آمد.");
+                btn.innerText = "صدور دستور تحلیل 🚀";
+                btn.disabled = false;
+            }
+        }
+
+        // ==========================================
+        // 🎨 نمایش داشبورد نهایی (رسم نمودار و متن)
+        // ==========================================
+        function showResultDashboard(reportsData, aiText) {
+            showPanel('panelResult');
+
+            // 1. فرمت کردن متن جمینای (تبدیل ** به <strong> و \n به <br>)
+            let formattedText = aiText
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>');
+            
+            document.getElementById('aiResponseText').innerHTML = formattedText;
+
+            // 2. رسم نمودار هفته
+            let labels = [];
+            let timeData = [];
+            let testData = [];
+
+            // برعکس کردن آرایه تا از قدیمی‌ترین به جدیدترین رسم بشه
+            let sortedReports = [...reportsData].reverse();
+
+            sortedReports.forEach(r => {
+                let dayTime = 0; let dayTests = 0;
+                if(r.courses) {
+                    r.courses.forEach(c => {
+                        dayTime += (c.edu || 0) + (c.study || 0);
+                        dayTests += (c.tests || 0);
+                    });
+                }
+                
+                // گرفتن روز و ماه
+                let dateParts = r.report_date.split('/');
+                let shortDate = dateParts.length >= 3 ? `${dateParts[2]}/${dateParts[1]}` : r.report_date;
+
+                labels.push(shortDate);
+                timeData.push(dayTime);
+                testData.push(dayTests);
+            });
+
+            new Chart(document.getElementById('comboChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { type: 'line', label: 'تست', data: testData, borderColor: '#f59e0b', backgroundColor: '#f59e0b', yAxisID: 'y1', tension: 0.4, borderWidth: 3 },
+                        { type: 'bar', label: 'مطالعه', data: timeData, backgroundColor: '#3b82f6', borderRadius: 6, yAxisID: 'y' }
+                    ]
+                },
+                options: { responsive: true, scales: { y: { type: 'linear', position: 'right', title: {display:true, text:'ساعت'} }, y1: { type: 'linear', position: 'left', grid: {drawOnChartArea: false} } }, plugins: { legend: { labels: { font: { family: 'Vazirmatn' } } } } }
+            });
+        }
+
+        // ==========================================
+        // 🎛️ تابع کمکی برای جابجایی بین پنل‌ها
+        // ==========================================
+        function showPanel(panelId) {
+            document.querySelectorAll('.panel, .result-dashboard').forEach(p => p.classList.remove('active'));
+            document.getElementById(panelId).classList.add('active');
+        }
+
+    </script>
+</body>
+</html>
