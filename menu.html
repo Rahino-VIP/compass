@@ -279,8 +279,11 @@
         // 🧭 سیستم هدایت (Navigation)
         // ==========================================
         function navigate(page) {
-            // اینجا آدرس صفحات رو در آینده می‌ذاریم
-            alert("این صفحه به زودی ساخته می‌شود: " + page);
+            if (page === 'report') {
+                window.location.href = 'report.html';
+            } else {
+                alert("این صفحه به زودی ساخته می‌شود: " + page);
+            }
         }
 
         function handleProtectedNavigation(page) {
