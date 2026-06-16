@@ -7,27 +7,30 @@
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     
     <style>
-        /* 🎨 پالت رنگی خنثی و حرفه‌ای */
+        /* 🎨 پالت رنگی استخراج شده از لوگوی راهینو */
         :root { 
-            --primary: #0ea5e9; 
-            --primary-hover: #0284c7;
-            --bg-color: #f8fafc; 
+            --primary: #2a7a82; /* آبی فیروزه‌ای لوگو */
+            --primary-hover: #1d5b61;
+            --accent: #8b1c31; /* زرشکی/عنابی نوشته راهینو */
+            --bg-color: #fdfbf7; /* کرم بسیار روشن پس‌زمینه لوگو */
             --surface: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --shadow: 0 10px 25px rgba(14, 165, 233, 0.1);
+            --text-main: #1f2937; 
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --shadow: 0 10px 30px rgba(42, 122, 130, 0.15);
         }
 
+        /* 🌙 دارک مود هماهنگ با رنگ‌های لوگو */
         [data-theme="dark"] {
-            --primary: #38bdf8;
-            --primary-hover: #0ea5e9;
-            --bg-color: #0f172a; 
-            --surface: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-            --shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            --primary: #419ca4; 
+            --primary-hover: #2a7a82;
+            --accent: #a32d46;
+            --bg-color: #111827; 
+            --surface: #1f2937;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --border: #374151;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
@@ -35,7 +38,6 @@
         body { 
             background: var(--bg-color); color: var(--text-main); 
             min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; 
-            background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 20px 20px;
         }
 
         .theme-toggle {
@@ -55,9 +57,20 @@
 
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .logo-emoji { font-size: 60px; margin-bottom: 10px; line-height: 1; }
+        /* 🖼️ استایل جایگاه لوگو */
+        .logo-container {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 15px auto;
+            border-radius: 50%;
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .logo-img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 50%; }
         
-        h1 { font-size: 24px; font-weight: 900; margin-bottom: 5px; }
+        h1 { font-size: 24px; font-weight: 900; margin-bottom: 5px; color: var(--accent); }
         .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; font-weight: 500; }
 
         .input-group { margin-bottom: 20px; text-align: right; }
@@ -67,22 +80,29 @@
             border: 2px solid var(--border); background: var(--bg-color); color: var(--text-main);
             font-size: 16px; font-weight: bold; outline: none; transition: 0.2s; direction: ltr; text-align: left;
         }
-        input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15); }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(42, 122, 130, 0.15); }
 
         .btn { width: 100%; padding: 16px; border-radius: 14px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
-        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3); }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(42, 122, 130, 0.3); }
         .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
         .btn-primary:active { transform: translateY(0); }
         .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
 
-        .forgot-link { display: inline-block; margin-top: 20px; color: var(--primary); font-size: 13px; font-weight: bold; cursor: pointer; text-decoration: none; }
-        .forgot-link:hover { text-decoration: underline; }
+        .forgot-link { display: inline-block; margin-top: 20px; color: var(--text-muted); font-size: 13px; font-weight: bold; cursor: pointer; text-decoration: none; }
+        .forgot-link:hover { color: var(--accent); }
 
         .loader { display: none; font-size: 13px; color: var(--primary); font-weight: bold; margin-top: 15px; }
-        
         .error-message { color: #ef4444; font-size: 13px; font-weight: bold; margin-top: 15px; display: none; background: #fee2e2; padding: 10px; border-radius: 8px; }
-        [data-theme="dark"] .error-message { background: #7f1d1d; color: #fca5a5; }
 
+        /* 🪟 مدال فراموشی رمز */
+        .modal-overlay { 
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+            background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px);
+        }
+        .modal { background: var(--surface); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .modal h3 { margin-bottom: 10px; font-size: 18px; color: var(--primary); }
+        .modal p { color: var(--text-muted); font-size: 13px; margin-bottom: 20px; line-height: 1.6; }
+        .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text-main); margin-top: 10px;}
     </style>
 </head>
 <body>
@@ -90,14 +110,15 @@
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
 
     <div class="login-box">
-        <!-- در آینده می‌تونی به جای ایموجی، عکس لوگو رو اینجا بذاری -->
-        <div class="logo-emoji">🧭</div>
+        <div class="logo-container">
+            <img src="لینک_عکس_لوگوی_شما.png" alt="لوگو راهینو" class="logo-img" id="logoImg" onerror="this.style.display='none'; this.parentElement.innerHTML='🧭'; this.parentElement.style.fontSize='60px';">
+        </div>
         
         <h1>قطب‌نمای راهینو</h1>
         <p class="subtitle">سیستم مدیریت یادگیری هوشمند</p>
 
         <div class="input-group">
-            <label>آیدی عددی (Chat ID)</label>
+            <label>آیدی عددی</label>
             <input type="text" id="userId" placeholder="مثال: 12345678" autocomplete="off">
         </div>
         
@@ -110,18 +131,31 @@
         <div class="loader" id="loginLoader">در حال بررسی اطلاعات... ⏳</div>
         <div class="error-message" id="errorMsg"></div>
 
-        <a class="forgot-link" onclick="forgotPassword()">رمز عبورت رو فراموش کردی؟</a>
+        <a class="forgot-link" onclick="openForgotModal()">رمز عبورت رو فراموش کردی؟</a>
+    </div>
+
+    <div class="modal-overlay" id="forgotModal">
+        <div class="modal">
+            <h3>بازیابی اطلاعات ورود</h3>
+            <p>کد ملی خودت رو وارد کن تا آیدی و رمز عبور از طریق ربات برات ارسال بشه.</p>
+            <div class="input-group" style="text-align: right;">
+                <input type="text" id="forgotNid" placeholder="کد ملی ۱۰ رقمی">
+            </div>
+            <button class="btn btn-primary" onclick="submitForgotPassword()" id="btnForgotSend">ارسال به ربات 🚀</button>
+            <button class="btn btn-outline" onclick="closeForgotModal()">انصراف</button>
+        </div>
     </div>
 
     <script>
         // ==========================================
-        // 🔗 تنظیمات اتصال به دیتابیس سوپابیس
+        // 🔗 تنظیمات اتصال
         // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec'; 
 
         // ==========================================
-        // 🌓 سیستم دارک مود هوشمند
+        // 🌓 سیستم دارک مود
         // ==========================================
         const themeBtn = document.getElementById('themeBtn');
         const currentTheme = localStorage.getItem('theme') || 'light';
@@ -144,7 +178,7 @@
         }
 
         // ==========================================
-        // 🚪 لاگین و اتصال به سوپابیس
+        // 🚪 ورود به سیستم
         // ==========================================
         async function handleLogin() {
             const idInput = document.getElementById("userId").value.trim();
@@ -153,59 +187,42 @@
             const loader = document.getElementById("loginLoader");
             const errorMsg = document.getElementById("errorMsg");
 
-            // ریست کردن ارور
             errorMsg.style.display = "none";
+            if (!idInput || !passInput) return showError("لطفاً آیدی و رمز عبور را وارد کنید.");
 
-            if (!idInput || !passInput) {
-                showError("لطفاً آیدی و رمز عبور را وارد کنید.");
-                return;
-            }
-
-            btn.disabled = true;
-            loader.style.display = "block";
+            btn.disabled = true; loader.style.display = "block";
 
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
-                // درخواست به سوپابیس برای پیدا کردن کاربر بر اساس آیدی
                 const response = await fetch(`${cleanUrl}/rest/v1/students?chat_id=eq.${idInput}&select=*`, {
-                    method: 'GET',
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                    method: 'GET', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
                 });
 
-                if (!response.ok) throw new Error("Network response was not ok");
-                
+                if (!response.ok) throw new Error("Network error");
                 const users = await response.json();
 
                 if (users.length === 0) {
-                    showError("کاربری با این آیدی یافت نشد. آیا ثبت‌نام کرده‌اید؟");
+                    showError("کاربری با این آیدی یافت نشد.");
                 } else {
                     const user = users[0];
-                    
-                    // بررسی وضعیت کاربر
                     if (user.status === 'pending') {
-                        showError("فیش شما هنوز توسط مدیریت تایید نشده است. لطفاً صبور باشید.");
+                        showError("فیش شما در حال بررسی توسط مدیریت است.");
                     } else if (user.status !== 'active') {
-                        showError("حساب کاربری شما فعال نیست. لطفاً با پشتیبانی تماس بگیرید.");
+                        showError("حساب کاربری شما فعال نیست.");
                     } else if (user.password !== passInput) {
                         showError("رمز عبور اشتباه است!");
                     } else {
-                        // ✅ ورود موفق! ذخیره اطلاعات در مرورگر
                         localStorage.setItem('qotbnama_user_id', user.chat_id);
                         localStorage.setItem('qotbnama_full_name', user.full_name);
-                        localStorage.setItem('qotbnama_role', user.role); // برای قفل کردن بخش‌های VIP
+                        localStorage.setItem('qotbnama_role', user.role); 
                         localStorage.setItem('qotbnama_plan', user.plan_type); 
-
-                        // هدایت به صفحه داشبورد (منوی اصلی)
                         window.location.href = 'menu.html';
                     }
                 }
             } catch (error) {
-                console.error("Error:", error);
-                showError("خطا در برقراری ارتباط با سرور. لطفاً اینترنت خود را چک کنید.");
+                showError("خطا در ارتباط با سرور.");
             }
-
-            btn.disabled = false;
-            loader.style.display = "none";
+            btn.disabled = false; loader.style.display = "none";
         }
 
         function showError(text) {
@@ -214,9 +231,42 @@
             errorMsg.style.display = "block";
         }
 
-        function forgotPassword() {
-            alert("برای بازیابی رمز عبور، لطفاً در ربات کلمه /forgot را ارسال کنید تا رمز جدید برایتان پیامک شود.");
-            // بعداً می‌تونیم این رو به یک مدال تبدیل کنیم که مستقیماً به گوگل اسکریپت ریکوئست بزنه
+        // ==========================================
+        // 🔑 سیستم مدال فراموشی رمز
+        // ==========================================
+        function openForgotModal() { 
+            document.getElementById('forgotModal').style.display = 'flex'; 
+        }
+        
+        function closeForgotModal() { 
+            document.getElementById('forgotModal').style.display = 'none'; 
+        }
+
+        async function submitForgotPassword() {
+            const nid = document.getElementById('forgotNid').value.trim();
+            if(!nid) { alert("لطفاً کد ملی خود را وارد کنید."); return; }
+
+            const btn = document.getElementById('btnForgotSend');
+            btn.innerText = "در حال پردازش... ⏳";
+            btn.disabled = true;
+
+            try {
+                // ارسال درخواست به گوگل بدون بلاک شدن توسط CORS در مرورگر
+                fetch(`${GOOGLE_SCRIPT_URL}?action=forgot_password&national_id=${nid}`, { mode: 'no-cors' });
+                
+                setTimeout(() => {
+                    alert("✅ درخواست ثبت شد. در صورتی که کد ملی شما در سیستم موجود باشد، آیدی و رمز عبور هم‌اکنون به ربات شما ارسال شد.");
+                    closeForgotModal();
+                    btn.innerText = "ارسال به ربات 🚀";
+                    btn.disabled = false;
+                }, 1500);
+
+            } catch (e) {
+                console.error(e);
+                alert("مشکلی پیش آمد، لطفاً اینترنت خود را چک کنید.");
+                btn.innerText = "ارسال به ربات 🚀";
+                btn.disabled = false;
+            }
         }
     </script>
 </body>
