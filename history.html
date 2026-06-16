@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دفترچه گزارش‌ها | قطب‌نمای راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <!-- کتابخانه رسم نمودار -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root { 
+            --primary: #1e3a8a; --primary-light: #3b82f6; --primary-fade: rgba(30, 58, 138, 0.05);
+            --accent: #d97706; --accent-light: #f59e0b;
+            --bg-color: #f8fafc; --surface: #ffffff;
+            --text-main: #0f172a; --text-muted: #64748b;
+            --border: #e2e8f0; --success: #10b981; --danger: #ef4444;
+            --shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        [data-theme="dark"] {
+            --primary: #3b82f6; --primary-fade: rgba(59, 130, 246, 0.1);
+            --accent: #f59e0b; --bg-color: #0f172a; --surface: #1e293b;
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+            --border: #334155; --shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 50px; transition: 0.3s; }
+        
+        .app-container { max-width: 600px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 🎩 هدر ناوبری */
+        .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .back-btn { background: var(--surface); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; box-shadow: var(--shadow); }
+        .page-title { font-size: 18px; font-weight: 900; color: var(--primary); }
+
+        /* 🗂️ آکاردئون گزارش‌ها */
+        .history-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; margin-bottom: 15px; box-shadow: var(--shadow); overflow: hidden; transition: 0.3s; }
+        .history-header { padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .history-header:hover { background: var(--primary-fade); }
+        
+        .date-badge { background: var(--primary); color: white; padding: 5px 12px; border-radius: 10px; font-size: 14px; font-weight: bold; }
+        .summary-stats { display: flex; gap: 15px; font-size: 13px; font-weight: bold; color: var(--text-muted); }
+        .summary-stats span { display: flex; align-items: center; gap: 5px; }
+        
+        /* 🔻 محتوای بازشو */
+        .history-body { display: none; padding: 20px; border-top: 1px solid var(--border); background: var(--bg-color); }
+        .history-card.active .history-body { display: block; animation: slideDown 0.3s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-title { font-size: 14px; font-weight: bold; color: var(--text-muted); margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; display: block; width: 5px; height: 15px; background: var(--accent); border-radius: 10px; }
+
+        /* 📊 نمودار */
+        .chart-container { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: center; }
+        .chart-box { position: relative; width: 100%; max-width: 250px; aspect-ratio: 1; }
+        
+        /* 🌿 ویجت‌های لایف‌استایل */
+        .life-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+        .life-widget { background: var(--surface); border: 1px solid var(--border); padding: 15px; border-radius: 16px; display: flex; flex-direction: column; gap: 5px; }
+        .life-widget-title { font-size: 12px; color: var(--text-muted); font-weight: bold; }
+        .life-widget-value { font-size: 15px; font-weight: 900; color: var(--primary); display: flex; align-items: center; justify-content: space-between;}
+        .sleep-cycle { display: flex; align-items: center; gap: 5px; font-size: 14px; direction: ltr;}
+        .danger-text { color: var(--danger) !important; }
+        .mood-icon { font-size: 35px; align-self: flex-end; margin-top: -20px;}
+
+        /* 📚 جدول دروس */
+        .course-list { display: flex; flex-direction: column; gap: 8px; }
+        .course-item { background: var(--surface); border: 1px solid var(--border); padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .c-name { font-size: 14px; font-weight: bold; color: var(--text-main); }
+        .c-stats { font-size: 12px; font-weight: bold; color: var(--text-muted); display: flex; gap: 10px; }
+        .c-stats span { background: var(--bg-color); padding: 3px 8px; border-radius: 8px; border: 1px solid var(--border);}
+
+        /* 🪟 لودینگ روی صفحه */
+        .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
+        .spinner { font-size: 50px; animation: spin 1.5s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .empty-state { text-align: center; padding: 50px 20px; color: var(--text-muted); font-weight: bold; display: none; }
+        .empty-state span { font-size: 60px; display: block; margin-bottom: 10px; opacity: 0.5; }
+    </style>
+</head>
+<body>
+
+    <div class="loader-overlay" id="mainLoader">
+        <div class="spinner">⏳</div>
+        <h3 style="color: var(--primary);">در حال استخراج کارنامه‌ها...</h3>
+    </div>
+
+    <div class="app-container">
+        <div class="nav-header">
+            <a href="menu.html" class="back-btn">🔙</a>
+            <div class="page-title">دفترچه گزارش‌ها (۱۴ روز اخیر)</div>
+            <div style="width: 40px;"></div> 
+        </div>
+
+        <div id="historyContainer">
+            <!-- کارت‌ها اینجا تولید میشن -->
+        </div>
+        
+        <div class="empty-state" id="emptyState">
+            <span>📭</span>
+            هنوز هیچ گزارشی ثبت نکردی!
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 🔗 تنظیمات سوپابیس
+        // ==========================================
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+
+        const userId = localStorage.getItem('qotbnama_user_id');
+        if (!userId) window.location.href = 'index.html';
+
+        // دیکشنری رنگ‌ها برای نمودار
+        const chartColors = ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+
+        window.onload = async function() {
+            await fetchHistory();
+        };
+
+        async function fetchHistory() {
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                // دریافت 14 گزارش آخر کاربر
+                const response = await fetch(`${cleanUrl}/rest/v1/daily_reports?chat_id=eq.${userId}&order=report_date.desc&limit=14`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+
+                if (!response.ok) throw new Error("Network error");
+                const data = await response.json();
+
+                document.getElementById('mainLoader').style.display = 'none';
+
+                if (data.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+
+                renderHistoryCards(data);
+
+            } catch (error) {
+                alert("⚠️ خطا در دریافت اطلاعات. اینترنت خود را چک کنید.");
+                document.getElementById('mainLoader').style.display = 'none';
+            }
+        }
+
+        function renderHistoryCards(reports) {
+            const container = document.getElementById('historyContainer');
+            
+            reports.forEach((report, index) => {
+                let courses = report.courses || [];
+                let life = report.lifestyle || {};
+                
+                // محاسبه آمار کلی روز
+                let totalStudy = 0;
+                let totalTests = 0;
+                let chartLabels = [];
+                let chartData = [];
+
+                courses.forEach(c => {
+                    let cTime = (c.edu || 0) + (c.study || 0);
+                    totalStudy += cTime;
+                    totalTests += (c.tests || 0);
+                    chartLabels.push(c.name);
+                    chartData.push(cTime);
+                });
+
+                // ساخت HTML دروس
+                let coursesHtml = courses.map(c => `
+                    <div class="course-item">
+                        <span class="c-name">${c.name}</span>
+                        <div class="c-stats">
+                            <span>⏱️ ${(c.edu || 0) + (c.study || 0)} س</span>
+                            <span>🎯 ${c.tests || 0} ت</span>
+                        </div>
+                    </div>
+                `).join('');
+
+                // منطق رنگی برای گوشی
+                let phoneTime = parseFloat(life.phone) || 0;
+                let phoneClass = phoneTime >= 2 ? 'danger-text' : '';
+
+                // انتخاب ایموجی مود
+                let moodEmoji = '🙂';
+                if(life.mood === 'عالی') moodEmoji = '🤩';
+                if(life.mood === 'خوب') moodEmoji = '😊';
+                if(life.mood === 'بد') moodEmoji = '😞';
+
+                // ساخت کارت اصلی
+                const card = document.createElement('div');
+                card.className = 'history-card';
+                card.innerHTML = `
+                    <div class="history-header" onclick="toggleCard(this, 'chart_${index}')">
+                        <div class="date-badge">${report.report_date}</div>
+                        <div class="summary-stats">
+                            <span>⏱️ ${totalStudy} ساعت</span>
+                            <span>🎯 ${totalTests} تست</span>
+                            <span>${moodEmoji}</span>
+                        </div>
+                    </div>
+                    <div class="history-body">
+                        
+                        <!-- نمودار -->
+                        ${totalStudy > 0 ? `
+                        <div class="section-title">نمودار سهم دروس</div>
+                        <div class="chart-container">
+                            <div class="chart-box"><canvas id="chart_${index}"></canvas></div>
+                        </div>
+                        ` : ''}
+
+                        <!-- لایف‌استایل -->
+                        <div class="section-title">ریکاوری و لایف‌استایل</div>
+                        <div class="life-grid">
+                            <div class="life-widget" style="grid-column: span 2;">
+                                <span class="life-widget-title">چرخه خواب</span>
+                                <span class="life-widget-value sleep-cycle">☀️ ${life.wakeToday} <span>⬅️</span> 🌙 ${life.sleepLast}</span>
+                            </div>
+                            <div class="life-widget">
+                                <span class="life-widget-title">فضای مجازی</span>
+                                <span class="life-widget-value ${phoneClass}">${life.phone} ساعت</span>
+                            </div>
+                            <div class="life-widget">
+                                <span class="life-widget-title">چرت روزانه</span>
+                                <span class="life-widget-value">${life.nap} ساعت</span>
+                            </div>
+                        </div>
+
+                        <!-- ریز دروس -->
+                        <div class="section-title">ریز عملکرد درسی</div>
+                        <div class="course-list">
+                            ${coursesHtml}
+                        </div>
+
+                    </div>
+                `;
+
+                container.appendChild(card);
+
+                // ذخیره دیتای نمودار تو عنصر HTML تا موقع کلیک رسمش کنیم
+                if (totalStudy > 0) {
+                    card.dataset.chartLabels = JSON.stringify(chartLabels);
+                    card.dataset.chartData = JSON.stringify(chartData);
+                }
+            });
+        }
+
+        // تابع باز و بسته کردن آکاردئون و رسم نمودار با تاخیر (Lazy Load)
+        function toggleCard(headerEl, chartId) {
+            const card = headerEl.parentElement;
+            const isActive = card.classList.contains('active');
+            
+            // بستن بقیه کارت‌ها
+            document.querySelectorAll('.history-card').forEach(c => c.classList.remove('active'));
+            
+            if (!isActive) {
+                card.classList.add('active');
+                
+                // رسم نمودار اگر قبلا رسم نشده باشه
+                let canvas = document.getElementById(chartId);
+                if (canvas && !canvas.classList.contains('rendered')) {
+                    let labels = JSON.parse(card.dataset.chartLabels);
+                    let data = JSON.parse(card.dataset.chartData);
+                    
+                    new Chart(canvas.getContext('2d'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: data,
+                                backgroundColor: chartColors.slice(0, data.length),
+                                borderWidth: 0,
+                                hoverOffset: 5
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '70%', // توخالی کردن وسط نمودار
+                            plugins: {
+                                legend: { position: 'bottom', labels: { font: { family: 'Vazirmatn' } } }
+                            }
+                        }
+                    });
+                    canvas.classList.add('rendered'); // مارک کردن که دوباره رسم نشه
+                }
+            }
+        }
+    </script>
+</body>
+</html>
