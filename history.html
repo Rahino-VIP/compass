@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>دفترچه گزارش‌ها | قطب‌نمای راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
-    <!-- کتابخانه رسم نمودار -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
@@ -62,16 +61,17 @@
         .life-widget { background: var(--surface); border: 1px solid var(--border); padding: 15px; border-radius: 16px; display: flex; flex-direction: column; gap: 5px; }
         .life-widget-title { font-size: 12px; color: var(--text-muted); font-weight: bold; }
         .life-widget-value { font-size: 15px; font-weight: 900; color: var(--primary); display: flex; align-items: center; justify-content: space-between;}
-        .sleep-cycle { display: flex; align-items: center; gap: 5px; font-size: 14px; direction: ltr;}
         .danger-text { color: var(--danger) !important; }
-        .mood-icon { font-size: 35px; align-self: flex-end; margin-top: -20px;}
 
-        /* 📚 جدول دروس */
-        .course-list { display: flex; flex-direction: column; gap: 8px; }
-        .course-item { background: var(--surface); border: 1px solid var(--border); padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .c-name { font-size: 14px; font-weight: bold; color: var(--text-main); }
-        .c-stats { font-size: 12px; font-weight: bold; color: var(--text-muted); display: flex; gap: 10px; }
-        .c-stats span { background: var(--bg-color); padding: 3px 8px; border-radius: 8px; border: 1px solid var(--border);}
+        /* 📚 جدول دروس (طراحی جدید و تفکیک شده) */
+        .course-list { display: flex; flex-direction: column; gap: 10px; }
+        .course-item { background: var(--surface); border: 1px solid var(--border); padding: 15px; border-radius: 16px; display: flex; flex-direction: column; gap: 10px; }
+        .c-name { font-size: 15px; font-weight: 900; color: var(--primary); border-bottom: 1px dashed var(--border); padding-bottom: 8px; }
+        .c-stats { display: flex; justify-content: space-between; gap: 5px; }
+        .c-stats span { font-size: 11px; font-weight: bold; padding: 5px 8px; border-radius: 8px; flex: 1; text-align: center; }
+        .stat-edu { background: rgba(30, 58, 138, 0.08); color: var(--primary); border: 1px solid rgba(30, 58, 138, 0.15); }
+        .stat-std { background: rgba(16, 185, 129, 0.08); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.15); }
+        .stat-tst { background: rgba(217, 119, 6, 0.08); color: var(--accent); border: 1px solid rgba(217, 119, 6, 0.15); }
 
         /* 🪟 لودینگ روی صفحه */
         .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
@@ -97,8 +97,7 @@
         </div>
 
         <div id="historyContainer">
-            <!-- کارت‌ها اینجا تولید میشن -->
-        </div>
+            </div>
         
         <div class="empty-state" id="emptyState">
             <span>📭</span>
@@ -116,7 +115,6 @@
         const userId = localStorage.getItem('qotbnama_user_id');
         if (!userId) window.location.href = 'index.html';
 
-        // دیکشنری رنگ‌ها برای نمودار
         const chartColors = ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
         window.onload = async function() {
@@ -126,7 +124,6 @@
         async function fetchHistory() {
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
-                // دریافت 14 گزارش آخر کاربر
                 const response = await fetch(`${cleanUrl}/rest/v1/daily_reports?chat_id=eq.${userId}&order=report_date.desc&limit=14`, {
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
                 });
@@ -156,42 +153,61 @@
                 let courses = report.courses || [];
                 let life = report.lifestyle || {};
                 
-                // محاسبه آمار کلی روز
                 let totalStudy = 0;
                 let totalTests = 0;
                 let chartLabels = [];
                 let chartData = [];
 
-                courses.forEach(c => {
+                // ساخت لیست دروس با تفکیک جدید
+                let coursesHtml = courses.map(c => {
                     let cTime = (c.edu || 0) + (c.study || 0);
                     totalStudy += cTime;
                     totalTests += (c.tests || 0);
                     chartLabels.push(c.name);
                     chartData.push(cTime);
-                });
 
-                // ساخت HTML دروس
-                let coursesHtml = courses.map(c => `
+                    return `
                     <div class="course-item">
                         <span class="c-name">${c.name}</span>
                         <div class="c-stats">
-                            <span>⏱️ ${(c.edu || 0) + (c.study || 0)} س</span>
-                            <span>🎯 ${c.tests || 0} ت</span>
+                            <span class="stat-edu">👨‍🏫 کلاس: ${c.edu || 0}</span>
+                            <span class="stat-std">📖 مطالعه: ${c.study || 0}</span>
+                            <span class="stat-tst">🎯 تست: ${c.tests || 0}</span>
                         </div>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
 
-                // منطق رنگی برای گوشی
                 let phoneTime = parseFloat(life.phone) || 0;
                 let phoneClass = phoneTime >= 2 ? 'danger-text' : '';
 
-                // انتخاب ایموجی مود
                 let moodEmoji = '🙂';
                 if(life.mood === 'عالی') moodEmoji = '🤩';
                 if(life.mood === 'خوب') moodEmoji = '😊';
                 if(life.mood === 'بد') moodEmoji = '😞';
 
-                // ساخت کارت اصلی
+                // 🎨 ساخت نقاشیِ چرخه خواب با SVG
+                let sleepSvg = `
+                <div style="text-align:center; padding: 15px 0;">
+                    <svg viewBox="0 0 200 120" style="width:100%; max-width:280px; height:auto; overflow:visible; margin:0 auto; display:block;">
+                        <defs>
+                            <linearGradient id="grad_${index}" x1="0%" y1="0%" x2="100%" y2="0%"> 
+                                <stop offset="0%" stop-color="#312e81" />
+                                <stop offset="100%" stop-color="#f59e0b" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M 30 80 A 70 70 0 0 1 170 80" fill="none" stroke="var(--border)" stroke-width="4" stroke-dasharray="4 4" />
+                        <path d="M 30 80 A 70 70 0 0 1 170 80" fill="none" stroke="url(#grad_${index})" stroke-width="6" stroke-dasharray="8 6" stroke-linecap="round" />
+                        
+                        <text x="30" y="80" font-size="28" text-anchor="middle" dominant-baseline="central">🌙</text>
+                        <text x="170" y="80" font-size="28" text-anchor="middle" dominant-baseline="central">☀️</text>
+                        
+                        <text x="30" y="115" font-size="14" fill="var(--text-muted)" text-anchor="middle" font-weight="bold" font-family="Vazirmatn">${life.sleepLast || '23:00'}</text>
+                        <text x="170" y="115" font-size="14" fill="var(--text-muted)" text-anchor="middle" font-weight="bold" font-family="Vazirmatn">${life.wakeToday || '07:00'}</text>
+                    </svg>
+                </div>
+                `;
+
                 const card = document.createElement('div');
                 card.className = 'history-card';
                 card.innerHTML = `
@@ -205,7 +221,6 @@
                     </div>
                     <div class="history-body">
                         
-                        <!-- نمودار -->
                         ${totalStudy > 0 ? `
                         <div class="section-title">نمودار سهم دروس</div>
                         <div class="chart-container">
@@ -213,13 +228,13 @@
                         </div>
                         ` : ''}
 
-                        <!-- لایف‌استایل -->
+                        <div class="section-title">چرخه خواب و بیداری</div>
+                        <div class="life-widget" style="margin-bottom: 20px; align-items: center; border-color: var(--primary-light);">
+                            ${sleepSvg}
+                        </div>
+
                         <div class="section-title">ریکاوری و لایف‌استایل</div>
                         <div class="life-grid">
-                            <div class="life-widget" style="grid-column: span 2;">
-                                <span class="life-widget-title">چرخه خواب</span>
-                                <span class="life-widget-value sleep-cycle">☀️ ${life.wakeToday} <span>⬅️</span> 🌙 ${life.sleepLast}</span>
-                            </div>
                             <div class="life-widget">
                                 <span class="life-widget-title">فضای مجازی</span>
                                 <span class="life-widget-value ${phoneClass}">${life.phone} ساعت</span>
@@ -230,7 +245,6 @@
                             </div>
                         </div>
 
-                        <!-- ریز دروس -->
                         <div class="section-title">ریز عملکرد درسی</div>
                         <div class="course-list">
                             ${coursesHtml}
@@ -241,7 +255,6 @@
 
                 container.appendChild(card);
 
-                // ذخیره دیتای نمودار تو عنصر HTML تا موقع کلیک رسمش کنیم
                 if (totalStudy > 0) {
                     card.dataset.chartLabels = JSON.stringify(chartLabels);
                     card.dataset.chartData = JSON.stringify(chartData);
@@ -249,18 +262,15 @@
             });
         }
 
-        // تابع باز و بسته کردن آکاردئون و رسم نمودار با تاخیر (Lazy Load)
         function toggleCard(headerEl, chartId) {
             const card = headerEl.parentElement;
             const isActive = card.classList.contains('active');
             
-            // بستن بقیه کارت‌ها
             document.querySelectorAll('.history-card').forEach(c => c.classList.remove('active'));
             
             if (!isActive) {
                 card.classList.add('active');
                 
-                // رسم نمودار اگر قبلا رسم نشده باشه
                 let canvas = document.getElementById(chartId);
                 if (canvas && !canvas.classList.contains('rendered')) {
                     let labels = JSON.parse(card.dataset.chartLabels);
@@ -280,13 +290,13 @@
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            cutout: '70%', // توخالی کردن وسط نمودار
+                            cutout: '65%', 
                             plugins: {
                                 legend: { position: 'bottom', labels: { font: { family: 'Vazirmatn' } } }
                             }
                         }
                     });
-                    canvas.classList.add('rendered'); // مارک کردن که دوباره رسم نشه
+                    canvas.classList.add('rendered'); 
                 }
             }
         }
