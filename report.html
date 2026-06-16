@@ -24,7 +24,7 @@
         }
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
-        body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 80px; transition: 0.3s; }
+        body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 120px; transition: 0.3s; }
         
         .app-container { max-width: 600px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -34,13 +34,19 @@
         .back-btn { background: var(--surface); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; box-shadow: var(--shadow); }
         .page-title { font-size: 18px; font-weight: 900; color: var(--primary); }
 
-        /* 🗓️ اسلایدر افقی تاریخ (نوآوری جدید) */
+        /* 🗓️ اسلایدر افقی تاریخ */
         .date-slider { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 25px; scrollbar-width: none; }
         .date-slider::-webkit-scrollbar { display: none; }
-        .date-chip { flex: 0 0 auto; background: var(--surface); border: 2px solid var(--border); padding: 12px 20px; border-radius: 16px; text-align: center; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .date-chip { flex: 0 0 auto; background: var(--surface); border: 2px solid var(--border); padding: 12px 20px; border-radius: 16px; text-align: center; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.02); min-width: 90px;}
         .date-chip.active { background: var(--primary); border-color: var(--primary); color: white; transform: scale(1.05); box-shadow: 0 8px 15px rgba(30, 58, 138, 0.2); }
         .date-chip span { display: block; font-size: 14px; font-weight: bold; }
         .date-chip small { font-size: 11px; opacity: 0.8; }
+        
+        /* استایل روزهای ثبت شده */
+        .date-chip.completed { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
+        .date-chip.completed .status-badge { color: var(--success); font-size: 11px; font-weight: bold; margin-bottom: 4px; display: block; }
+        .date-chip.active.completed { background: var(--success); border-color: var(--success); color: white; }
+        .date-chip.active.completed .status-badge { color: white; }
 
         .section-title { font-size: 16px; font-weight: bold; color: var(--text-muted); margin: 25px 0 15px 0; display: flex; align-items: center; gap: 8px; }
         .section-title::before { content: ''; display: block; width: 6px; height: 18px; background: var(--accent); border-radius: 10px; }
@@ -53,7 +59,7 @@
         select.modern-select { width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 15px; font-weight: bold; margin-bottom: 15px; outline: none; }
         select.modern-select:focus { border-color: var(--primary); }
 
-        /* 🎚️ استایل مدرن اسلایدرها */
+        /* 🎚️ اسلایدرها */
         .slider-group { background: var(--primary-fade); padding: 15px; border-radius: 14px; margin-bottom: 10px; border: 1px solid var(--border); }
         .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .slider-label { font-size: 13px; font-weight: bold; color: var(--text-main); }
@@ -70,8 +76,13 @@
         .mood-btn small { font-size: 12px; font-weight: bold; color: var(--text-muted); }
         .mood-btn.active { border-color: var(--primary); background: var(--primary-fade); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(30, 58, 138, 0.15); }
 
+        /* 🗑️ دکمه حذف گزارش */
+        .btn-delete-report { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px dashed var(--danger); width: 100%; padding: 15px; border-radius: 16px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.2s; }
+        .btn-delete-report:hover { background: var(--danger); color: white; }
+
         /* 🚀 دکمه شناور ثبت نهایی */
-        .fab-submit { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: linear-gradient(135deg, var(--primary), #312e81); color: white; padding: 18px; border-radius: 20px; border: none; font-size: 18px; font-weight: 900; box-shadow: 0 15px 30px rgba(30, 58, 138, 0.3); cursor: pointer; z-index: 100; transition: 0.3s; }
+        .bottom-actions { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
+        .fab-submit { background: linear-gradient(135deg, var(--primary), #312e81); color: white; padding: 18px; border-radius: 20px; border: none; font-size: 18px; font-weight: 900; box-shadow: 0 15px 30px rgba(30, 58, 138, 0.3); cursor: pointer; transition: 0.3s; width: 100%; }
         .fab-submit:disabled { opacity: 0.7; cursor: not-allowed; }
 
         /* 🪟 لودینگ روی صفحه */
@@ -92,11 +103,11 @@
         <div class="nav-header">
             <a href="menu.html" class="back-btn">🔙</a>
             <div class="page-title">ثبت گزارش عملکرد</div>
-            <div style="width: 40px;"></div> </div>
+            <div style="width: 40px;"></div> 
+        </div>
 
         <div class="section-title" style="margin-top: 0;">انتخاب روز</div>
-        <div class="date-slider" id="dateSlider">
-            </div>
+        <div class="date-slider" id="dateSlider"></div>
 
         <div class="section-title">📚 عملکرد درسی</div>
         <div id="courseContainer"></div>
@@ -133,9 +144,13 @@
         </div>
         <input type="hidden" id="life_mood" value="خوب">
 
+        <button class="btn-delete-report" onclick="deleteReport()">🗑️ پاک کردن کل گزارشِ این روز</button>
+
     </div>
 
-    <button class="fab-submit" id="submitBtn" onclick="submitReport()" style="display: none;">🚀 ثبت نهایی گزارش</button>
+    <div class="bottom-actions">
+        <button class="fab-submit" id="submitBtn" onclick="submitReport()" style="display: none;">🚀 ثبت نهایی گزارش</button>
+    </div>
 
     <script>
         // ==========================================
@@ -144,39 +159,43 @@
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
 
-        // ==========================================
-        // 🛡️ امنیت و اطلاعات کاربر
-        // ==========================================
         const userId = localStorage.getItem('qotbnama_user_id');
         if (!userId) window.location.href = 'index.html';
 
-        let userGrade = '';
-        let userMajor = '';
         let selectedDate = '';
         let courseCount = 0;
         let globalSubjects = [];
+        let completedDates = []; // آرایه برای نگهداری روزهای ثبت شده
 
-        // دیکشنری هوشمند دروس
         const subjectsDict = { 
-            "دهم": { "ریاضی": ["هندسه ۱", "ریاضی ۱", "فیزیک ۱", "شیمی ۱", "عمومی/سایر"], "تجربی": ["زیست ۱", "ریاضی ۱", "فیزیک ۱", "شیمی ۱", "عمومی/سایر"], "انسانی": ["ریاضی و آمار ۱", "اقتصاد", "علوم و فنون ۱", "عربی ۱", "تاریخ ۱", "جامعه‌شناسی ۱", "منطق", "عمومی/سایر"] }, 
-            "یازدهم": { "ریاضی": ["حسابان ۱", "هندسه ۲", "آمار و احتمال", "فیزیک ۲", "شیمی ۲", "عمومی/سایر"], "تجربی": ["زیست ۲", "ریاضی ۲", "فیزیک ۲", "شیمی ۲", "زمین‌شناسی", "عمومی/سایر"], "انسانی": ["ریاضی و آمار ۲", "علوم و فنون ۲", "عربی ۲", "تاریخ ۲", "جامعه‌شناسی ۲", "فلسفه ۱", "روان‌شناسی", "عمومی/سایر"] }, 
-            "دوازدهم": { "ریاضی": ["حسابان ۲", "هندسه ۳", "گسسته", "فیزیک ۳", "شیمی ۳", "دروس پایه (دهم/یازدهم)", "عمومی/سایر"], "تجربی": ["ریاضی ۳", "زیست ۳", "فیزیک ۳", "شیمی ۳", "دروس پایه (دهم/یازدهم)", "عمومی/سایر"], "انسانی": ["علوم و فنون ۳", "ریاضی ۳", "عربی ۳", "تاریخ ۳", "جامعه‌شناسی ۳", "جغرافیا ۳", "فلسفه ۲", "دروس پایه", "عمومی/سایر"] } 
+            "دهم": { 
+                "ریاضی": ["هندسه 1", "ریاضی 1", "فیزیک 1", "شیمی 1", "فارسی 1", "عربی 1", "دینی 1", "زبان 1", "جغرافیا ایران", "سایر"], 
+                "تجربی": ["زیست 1", "ریاضی 1", "فیزیک 1", "شیمی 1", "فارسی 1", "عربی 1", "دینی 1", "زبان 1", "جغرافیا ایران", "سایر"], 
+                "انسانی": ["ریاضی و آمار ۱", "اقتصاد", "علوم و فنون ۱", "عربی انسانی ۱", "تاریخ ۱", "جامعه‌شناسی ۱", "منطق", "فارسی ۱", "دینی ۱", "زبان ۱", "جغرافیا ۱", "سایر"] 
+            }, 
+            "یازدهم": { 
+                "ریاضی": ["حسابان 1", "هندسه 2", "آمار و احتمال", "فیزیک 2", "شیمی 2", "فارسی", "عربی", "دینی", "زبان", "تاریخ معاصر", "زمین‌شناسی", "سایر"], 
+                "تجربی": ["زیست 2", "ریاضی 2", "فیزیک 2", "شیمی 2", "زمین‌شناسی", "فارسی", "عربی", "دینی", "زبان", "تاریخ معاصر", "سایر"], 
+                "انسانی": ["ریاضی و آمار ۲", "علوم و فنون ۲", "عربی انسانی ۲", "تاریخ ۲", "جامعه‌شناسی ۲", "فلسفه ۱", "روان‌شناسی", "فارسی ۲", "دینی ۲", "زبان ۲", "سایر"] 
+            }, 
+            "دوازدهم": { 
+                "ریاضی": ["حسابان 2", "ریاضیات پایه", "هندسه 1", "هندسه 2", "هندسه 3", "گسسته", "آمار و احتمال", "فیزیک 1", "فیزیک 2", "فیزیک 3", "شیمی 1", "شیمی 2", "شیمی 3", "فارسی", "عربی", "دینی", "زبان", "سلامت و بهداشت", "هویت اجتماعی", "سایر"], 
+                "تجربی": ["ریاضیات پایه", "ریاضی 3", "زیست 1", "زیست 2", "زیست 3", "زمین شناسی", "فیزیک 1", "فیزیک 2", "فیزیک 3", "شیمی 1", "شیمی 2", "شیمی 3", "فارسی", "عربی", "دینی", "زبان", "سلامت و بهداشت", "هویت اجتماعی", "سایر"], 
+                "انسانی": ["علوم و فنون ۱", "علوم و فنون ۲", "علوم و فنون ۳", "ریاضی و آمار ۱", "ریاضی و آمار ۲", "ریاضی و آمار ۳", "عربی انسانی ۱", "عربی انسانی ۲", "عربی انسانی ۳", "تاریخ ۱", "تاریخ ۲", "تاریخ ۳", "جامعه‌شناسی ۱", "جامعه‌شناسی ۲", "جامعه‌شناسی ۳", "جغرافیا ۱", "جغرافیا ۲", "جغرافیا ۳", "منطق", "فلسفه ۱", "فلسفه ۲", "اقتصاد", "روان‌شناسی", "فارسی", "دینی", "زبان", "سلامت و بهداشت", "سایر"] 
+            } 
         };
 
-        // ==========================================
-        // 🚀 اجرای اولیه در زمان لود صفحه
-        // ==========================================
         window.onload = async function() {
-            generateDateChips();
-            await fetchUserDetails(); // گرفتن پایه و رشته از سرور
-            addCourseCard(); // اضافه کردن اولین کارت درس
+            await fetchUserDetails(); 
+            await fetchCompletedDates(); // چک کردن روزهای ثبت شده قبل از چیدن تقویم
+            generateDateChips(); 
+            addCourseCard(); 
             
             document.getElementById('mainLoader').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
             document.getElementById('submitBtn').style.display = 'block';
         };
 
-        // گرفتن اطلاعات رشته و پایه کاربر از سوپابیس برای چیدن لیست دروس
         async function fetchUserDetails() {
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
@@ -188,17 +207,22 @@
                     let g = data[0].grade || ""; let m = data[0].major || "";
                     let targetGrade = g.includes("یازدهم") ? "یازدهم" : (g.includes("دوازدهم") || g.includes("پشت کنکوری")) ? "دوازدهم" : "دهم";
                     let targetField = m.includes("ریاضی") ? "ریاضی" : m.includes("انسانی") ? "انسانی" : "تجربی";
-                    
                     globalSubjects = subjectsDict[targetGrade][targetField] || ["درس عمومی", "تخصصی پایه", "تخصصی دوازدهم"];
                 }
-            } catch (e) {
-                globalSubjects = ["درس عمومی", "درس تخصصی"]; // در صورت قطعی اینترنت
-            }
+            } catch (e) { globalSubjects = ["درس عمومی", "درس تخصصی"]; }
         }
 
-        // ==========================================
-        // 🗓️ تولید اسلایدر تاریخ‌های شمسی
-        // ==========================================
+        async function fetchCompletedDates() {
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                const response = await fetch(`${cleanUrl}/rest/v1/daily_reports?chat_id=eq.${userId}&select=report_date`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                const data = await response.json();
+                completedDates = data.map(item => item.report_date);
+            } catch (e) { console.error(e); }
+        }
+
         function generateDateChips() {
             const container = document.getElementById('dateSlider');
             const labels = ["امروز", "دیروز", "پریروز", "۳ روز پیش", "۴ روز پیش", "۵ روز پیش", "۶ روز پیش"];
@@ -206,27 +230,35 @@
             for(let i=0; i<7; i++) {
                 let d = new Date(); d.setDate(d.getDate() - i);
                 let shamsi = new Intl.DateTimeFormat('fa-IR', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(d);
-                let shamsiEng = shamsi.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); // تبدیل اعداد فارسی به انگلیسی برای دیتابیس
+                let shamsiEng = shamsi.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); 
                 
+                let isCompleted = completedDates.includes(shamsiEng);
                 let chip = document.createElement('div');
-                chip.className = `date-chip ${i===0 ? 'active' : ''}`;
-                chip.onclick = () => selectDate(chip, shamsiEng);
-                chip.innerHTML = `<span>${labels[i]}</span><small>${shamsi}</small>`;
+                chip.className = `date-chip ${isCompleted ? 'completed' : ''} ${i===0 ? 'active' : ''}`;
+                
+                let statusHtml = isCompleted ? `<span class="status-badge">✅ ثبت شده</span>` : ``;
+                chip.innerHTML = `${statusHtml}<span>${labels[i]}</span><small>${shamsi}</small>`;
+                
+                chip.onclick = () => handleDateClick(chip, shamsiEng, isCompleted);
                 container.appendChild(chip);
 
-                if(i===0) selectedDate = shamsiEng; // دیفالت روی امروز
+                if(i===0) selectedDate = shamsiEng; 
             }
         }
 
-        function selectDate(element, dateStr) {
+        function handleDateClick(element, dateStr, isCompleted) {
+            if (dateStr === selectedDate) return; 
+            
+            if (isCompleted) {
+                let res = confirm("⚠️ رفیق، تو قبلاً گزارش این روز رو تو سیستم ثبت کردی!\nآیا می‌خوای اطلاعات قبلیت پاک بشه و از اول برای این روز گزارش بنویسی؟");
+                if(!res) return; // اگر پشیمون شد، هیچی تغییر نمی‌کنه
+            }
+            
             document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('active'));
             element.classList.add('active');
             selectedDate = dateStr;
         }
 
-        // ==========================================
-        // 🃏 مدیریت کارت‌های درسی
-        // ==========================================
         function addCourseCard() {
             courseCount++;
             const container = document.getElementById('courseContainer');
@@ -252,15 +284,12 @@
 
                 <div class="slider-group" style="background: rgba(217, 119, 6, 0.05); border-color: rgba(217, 119, 6, 0.2);">
                     <div class="slider-header"><span class="slider-label">تعداد تست زده شده</span><span class="slider-val" style="color:var(--accent);" id="v_tst_${courseCount}">0 تست</span></div>
-                    <input type="range" class="c-tst" min="0" max="300" step="5" value="0" oninput="document.getElementById('v_tst_${courseCount}').innerText = this.value + ' تست'">
+                    <input type="range" class="c-tst" min="0" max="400" step="5" value="0" oninput="document.getElementById('v_tst_${courseCount}').innerText = this.value + ' تست'">
                 </div>
             `;
             container.appendChild(div);
         }
 
-        // ==========================================
-        // ⚙️ توابع کمکی (فرمتیگ و لایف‌استایل)
-        // ==========================================
         function updateTimeFormat(val, labelId) {
             let h = Math.floor(val); let m = (val - h) * 60; 
             if (h >= 24) h -= 24;
@@ -273,16 +302,38 @@
             document.getElementById("life_mood").value = val;
         }
 
-        // ==========================================
-        // 🚀 ارسال اطلاعات به سوپابیس
-        // ==========================================
+        async function deleteReport() {
+            if(!confirm(`آیا مطمئنی می‌خوای کل گزارشِ تاریخ (${selectedDate}) رو از سیستم پاک کنی؟ این کار قابل برگشت نیست!`)) return;
+            
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                const response = await fetch(`${cleanUrl}/rest/v1/daily_reports?chat_id=eq.${userId}&report_date=eq.${selectedDate}`, {
+                    method: 'DELETE',
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+
+                if (!response.ok) throw new Error("Network error");
+                alert("✅ گزارش این روز با موفقیت از سیستم پاک شد. حالا می‌تونی از صفر فرم رو پر کنی.");
+                window.location.reload(); // رفرش صفحه برای آپدیت شدن تیک‌های سبز
+            } catch (e) { alert("⚠️ مشکلی پیش آمد. لطفاً اینترنت خود رو چک کن."); }
+        }
+
         async function submitReport() {
+            // چک امنیتی نهایی
+            if (completedDates.includes(selectedDate)) {
+                if(!confirm("⚠️ توجه: این روز قبلاً گزارش داشته. با ثبت فرم جدید، اطلاعات قبلی کاملاً پاک شده و این فرم جایگزین می‌شود. مطمئنی؟")) {
+                    return;
+                }
+            }
+
             const btn = document.getElementById('submitBtn');
             btn.innerText = "در حال انتقال به دیتابیس... ⏳";
             btn.disabled = true;
 
-            // 1. جمع‌آوری اطلاعات دروس
             let coursesData = [];
+            let totalStudy = 0;
+            let totalTests = 0;
+
             document.querySelectorAll(".course-card").forEach(card => {
                 let name = card.querySelector(".c-name").value; 
                 let edu = parseFloat(card.querySelector(".c-edu").value) || 0; 
@@ -291,6 +342,8 @@
                 
                 if(edu > 0 || std > 0 || tst > 0) {
                     coursesData.push({ name: name, edu: edu, study: std, tests: tst });
+                    totalStudy += (edu + std);
+                    totalTests += tst;
                 }
             });
 
@@ -299,7 +352,15 @@
                 btn.innerText = "🚀 ثبت نهایی گزارش"; btn.disabled = false; return;
             }
 
-            // 2. ساخت پکیج JSON نهایی
+            let feedbackMsg = "";
+            if (totalStudy >= 8 || totalTests >= 150) {
+                feedbackMsg = "شاهکار بود! 🌟 با همین فرمون پیش بری، هدف تو مشتته.";
+            } else if (totalStudy >= 4) {
+                feedbackMsg = "خدا قوت! 🍃 روز خوبی ساختی، اما می‌دونم پتانسیلت حتی بیشتر از اینه.";
+            } else {
+                feedbackMsg = "ثبت شد! ☕ امروز شاید روز اوجت نبود، اما مهم اینه که تو مسیر موندی.";
+            }
+
             const payload = {
                 chat_id: userId,
                 report_date: selectedDate,
@@ -313,12 +374,10 @@
                 }
             };
 
-            // 3. ارسال به جدول daily_reports
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
                 
-                // از دستور upsert استفاده می‌کنیم تا اگر قبلاً برای این روز ثبت کرده بود، روی همون آپدیت بشه (جلوگیری از ارور و دوبار ثبت شدن)
-                const response = await fetch(`${cleanUrl}/rest/v1/daily_reports`, {
+                const response = await fetch(`${cleanUrl}/rest/v1/daily_reports?on_conflict=chat_id,report_date`, {
                     method: 'POST',
                     headers: { 
                         'apikey': SUPABASE_KEY, 
@@ -331,10 +390,9 @@
 
                 if (!response.ok) throw new Error("مشکل در ارتباط با سرور");
 
-                // انیمیشن خروج شیک و پیام موفقیت
                 document.getElementById('appContent').style.opacity = '0';
                 setTimeout(() => {
-                    alert("🎉 خسته نباشی! گزارشت با موفقیت تو سیستم نشست.");
+                    alert(feedbackMsg); 
                     window.location.href = 'menu.html';
                 }, 400);
 
