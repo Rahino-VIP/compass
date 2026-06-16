@@ -232,7 +232,7 @@
         const userId = localStorage.getItem('qotbnama_user_id');
         if (!userId) {
             // اگر آیدی نبود، پرتش کن بیرون!
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
         }
 
         // ==========================================
@@ -332,7 +332,7 @@
         function logout() {
             if(confirm('آیا مطمئنی می‌خوای از حساب کاربری خارج بشی؟')) {
                 localStorage.clear(); // پاک کردن حافظه
-                window.location.href = 'login.html'; // پرتاب به صفحه لاگین
+                window.location.href = 'index.html'; // پرتاب به صفحه لاگین
             }
         }
     </script>
