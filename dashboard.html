@@ -43,7 +43,7 @@
         .rank-progress { width: 100%; background: rgba(255,255,255,0.2); height: 8px; border-radius: 10px; overflow: hidden; margin-top: 15px; }
         .rank-progress-bar { height: 100%; background: var(--accent-light); width: 0%; transition: 1s ease-out; }
 
-        /* 🏆 نوار افتخارات (Hero Stats) */
+        /* 🏆 نوار افتخارات */
         .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 30px; }
         .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 15px; border-radius: 16px; text-align: center; box-shadow: var(--shadow); }
         .stat-icon { font-size: 24px; display: block; margin-bottom: 5px; }
@@ -92,6 +92,7 @@
             <div style="width: 40px;"></div> 
         </div>
 
+        <!-- 👑 بنر لقب -->
         <div class="rank-banner">
             <div class="rank-title">مقام فعلی شما در سیستم:</div>
             <div class="rank-name" id="rankName">در حال محاسبه...</div>
@@ -101,6 +102,7 @@
             </div>
         </div>
 
+        <!-- 🏆 نوار افتخارات -->
         <div class="stats-grid">
             <div class="stat-card">
                 <span class="stat-icon">⏱️</span>
@@ -124,11 +126,13 @@
             </div>
         </div>
 
+        <!-- 📊 نمودار ترکیبی روند هفتگی -->
         <div class="section-title">روند پیشرفت شما (عملکرد هفتگی)</div>
         <div class="chart-container">
             <canvas id="comboChart"></canvas>
         </div>
 
+        <!-- 🍩 نمودار محبوب‌ترین درس -->
         <div class="section-title">سهم دروس از کل زمان</div>
         <div class="chart-container" style="text-align: center;">
             <div style="margin-bottom: 15px; font-size: 14px; font-weight: bold; color: var(--primary);">
@@ -137,20 +141,22 @@
             <div class="pie-box"><canvas id="pieChart"></canvas></div>
         </div>
 
+        <!-- 🌿 رادار لایف‌استایل -->
         <div class="section-title">رادار لایف‌استایل و ریکاوری</div>
         
         <div class="life-grid">
+            <!-- پروفایل خواب -->
             <div class="life-card">
                 <div class="life-info">
                     <h4 id="sleepProfileName">تیپ‌شناسی خواب</h4>
                     <p id="sleepProfileDesc">
-                        میانگین خواب کل: <br>
-                        میانگین بیداری: 
+                        <!-- اینجا اطلاعات کامل خواب پر میشه -->
                     </p>
                 </div>
                 <div id="sleepSvgBox" style="width: 50px; height: 50px; font-size: 45px; text-align: center; line-height: 50px;"></div>
             </div>
 
+            <!-- باتری گوشی -->
             <div class="life-card">
                 <div class="life-info">
                     <h4 id="batteryName">باتری تمرکز</h4>
@@ -160,6 +166,7 @@
             </div>
         </div>
 
+        <!-- 🎭 نوار حال روحی -->
         <div class="mood-bar-container">
             <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: var(--text-main);">
                 <span>آمار حال روحی</span>
@@ -190,7 +197,7 @@
 
         window.onload = async function() { await fetchAllData(); };
 
-        // تابع تبدیل تاریخ شمسی به تعداد روز (برای پیدا کردن فاصله‌ها)
+        // 🧮 فرمول دقیق محاسبه روزهای تقویم شمسی
         function getJalaliDays(dateStr) {
             let parts = dateStr.split('/');
             if(parts.length < 3) return 0;
@@ -200,7 +207,7 @@
             return days + d;
         }
 
-        // تبدیل "1403/03/25" به "25 خرداد"
+        // تبدیل 1403/03/25 به 25 خرداد
         function getShortPersianDate(dateStr) {
             let parts = dateStr.split('/');
             if(parts.length < 3) return dateStr;
@@ -235,12 +242,10 @@
             let maxTimeDay = 0; let maxTestsDay = 0;
             let subjectAgg = {}; 
 
-            let totalWake = 0; let totalSleepDuration = 0; let totalPhone = 0;
+            let totalWake = 0; let totalBedtime = 0; let totalSleepDuration = 0; let totalPhone = 0;
             let moodCounts = { 'عالی': 0, 'خوب': 0, 'معمولی': 0, 'بد': 0 };
 
-            // متغیرهای گروه‌بندی هفتگی
             let weeklyData = {};
-            let baseDay = getJalaliDays(reports[0].report_date);
 
             reports.forEach(r => {
                 let dayTime = 0; let dayTests = 0;
@@ -259,10 +264,11 @@
                 if (dayTests > maxTestsDay) maxTestsDay = dayTests;
 
                 // =====================================
-                // 📊 منطق گروه‌بندی هفتگی
+                // 📊 الگوریتم تقویم دقیق (شنبه تا جمعه)
                 // =====================================
-                let daysDiff = getJalaliDays(r.report_date) - baseDay;
-                let weekIndex = Math.floor(daysDiff / 7); // هر 7 روز در یک بلوک قرار می‌گیرد
+                // با اضافه کردن عدد 3، فرمول جوری تنظیم میشه که هفته‌ها دقیقاً از روز شنبه شروع بشن
+                let absoluteDays = getJalaliDays(r.report_date);
+                let weekIndex = Math.floor((absoluteDays + 3) / 7); 
                 
                 if(!weeklyData[weekIndex]) {
                     weeklyData[weekIndex] = { study: 0, tests: 0, startStr: r.report_date, endStr: r.report_date };
@@ -272,7 +278,7 @@
                 weeklyData[weekIndex].endStr = r.report_date;
 
                 // =====================================
-                // 🌿 پردازش خواب و لایف‌استایل
+                // 🌿 پردازش دقیق زمان‌های لایف‌استایل
                 // =====================================
                 if(r.lifestyle) {
                     let wStr = r.lifestyle.wakeToday || "07:00";
@@ -283,13 +289,16 @@
                     let wH = parseInt(wParts[0]) + (parseInt(wParts[1])/60);
                     let sH = parseInt(sParts[0]) + (parseInt(sParts[1])/60);
                     
-                    if (sH > 24) sH -= 24;
                     totalWake += wH;
 
-                    // محاسبه مدت زمان خواب
+                    // میانگین‌گیری از ساعت به خواب رفتن (حل مشکل رد شدن از نیمه‌شب)
+                    // اگر ساعت خواب قبل از 12 ظهر بود، یعنی رفته برای روز بعد، پس 24 بهش اضافه می‌کنیم تا میانگین درست دربیاد
+                    let adjustedBedtime = sH < 12 ? sH + 24 : sH; 
+                    totalBedtime += adjustedBedtime;
+
                     let sleepDuration = wH - sH;
                     if (sleepDuration < 0) sleepDuration += 24; 
-                    sleepDuration += nap; // اضافه کردن چرت
+                    sleepDuration += nap; 
                     totalSleepDuration += sleepDuration;
                     
                     totalPhone += parseFloat(r.lifestyle.phone) || 0;
@@ -303,9 +312,7 @@
             document.getElementById('val_max_time').innerText = maxTimeDay.toFixed(1);
             document.getElementById('val_max_tests').innerText = maxTestsDay;
 
-            // ==========================================
-            // 👑 سیستم رتبه‌بندی (گسترش یافته تا 2500)
-            // ==========================================
+            // سیستم رتبه‌بندی
             const ranksList = [
                 { max: 50, title: "مسافرِ مسیر 🚶‍♂️" },
                 { max: 150, title: "جستجوگر قطب‌نما 🧭" },
@@ -317,18 +324,14 @@
                 { max: 2500, title: "افسانه قطب‌نما 👑" }
             ];
 
-            let rank = "";
-            let target = 2500;
+            let rank = ""; let target = 2500;
             
             for(let i=0; i<ranksList.length; i++) {
                 if(totalTime < ranksList[i].max) {
-                    rank = ranksList[i].title;
-                    target = ranksList[i].max;
-                    break;
+                    rank = ranksList[i].title; target = ranksList[i].max; break;
                 }
             }
 
-            // اگر بالای 2500 بود (لقب نهایی بر اساس رشته)
             if (totalTime >= 2500) {
                 if(major.includes("تجربی")) rank = "دکترِ آینده 🩺";
                 else if(major.includes("ریاضی")) rank = "مهندسِ آینده 🏗️";
@@ -342,20 +345,15 @@
             setTimeout(() => { document.getElementById('rankProgressBar').style.width = progressPercent + '%'; }, 500);
             document.getElementById('rankSubtitle').innerText = `هدف بعدی: ${(target - totalTime).toFixed(1)} ساعت مانده`;
 
-            // ==========================================
-            // 📊 رسم نمودار ترکیبی هفتگی
-            // ==========================================
+            // رسم نمودار ترکیبی هفتگی
             let trendLabels = [];
             let trendTime = [];
             let trendTests = [];
 
-            // مرتب‌سازی کلیدها و ساخت لیبل‌های زیبا
             Object.keys(weeklyData).sort((a,b)=>a-b).forEach(key => {
                 let w = weeklyData[key];
                 let startLabel = getShortPersianDate(w.startStr);
                 let endLabel = getShortPersianDate(w.endStr);
-                
-                // لیبل: مثلاً "23 تا 29 خرداد" یا فقط یک تاریخ اگر اون هفته یک روز گزارش داشته
                 trendLabels.push(startLabel === endLabel ? startLabel : `${startLabel} تا ${endLabel}`);
                 trendTime.push(w.study);
                 trendTests.push(w.tests);
@@ -373,7 +371,7 @@
                 options: { responsive: true, scales: { y: { type: 'linear', position: 'right', title: {display:true, text:'ساعت'} }, y1: { type: 'linear', position: 'left', grid: {drawOnChartArea: false} } }, plugins: { legend: { labels: { font: { family: 'Vazirmatn' } } } } }
             });
 
-            // نمودار دایره‌ای محبوب‌ترین درس
+            // نمودار دایره‌ای
             let sortedSubjects = Object.keys(subjectAgg).sort((a,b) => subjectAgg[b] - subjectAgg[a]);
             if(sortedSubjects.length > 0) document.getElementById('favSubject').innerText = sortedSubjects[0];
             
@@ -387,47 +385,54 @@
             });
 
             // ==========================================
-            // 🌿 رادار لایف‌استایل
+            // 🌿 محاسبات رادار لایف‌استایل
             // ==========================================
             let daysCount = reports.length;
+            
             let avgWake = totalWake / daysCount;
+            let avgBedtime = totalBedtime / daysCount;
             let avgSleepDuration = totalSleepDuration / daysCount;
             
-            // تبدیل اعشار به قالب ساعت (مثلاً 7.5 میشه 07:30)
-            let avgWakeH = Math.floor(avgWake); let avgWakeM = Math.round((avgWake - avgWakeH) * 60);
-            let wakeText = `${avgWakeH < 10 ? '0'+avgWakeH : avgWakeH}:${avgWakeM === 0 ? '00' : avgWakeM}`;
+            // اصلاح ساعت به خواب رفتن (برگرداندن به قالب 24 ساعته)
+            if (avgBedtime >= 24) avgBedtime -= 24;
             
-            let avgSleepH = Math.floor(avgSleepDuration); let avgSleepM = Math.round((avgSleepDuration - avgSleepH) * 60);
-            let sleepText = `${avgSleepH < 10 ? '0'+avgSleepH : avgSleepH}:${avgSleepM === 0 ? '00' : avgSleepM}`;
+            // فرمت‌بندی زیبا برای ساعت‌ها
+            let formatTime = (timeNum) => {
+                let h = Math.floor(timeNum); 
+                let m = Math.round((timeNum - h) * 60);
+                if (m === 60) { h++; m = 0; }
+                if (h >= 24) h -= 24;
+                return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            };
 
-            let sleepEmoji = "";
-            let sleepTitle = "";
-            let sleepColor = "var(--text-main)";
+            let wakeText = formatTime(avgWake);
+            let bedtimeText = formatTime(avgBedtime);
+            let sleepText = formatTime(avgSleepDuration); // طول کل خواب
+
+            let sleepEmoji = ""; let sleepTitle = ""; let sleepColor = "var(--text-main)";
 
             if (avgSleepDuration >= 10) {
-                sleepTitle = "کوالا 🐨";
-                sleepColor = "var(--text-muted)";
-                sleepEmoji = "🐨";
+                sleepTitle = "کوالا 🐨"; sleepColor = "var(--text-muted)"; sleepEmoji = "🐨";
             } else if (avgWake <= 7.5) {
-                sleepTitle = "سحرخیز و پرانرژی ☀️";
-                sleepColor = "var(--accent)";
-                sleepEmoji = "☀️";
+                sleepTitle = "سحرخیز و پرانرژی ☀️"; sleepColor = "var(--accent)"; sleepEmoji = "☀️";
             } else {
-                sleepTitle = "جغدِ شب‌بیدار 🦉";
-                sleepColor = "var(--primary)";
-                sleepEmoji = "🦉";
+                sleepTitle = "جغدِ شب‌بیدار 🦉"; sleepColor = "var(--primary)"; sleepEmoji = "🦉";
             }
 
             document.getElementById('sleepProfileName').innerText = sleepTitle;
             document.getElementById('sleepProfileName').style.color = sleepColor;
-            document.getElementById('sleepProfileDesc').innerHTML = `میانگین خواب (با چرت): <strong style="color:var(--text-main)">${sleepText}</strong><br>میانگین بیداری: <strong style="color:var(--text-main)">${wakeText}</strong>`;
+            
+            // نمایش کامل 3 پارامتر خواب
+            document.getElementById('sleepProfileDesc').innerHTML = `
+                میانگین به خواب رفتن: <strong style="color:var(--text-main)">${bedtimeText}</strong><br>
+                میانگین بیداری: <strong style="color:var(--text-main)">${wakeText}</strong><br>
+                طول کل خواب (با چرت): <strong style="color:var(--text-main)">${sleepText}</strong>
+            `;
             document.getElementById('sleepSvgBox').innerText = sleepEmoji;
 
             // باتری گوشی
             let avgPhone = totalPhone / daysCount;
-            let batteryColor = "var(--success)";
-            let batteryFill = 80;
-            let batteryText = "تمرکز عالی";
+            let batteryColor = "var(--success)"; let batteryFill = 80; let batteryText = "تمرکز عالی";
 
             if(avgPhone > 3) { batteryColor = "var(--danger)"; batteryFill = 20; batteryText = "هشدار حواس‌پرتی!"; }
             else if (avgPhone > 1.5) { batteryColor = "var(--warning)"; batteryFill = 50; batteryText = "نیاز به کنترل"; }
