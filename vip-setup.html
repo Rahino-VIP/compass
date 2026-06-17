@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پیکربندی VIP | قطب‌نمای راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    
+    <style>
+        :root { 
+            --vip-bg: #0f172a; --vip-surface: #1e293b; --vip-border: #334155;
+            --gold: #f59e0b; --gold-light: #fbbf24; --gold-fade: rgba(245, 158, 11, 0.1);
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+            --danger: #ef4444; --shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--vip-bg); color: var(--text-main); line-height: 1.6; padding-bottom: 80px; }
+        
+        .app-container { max-width: 600px; margin: 0 auto; padding: 20px; animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 👑 هدر VIP */
+        .vip-header { text-align: center; margin-bottom: 30px; position: relative; padding: 25px 20px; background: linear-gradient(135deg, var(--vip-surface), rgba(245, 158, 11, 0.05)); border-radius: 24px; border: 1px solid var(--gold-fade); box-shadow: var(--shadow); overflow: hidden; }
+        .vip-header::before { content: '👑'; position: absolute; font-size: 100px; opacity: 0.05; right: -10px; top: -20px; transform: rotate(15deg); }
+        .vip-title { font-size: 22px; font-weight: 900; color: var(--gold); margin-bottom: 8px; text-shadow: 0 2px 10px rgba(245, 158, 11, 0.3); }
+        .vip-desc { font-size: 13px; color: var(--text-muted); line-height: 1.8; }
+
+        .section-title { font-size: 16px; font-weight: bold; color: var(--gold-light); margin: 35px 0 15px 0; display: flex; align-items: center; gap: 8px; border-bottom: 1px dashed var(--vip-border); padding-bottom: 10px; }
+        
+        /* 🎛️ فرم‌های ورودی */
+        .input-group { margin-bottom: 20px; }
+        .input-label { display: block; font-size: 13px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; }
+        select.modern-select, input.modern-input { width: 100%; padding: 15px; border-radius: 16px; border: 2px solid var(--vip-border); background: var(--vip-bg); color: var(--text-main); font-size: 14px; font-weight: bold; outline: none; transition: 0.3s; }
+        select.modern-select:focus, input.modern-input:focus { border-color: var(--gold); box-shadow: 0 0 0 4px var(--gold-fade); }
+
+        /* 🏫 کارت برنامه‌های کلاسی */
+        .class-card { background: rgba(255,255,255,0.02); border: 1px solid var(--vip-border); border-radius: 20px; padding: 20px; margin-bottom: 15px; position: relative; }
+        .del-btn { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s; font-size: 18px;}
+        .del-btn:hover { background: var(--danger); color: white; }
+        
+        /* 🔵 دایره‌های روزهای هفته */
+        .days-container { display: flex; justify-content: space-between; gap: 5px; margin: 15px 0 25px 0; direction: rtl; }
+        .day-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--vip-bg); border: 1px solid var(--vip-border); color: var(--text-muted); font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; user-select: none; }
+        .day-circle.active { background: var(--gold); border-color: var(--gold); color: #000; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); transform: scale(1.1); }
+
+        /* 🎚️ اسلایدرها */
+        .slider-group { background: var(--vip-surface); padding: 15px; border-radius: 14px; margin-bottom: 12px; border: 1px solid var(--vip-border); }
+        .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .slider-val { background: var(--vip-bg); color: var(--gold); padding: 4px 12px; border-radius: 10px; font-size: 14px; font-weight: 900; border: 1px solid var(--vip-border); }
+        input[type="range"] { width: 100%; accent-color: var(--gold); }
+
+        /* رتبه‌بندی ۵ ستاره‌ای دروس */
+        .skill-slider-val { background: rgba(245, 158, 11, 0.1); color: var(--gold); padding: 4px 10px; border-radius: 8px; font-size: 13px; font-weight: bold; }
+
+        .btn-add { background: transparent; border: 2px dashed var(--gold); color: var(--gold); width: 100%; padding: 15px; border-radius: 16px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
+        .btn-add:hover { background: var(--gold-fade); }
+
+        .btn-submit { background: linear-gradient(135deg, var(--gold), #d97706); color: #000; width: 100%; padding: 18px; border-radius: 20px; border: none; font-size: 18px; font-weight: 900; cursor: pointer; box-shadow: 0 15px 30px rgba(245, 158, 11, 0.2); margin-top: 40px; transition: 0.3s; }
+        .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--vip-bg); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
+        .spinner { font-size: 50px; animation: spin 1.5s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="loader-overlay" id="mainLoader">
+        <div class="spinner">⚙️</div>
+        <h3 style="color: var(--gold);">در حال بارگذاری تنظیمات...</h3>
+    </div>
+
+    <div class="app-container" id="appContent" style="display: none;">
+        
+        <div class="vip-header">
+            <h1 class="vip-title">پیکربندی هسته برنامه‌ریز</h1>
+            <p class="vip-desc">اطلاعاتت رو با دقت وارد کن تا هوش مصنوعی سیستم، برنامه هفتگیت رو دقیقاً مثل یک لباس شخصی‌دوزی‌شده برات طراحی کنه.</p>
+        </div>
+
+        <!-- 1. استراتژی و هدف‌گذاری -->
+        <div class="section-title">🎯 ۱. استراتژی ذهنی</div>
+        
+        <div class="input-group">
+            <label class="input-label">دوست داری پارت اول صبحت با کدوم درس شروع بشه؟ (قورباغه طلایی)</label>
+            <select class="modern-select" id="startSubject"></select>
+        </div>
+
+        <div class="input-group">
+            <label class="input-label">دوست داری پارت آخر شبت با کدوم درس تموم بشه؟ (درس آرام‌بخش)</label>
+            <select class="modern-select" id="endSubject"></select>
+        </div>
+
+        <!-- 2. برنامه ثابت کلاسی و مدرسه -->
+        <div class="section-title">🏫 ۲. تقویم کلاس‌ها و مدرسه</div>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">روزها و ساعت‌هایی که درگیر کلاس هستی رو مشخص کن تا تو اون تایم‌ها برنامه نذاریم.</p>
+        
+        <div id="classesContainer"></div>
+        <button class="btn-add" onclick="addClassCard()">➕ افزودن یک کلاس / تایم مدرسه جدید</button>
+
+        <!-- 3. رادار نقاط قوت و ضعف -->
+        <div class="section-title">📊 ۳. ارزیابی سطح دروس</div>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">از <b>۱ (ضعیف و نیاز به کار زیاد)</b> تا <b>۵ (نقطه قوت و مسلط)</b> به خودت نمره بده تا حجم پارت‌ها بالانس بشه.</p>
+        <div id="skillsContainer">
+            <!-- اسلایدر دروس اینجا لود می‌شه -->
+        </div>
+
+        <!-- 4. آزمون‌ها -->
+        <div class="section-title">📝 ۴. برنامه آزمون‌ها</div>
+        <div class="input-group">
+            <label class="input-label">برنامه آزمونِ اصلیت چیه؟</label>
+            <select class="modern-select" id="examType">
+                <option value="قلم‌چی (جمعه‌ها)">قلم‌چی (جمعه‌ها دوهفته یک‌بار)</option>
+                <option value="ماز (پنجشنبه‌ها)">ماز (پنجشنبه‌ها دوهفته یک‌بار)</option>
+                <option value="گزینه دو">گزینه دو</option>
+                <option value="ترکیبی (قلم‌چی + ماز)">ترکیبی (قلم‌چی + ماز)</option>
+                <option value="بدون آزمون">فعلاً آزمون نمی‌دم</option>
+            </select>
+        </div>
+
+        <button class="btn-submit" id="submitBtn" onclick="saveVipSettings()">ذخیره و ورود به داشبورد برنامه 🚀</button>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // 🔗 تنظیمات اتصال سوپابیس
+        // ==========================================
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+
+        const userId = localStorage.getItem('qotbnama_user_id');
+        if (!userId) window.location.href = 'index.html';
+
+        let globalSubjects = [];
+        let classCount = 0;
+        let existingSettings = null;
+
+        const subjectsDict = { 
+            "دهم": { "ریاضی": ["هندسه ۱", "ریاضی ۱", "فیزیک ۱", "شیمی ۱", "عمومی"], "تجربی": ["زیست ۱", "ریاضی ۱", "فیزیک ۱", "شیمی ۱", "عمومی"], "انسانی": ["ریاضی و آمار ۱", "علوم و فنون ۱", "عربی ۱", "تاریخ و جغرافیا", "جامعه‌شناسی", "فلسفه و منطق", "عمومی"] }, 
+            "یازدهم": { "ریاضی": ["حسابان ۱", "هندسه ۲", "آمار و احتمال", "فیزیک ۲", "شیمی ۲", "عمومی"], "تجربی": ["زیست ۲", "ریاضی ۲", "فیزیک ۲", "شیمی ۲", "زمین‌شناسی", "عمومی"], "انسانی": ["ریاضی و آمار ۲", "علوم و فنون ۲", "عربی ۲", "تاریخ و جغرافیا", "جامعه‌شناسی", "فلسفه و منطق", "عمومی"] }, 
+            "دوازدهم": { "ریاضی": ["حسابان ۲", "هندسه ۳", "گسسته", "فیزیک ۳", "شیمی ۳", "پایه", "عمومی"], "تجربی": ["ریاضی ۳", "زیست ۳", "فیزیک ۳", "شیمی ۳", "پایه", "عمومی"], "انسانی": ["علوم و فنون ۳", "ریاضی ۳", "عربی ۳", "تاریخ و جغرافیا", "جامعه‌شناسی", "فلسفه", "پایه", "عمومی"] } 
+        };
+
+        window.onload = async function() {
+            await fetchUserDetails();
+            await fetchExistingSettings(); // خوندن دیتای قبلی در صورت وجود
+            populateUI();
+            
+            document.getElementById('mainLoader').style.display = 'none';
+            document.getElementById('appContent').style.display = 'block';
+        };
+
+        async function fetchUserDetails() {
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                const response = await fetch(`${cleanUrl}/rest/v1/students?chat_id=eq.${userId}&select=grade,major`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+                const data = await response.json();
+                if(data.length > 0) {
+                    let g = data[0].grade || ""; let m = data[0].major || "";
+                    let targetGrade = g.includes("یازدهم") ? "یازدهم" : (g.includes("دوازدهم") || g.includes("پشت کنکوری")) ? "دوازدهم" : "دهم";
+                    let targetField = m.includes("ریاضی") ? "ریاضی" : m.includes("انسانی") ? "انسانی" : "تجربی";
+                    globalSubjects = subjectsDict[targetGrade][targetField] || ["تخصصی ۱", "تخصصی ۲", "تخصصی ۳", "عمومی"];
+                }
+            } catch (e) { globalSubjects = ["درس تخصصی", "درس عمومی"]; }
+        }
+
+        async function fetchExistingSettings() {
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                const response = await fetch(`${cleanUrl}/rest/v1/vip_settings?chat_id=eq.${userId}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+                const data = await response.json();
+                if (data.length > 0) {
+                    existingSettings = data[0];
+                }
+            } catch (e) { console.error("Error fetching settings:", e); }
+        }
+
+        function populateUI() {
+            let optionsHtml = globalSubjects.map(s => `<option value="${s}">${s}</option>`).join('');
+            document.getElementById('startSubject').innerHTML = optionsHtml;
+            document.getElementById('endSubject').innerHTML = optionsHtml;
+
+            let skillsContainer = document.getElementById('skillsContainer');
+            skillsContainer.innerHTML = '';
+            
+            // تولید اسلایدر ارزیابی دروس (1 تا 5)
+            globalSubjects.forEach((subj, index) => {
+                // اگر دیتای قبلی داشتیم، نمره‌اش رو پیدا کن، وگرنه دیفالت 3 بذار
+                let defaultScore = 3;
+                if (existingSettings && existingSettings.subject_skills) {
+                    let found = existingSettings.subject_skills.find(s => s.subject === subj);
+                    if (found) defaultScore = found.score;
+                }
+
+                skillsContainer.innerHTML += `
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">سطح شما در ${subj}</span>
+                        <span class="skill-slider-val" id="v_skill_${index}">امتیاز: ${defaultScore}</span>
+                    </div>
+                    <input type="range" class="skill-range" data-subj="${subj}" min="1" max="5" step="1" value="${defaultScore}" oninput="document.getElementById('v_skill_${index}').innerText = 'امتیاز: ' + this.value">
+                </div>
+                `;
+            });
+
+            // پر کردن مقادیر قبلی در صورت وجود
+            if (existingSettings) {
+                if (existingSettings.start_subject) document.getElementById('startSubject').value = existingSettings.start_subject;
+                if (existingSettings.end_subject) document.getElementById('endSubject').value = existingSettings.end_subject;
+                if (existingSettings.exam_type) document.getElementById('examType').value = existingSettings.exam_type;
+
+                if (existingSettings.class_schedule && existingSettings.class_schedule.length > 0) {
+                    existingSettings.class_schedule.forEach(cls => {
+                        addClassCard(cls);
+                    });
+                } else {
+                    addClassCard(); // یه دونه خالی اگه کلاس نداشت
+                }
+            } else {
+                addClassCard(); // حالت پیش‌فرض برای بار اول
+            }
+        }
+
+        // 🏫 مدیریت کلاس‌ها
+        function addClassCard(existingClass = null) {
+            classCount++;
+            const container = document.getElementById('classesContainer');
+            const card = document.createElement('div');
+            card.className = 'class-card';
+            card.id = `class_${classCount}`;
+            
+            let nameVal = existingClass ? existingClass.name : "";
+            let startNum = existingClass ? existingClass.startNum : 16;
+            let endNum = existingClass ? existingClass.endNum : 17.5;
+            let days = existingClass ? existingClass.days : [];
+
+            let startLabel = formatTimeDisplay(startNum);
+            let endLabel = formatTimeDisplay(endNum);
+
+            const isDayActive = (d) => days.includes(d) ? 'active' : '';
+
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" class="modern-input c-name" placeholder="نام برنامه (مثلاً مدرسه، کلاس فیزیک...)" value="${nameVal}" style="flex:1; padding: 12px 15px;">
+                    <button class="del-btn" onclick="document.getElementById('class_${classCount}').remove()">🗑️</button>
+                </div>
+                
+                <label class="input-label">چه روزهایی این برنامه رو داری؟</label>
+                <div class="days-container">
+                    <div class="day-circle ${isDayActive('شنبه')}" onclick="this.classList.toggle('active')" data-day="شنبه">ش</div>
+                    <div class="day-circle ${isDayActive('یکشنبه')}" onclick="this.classList.toggle('active')" data-day="یکشنبه">ی</div>
+                    <div class="day-circle ${isDayActive('دوشنبه')}" onclick="this.classList.toggle('active')" data-day="دوشنبه">د</div>
+                    <div class="day-circle ${isDayActive('سه‌شنبه')}" onclick="this.classList.toggle('active')" data-day="سه‌شنبه">س</div>
+                    <div class="day-circle ${isDayActive('چهارشنبه')}" onclick="this.classList.toggle('active')" data-day="چهارشنبه">چ</div>
+                    <div class="day-circle ${isDayActive('پنجشنبه')}" onclick="this.classList.toggle('active')" data-day="پنجشنبه">پ</div>
+                    <div class="day-circle ${isDayActive('جمعه')}" onclick="this.classList.toggle('active')" data-day="جمعه">ج</div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header"><span class="slider-label">ساعت شروع</span><span class="slider-val" id="v_start_${classCount}">${startLabel}</span></div>
+                    <input type="range" class="c-start" min="6" max="23" step="0.5" value="${startNum}" oninput="updateTimeFormat(this.value, 'v_start_${classCount}')">
+                </div>
+                <div class="slider-group" style="margin-bottom:0;">
+                    <div class="slider-header"><span class="slider-label">ساعت پایان</span><span class="slider-val" id="v_end_${classCount}">${endLabel}</span></div>
+                    <input type="range" class="c-end" min="6" max="24" step="0.5" value="${endNum}" oninput="updateTimeFormat(this.value, 'v_end_${classCount}')">
+                </div>
+            `;
+            container.appendChild(card);
+        }
+
+        function updateTimeFormat(val, labelId) {
+            document.getElementById(labelId).innerText = formatTimeDisplay(val);
+        }
+
+        function formatTimeDisplay(val) {
+            let h = Math.floor(val); let m = (val - h) * 60; 
+            if (h >= 24) h -= 24;
+            return (h < 10 ? '0'+h : h) + ':' + (m === 0 ? '00' : '30');
+        }
+
+        // 🚀 ذخیره اطلاعات در دیتابیس
+        async function saveVipSettings() {
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "در حال ثبت در هسته هوشمند... ⏳";
+            btn.disabled = true;
+
+            // استخراج ارزیابی دروس (بازه 1 تا 5)
+            let skills = [];
+            document.querySelectorAll('.skill-range').forEach(input => {
+                skills.push({ subject: input.dataset.subj, score: parseInt(input.value) });
+            });
+
+            // استخراج کلاس‌ها
+            let classesData = [];
+            document.querySelectorAll('.class-card').forEach(card => {
+                let name = card.querySelector('.c-name').value.trim();
+                let activeDays = [];
+                card.querySelectorAll('.day-circle.active').forEach(circle => activeDays.push(circle.dataset.day));
+                
+                let startTime = card.querySelector('.c-start').value;
+                let endTime = card.querySelector('.c-end').value;
+
+                if (name !== "" && activeDays.length > 0) {
+                    classesData.push({
+                        name: name,
+                        days: activeDays,
+                        start: document.getElementById('v_start_' + card.id.split('_')[1]).innerText,
+                        end: document.getElementById('v_end_' + card.id.split('_')[1]).innerText,
+                        startNum: parseFloat(startTime),
+                        endNum: parseFloat(endTime)
+                    });
+                }
+            });
+
+            const payload = {
+                chat_id: userId,
+                exam_type: document.getElementById('examType').value,
+                start_subject: document.getElementById('startSubject').value,
+                end_subject: document.getElementById('endSubject').value,
+                subject_skills: skills,
+                class_schedule: classesData,
+                updated_at: new Date().toISOString()
+            };
+
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                const response = await fetch(`${cleanUrl}/rest/v1/vip_settings?on_conflict=chat_id`, {
+                    method: 'POST',
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("Server Error");
+
+                document.getElementById('appContent').style.opacity = '0';
+                setTimeout(() => { 
+                    alert("👑 تنظیمات VIP شما با موفقیت ذخیره شد."); 
+                    // بازگشت به داشبورد اصلی برنامه‌ریزی
+                    window.location.href = 'schedule.html'; 
+                }, 500);
+
+            } catch (error) {
+                alert("⚠️ اتصال به سرور برقرار نشد.");
+                btn.innerText = "ذخیره و ورود به داشبورد برنامه 🚀";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
