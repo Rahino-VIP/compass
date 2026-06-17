@@ -5,87 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ثبت گزارش | قطب‌نمای راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
-    
     <style>
-        :root { 
-            --primary: #1e3a8a; --primary-light: #3b82f6; --primary-fade: rgba(30, 58, 138, 0.05);
-            --accent: #d97706; --accent-light: #f59e0b;
-            --bg-color: #f8fafc; --surface: #ffffff;
-            --text-main: #0f172a; --text-muted: #64748b;
-            --border: #e2e8f0; --success: #10b981; --danger: #ef4444;
-            --shadow: 0 10px 25px rgba(0,0,0,0.05);
-        }
-
-        [data-theme="dark"] {
-            --primary: #3b82f6; --primary-fade: rgba(59, 130, 246, 0.1);
-            --accent: #f59e0b; --bg-color: #0f172a; --surface: #1e293b;
-            --text-main: #f8fafc; --text-muted: #94a3b8;
-            --border: #334155; --shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-
+        :root { --primary: #1e3a8a; --primary-light: #3b82f6; --primary-fade: rgba(30, 58, 138, 0.05); --accent: #d97706; --bg-color: #f8fafc; --surface: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0; --success: #10b981; --danger: #ef4444; --shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        [data-theme="dark"] { --primary: #3b82f6; --primary-fade: rgba(59, 130, 246, 0.1); --accent: #f59e0b; --bg-color: #0f172a; --surface: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; --shadow: 0 10px 25px rgba(0,0,0,0.3); }
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 120px; transition: 0.3s; }
-        
         .app-container { max-width: 600px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* 🎩 هدر ناوبری */
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .back-btn { background: var(--surface); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; box-shadow: var(--shadow); }
         .page-title { font-size: 18px; font-weight: 900; color: var(--primary); }
-
-        /* 🗓️ اسلایدر افقی تاریخ */
         .date-slider { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 25px; scrollbar-width: none; }
         .date-slider::-webkit-scrollbar { display: none; }
         .date-chip { flex: 0 0 auto; background: var(--surface); border: 2px solid var(--border); padding: 12px 20px; border-radius: 16px; text-align: center; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.02); min-width: 90px;}
         .date-chip.active { background: var(--primary); border-color: var(--primary); color: white; transform: scale(1.05); box-shadow: 0 8px 15px rgba(30, 58, 138, 0.2); }
         .date-chip span { display: block; font-size: 14px; font-weight: bold; }
         .date-chip small { font-size: 11px; opacity: 0.8; }
-        
-        /* استایل روزهای ثبت شده */
         .date-chip.completed { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
         .date-chip.completed .status-badge { color: var(--success); font-size: 11px; font-weight: bold; margin-bottom: 4px; display: block; }
         .date-chip.active.completed { background: var(--success); border-color: var(--success); color: white; }
         .date-chip.active.completed .status-badge { color: white; }
-
         .section-title { font-size: 16px; font-weight: bold; color: var(--text-muted); margin: 25px 0 15px 0; display: flex; align-items: center; gap: 8px; }
         .section-title::before { content: ''; display: block; width: 6px; height: 18px; background: var(--accent); border-radius: 10px; }
-
-        /* 🃏 کارت‌های دروس */
         .course-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: var(--shadow); position: relative; animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
         .del-btn { position: absolute; top: 15px; left: 15px; background: rgba(239, 68, 68, 0.1); color: var(--danger); border: none; width: 30px; height: 30px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
-        
         select.modern-select { width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 15px; font-weight: bold; margin-bottom: 15px; outline: none; }
         select.modern-select:focus { border-color: var(--primary); }
-
-        /* 🎚️ اسلایدرها */
         .slider-group { background: var(--primary-fade); padding: 15px; border-radius: 14px; margin-bottom: 10px; border: 1px solid var(--border); }
         .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .slider-label { font-size: 13px; font-weight: bold; color: var(--text-main); }
         .slider-val { background: var(--surface); color: var(--primary); padding: 4px 12px; border-radius: 10px; font-size: 14px; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         input[type="range"] { width: 100%; accent-color: var(--accent); }
-
         .btn-add { background: transparent; border: 2px dashed var(--accent); color: var(--accent); width: 100%; padding: 15px; border-radius: 16px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
         .btn-add:hover { background: rgba(217, 119, 6, 0.05); }
-
-        /* 🎭 حال روحی */
         .mood-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
         .mood-btn { background: var(--surface); border: 2px solid var(--border); padding: 15px 5px; border-radius: 16px; text-align: center; cursor: pointer; transition: 0.2s; }
         .mood-btn span { font-size: 26px; display: block; margin-bottom: 5px; }
         .mood-btn small { font-size: 12px; font-weight: bold; color: var(--text-muted); }
         .mood-btn.active { border-color: var(--primary); background: var(--primary-fade); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(30, 58, 138, 0.15); }
-
-        /* 🗑️ دکمه حذف گزارش */
         .btn-delete-report { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px dashed var(--danger); width: 100%; padding: 15px; border-radius: 16px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.2s; }
         .btn-delete-report:hover { background: var(--danger); color: white; }
-
-        /* 🚀 دکمه شناور ثبت نهایی */
         .bottom-actions { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
         .fab-submit { background: linear-gradient(135deg, var(--primary), #312e81); color: white; padding: 18px; border-radius: 20px; border: none; font-size: 18px; font-weight: 900; box-shadow: 0 15px 30px rgba(30, 58, 138, 0.3); cursor: pointer; transition: 0.3s; width: 100%; }
         .fab-submit:disabled { opacity: 0.7; cursor: not-allowed; }
-
-        /* 🪟 لودینگ روی صفحه */
         .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-color); display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
         .spinner { font-size: 60px; animation: spin 1.5s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -99,7 +62,6 @@
     </div>
 
     <div class="app-container" id="appContent" style="display: none;">
-        
         <div class="nav-header">
             <a href="menu.html" class="back-btn">🔙</a>
             <div class="page-title">ثبت گزارش عملکرد</div>
@@ -114,22 +76,18 @@
         <button class="btn-add" onclick="addCourseCard()">➕ اضافه کردن درس جدید</button>
 
         <div class="section-title">🌿 لایف‌استایل و ریکاوری</div>
-        
         <div class="slider-group">
             <div class="slider-header"><span class="slider-label">خواب دیشب</span><span class="slider-val" id="val_sleep">23:00</span></div>
             <input type="range" id="life_sleep" min="21" max="27" step="0.5" value="23" oninput="updateTimeFormat(this.value, 'val_sleep')">
         </div>
-        
         <div class="slider-group">
             <div class="slider-header"><span class="slider-label">بیداری امروز</span><span class="slider-val" id="val_wake">07:00</span></div>
             <input type="range" id="life_wake" min="4" max="12" step="0.5" value="7" oninput="updateTimeFormat(this.value, 'val_wake')">
         </div>
-
         <div class="slider-group">
             <div class="slider-header"><span class="slider-label">زمان در فضای مجازی</span><span class="slider-val" id="val_phone">1.5 ساعت</span></div>
             <input type="range" id="life_phone" min="0" max="5" step="0.5" value="1.5" oninput="document.getElementById('val_phone').innerText = this.value + (this.value==5?'+':'') + ' ساعت'">
         </div>
-
         <div class="slider-group">
             <div class="slider-header"><span class="slider-label">چرت و استراحت روزانه</span><span class="slider-val" id="val_nap">0 ساعت</span></div>
             <input type="range" id="life_nap" min="0" max="3" step="0.5" value="0" oninput="document.getElementById('val_nap').innerText = this.value + (this.value==3?'+':'') + ' ساعت'">
@@ -145,7 +103,6 @@
         <input type="hidden" id="life_mood" value="خوب">
 
         <button class="btn-delete-report" onclick="deleteReport()">🗑️ پاک کردن کل گزارشِ این روز</button>
-
     </div>
 
     <div class="bottom-actions">
@@ -153,44 +110,25 @@
     </div>
 
     <script>
-        // ==========================================
-        // 🔗 تنظیمات سوپابیس
-        // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
 
         const userId = localStorage.getItem('qotbnama_user_id');
         if (!userId) window.location.href = 'index.html';
 
-        let selectedDate = '';
-        let courseCount = 0;
-        let globalSubjects = [];
-        let completedDates = []; // آرایه برای نگهداری روزهای ثبت شده
+        let selectedDate = ''; let courseCount = 0; let globalSubjects = []; let completedDates = [];
 
         const subjectsDict = { 
-            "دهم": { 
-                "ریاضی": ["هندسه 1", "ریاضی 1", "فیزیک 1", "شیمی 1", "فارسی 1", "عربی 1", "دینی 1", "زبان 1", "جغرافیا ایران", "سایر"], 
-                "تجربی": ["زیست 1", "ریاضی 1", "فیزیک 1", "شیمی 1", "فارسی 1", "عربی 1", "دینی 1", "زبان 1", "جغرافیا ایران", "سایر"], 
-                "انسانی": ["ریاضی و آمار ۱", "اقتصاد", "علوم و فنون ۱", "عربی انسانی ۱", "تاریخ ۱", "جامعه‌شناسی ۱", "منطق", "فارسی ۱", "دینی ۱", "زبان ۱", "جغرافیا ۱", "سایر"] 
-            }, 
-            "یازدهم": { 
-                "ریاضی": ["حسابان 1", "هندسه 2", "آمار و احتمال", "فیزیک 2", "شیمی 2", "فارسی", "عربی", "دینی", "زبان", "تاریخ معاصر", "زمین‌شناسی", "سایر"], 
-                "تجربی": ["زیست 2", "ریاضی 2", "فیزیک 2", "شیمی 2", "زمین‌شناسی", "فارسی", "عربی", "دینی", "زبان", "تاریخ معاصر", "سایر"], 
-                "انسانی": ["ریاضی و آمار ۲", "علوم و فنون ۲", "عربی انسانی ۲", "تاریخ ۲", "جامعه‌شناسی ۲", "فلسفه ۱", "روان‌شناسی", "فارسی ۲", "دینی ۲", "زبان ۲", "سایر"] 
-            }, 
-            "دوازدهم": { 
-                "ریاضی": ["حسابان 2", "ریاضیات پایه", "هندسه 1", "هندسه 2", "هندسه 3", "گسسته", "آمار و احتمال", "فیزیک 1", "فیزیک 2", "فیزیک 3", "شیمی 1", "شیمی 2", "شیمی 3", "فارسی", "عربی", "دینی", "زبان", "سلامت و بهداشت", "هویت اجتماعی", "سایر"], 
-                "تجربی": ["ریاضیات پایه", "ریاضی 3", "زیست 1", "زیست 2", "زیست 3", "زمین شناسی", "فیزیک 1", "فیزیک 2", "فیزیک 3", "شیمی 1", "شیمی 2", "شیمی 3", "فارسی", "عربی", "دینی", "زبان", "سلامت و بهداشت", "هویت اجتماعی", "سایر"], 
-                "انسانی": ["علوم و فنون ۱", "علوم و فنون ۲", "علوم و فنون ۳", "ریاضی و آمار ۱", "ریاضی و آمار ۲", "ریاضی و آمار ۳", "عربی انسانی ۱", "عربی انسانی ۲", "عربی انسانی ۳", "تاریخ ۱", "تاریخ ۲", "تاریخ ۳", "جامعه‌شناسی ۱", "جامعه‌شناسی ۲", "جامعه‌شناسی ۳", "جغرافیا ۱", "جغرافیا ۲", "جغرافیا ۳", "منطق", "فلسفه ۱", "فلسفه ۲", "اقتصاد", "روان‌شناسی", "فارسی", "دینی", "زبان", "سلامت و بهداشت", "سایر"] 
-            } 
+            "دهم": { "ریاضی": ["هندسه 1", "ریاضی 1", "فیزیک 1", "شیمی 1", "فارسی 1", "عربی 1", "دینی 1", "زبان 1", "جغرافیا ایران", "سایر"], "تجربی": ["زیست 1", "ریاضی 1", "فیزیک 1", "شیمی 1", "فارسی 1", "عربی 1", "دینی 1", "زبان 1", "جغرافیا ایران", "سایر"], "انسانی": ["ریاضی و آمار ۱", "اقتصاد", "علوم و فنون ۱", "عربی انسانی ۱", "تاریخ ۱", "جامعه‌شناسی ۱", "منطق", "فارسی ۱", "دینی ۱", "زبان ۱", "جغرافیا ۱", "سایر"] }, 
+            "یازدهم": { "ریاضی": ["حسابان 1", "هندسه 2", "آمار و احتمال", "فیزیک 2", "شیمی 2", "فارسی", "عربی", "دینی", "زبان", "تاریخ معاصر", "زمین‌شناسی", "سایر"], "تجربی": ["زیست 2", "ریاضی 2", "فیزیک 2", "شیمی 2", "زمین‌شناسی", "فارسی", "عربی", "دینی", "زبان", "تاریخ معاصر", "سایر"], "انسانی": ["ریاضی و آمار ۲", "علوم و فنون ۲", "عربی انسانی ۲", "تاریخ ۲", "جامعه‌شناسی ۲", "فلسفه ۱", "روان‌شناسی", "فارسی ۲", "دینی ۲", "زبان ۲", "سایر"] }, 
+            "دوازدهم": { "ریاضی": ["حسابان 2", "ریاضیات پایه", "هندسه 1", "هندسه 2", "هندسه 3", "گسسته", "آمار و احتمال", "فیزیک 1", "فیزیک 2", "فیزیک 3", "شیمی 1", "شیمی 2", "شیمی 3", "فارسی", "عربی", "دینی", "زبان", "سلامت و بهداشت", "هویت اجتماعی", "سایر"], "تجربی": ["ریاضیات پایه", "ریاضی 3", "زیست 1", "زیست 2", "زیست 3", "زمین شناسی", "فیزیک 1", "فیزیک 2", "فیزیک 3", "شیمی 1", "شیمی 2", "شیمی 3", "فارسی", "عربی", "دینی", "زبان", "سلامت و بهداشت", "هویت اجتماعی", "سایر"], "انسانی": ["علوم و فنون ۱", "علوم و فنون ۲", "علوم و فنون ۳", "ریاضی و آمار ۱", "ریاضی و آمار ۲", "ریاضی و آمار ۳", "عربی انسانی ۱", "عربی انسانی ۲", "عربی انسانی ۳", "تاریخ ۱", "تاریخ ۲", "تاریخ ۳", "جامعه‌شناسی ۱", "جامعه‌شناسی ۲", "جامعه‌شناسی ۳", "جغرافیا ۱", "جغرافیا ۲", "جغرافیا ۳", "منطق", "فلسفه ۱", "فلسفه ۲", "اقتصاد", "روان‌شناسی", "فارسی", "دینی", "زبان", "سلامت و بهداشت", "سایر"] } 
         };
 
         window.onload = async function() {
             await fetchUserDetails(); 
-            await fetchCompletedDates(); // چک کردن روزهای ثبت شده قبل از چیدن تقویم
+            await fetchCompletedDates();
             generateDateChips(); 
             addCourseCard(); 
-            
             document.getElementById('mainLoader').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
             document.getElementById('submitBtn').style.display = 'block';
@@ -199,15 +137,13 @@
         async function fetchUserDetails() {
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
-                const response = await fetch(`${cleanUrl}/rest/v1/students?chat_id=eq.${userId}&select=grade,major`, {
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                });
+                const response = await fetch(`${cleanUrl}/rest/v1/students?chat_id=eq.${userId}&select=grade,major`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
                 const data = await response.json();
                 if(data.length > 0) {
                     let g = data[0].grade || ""; let m = data[0].major || "";
                     let targetGrade = g.includes("یازدهم") ? "یازدهم" : (g.includes("دوازدهم") || g.includes("پشت کنکوری")) ? "دوازدهم" : "دهم";
                     let targetField = m.includes("ریاضی") ? "ریاضی" : m.includes("انسانی") ? "انسانی" : "تجربی";
-                    globalSubjects = subjectsDict[targetGrade][targetField] || ["درس عمومی", "تخصصی پایه", "تخصصی دوازدهم"];
+                    globalSubjects = subjectsDict[targetGrade][targetField] || ["درس عمومی", "تخصصی پایه"];
                 }
             } catch (e) { globalSubjects = ["درس عمومی", "درس تخصصی"]; }
         }
@@ -215,45 +151,36 @@
         async function fetchCompletedDates() {
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
-                const response = await fetch(`${cleanUrl}/rest/v1/daily_reports?chat_id=eq.${userId}&select=report_date`, {
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                });
+                const response = await fetch(`${cleanUrl}/rest/v1/daily_reports?chat_id=eq.${userId}&select=report_date`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
                 const data = await response.json();
                 completedDates = data.map(item => item.report_date);
-            } catch (e) { console.error(e); }
+            } catch (e) {}
         }
 
         function generateDateChips() {
             const container = document.getElementById('dateSlider');
             const labels = ["امروز", "دیروز", "پریروز", "۳ روز پیش", "۴ روز پیش", "۵ روز پیش", "۶ روز پیش"];
-            
             for(let i=0; i<7; i++) {
                 let d = new Date(); d.setDate(d.getDate() - i);
                 let shamsi = new Intl.DateTimeFormat('fa-IR', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(d);
                 let shamsiEng = shamsi.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); 
-                
                 let isCompleted = completedDates.includes(shamsiEng);
                 let chip = document.createElement('div');
                 chip.className = `date-chip ${isCompleted ? 'completed' : ''} ${i===0 ? 'active' : ''}`;
-                
                 let statusHtml = isCompleted ? `<span class="status-badge">✅ ثبت شده</span>` : ``;
                 chip.innerHTML = `${statusHtml}<span>${labels[i]}</span><small>${shamsi}</small>`;
-                
                 chip.onclick = () => handleDateClick(chip, shamsiEng, isCompleted);
                 container.appendChild(chip);
-
                 if(i===0) selectedDate = shamsiEng; 
             }
         }
 
         function handleDateClick(element, dateStr, isCompleted) {
             if (dateStr === selectedDate) return; 
-            
             if (isCompleted) {
-                let res = confirm("⚠️ رفیق، تو قبلاً گزارش این روز رو تو سیستم ثبت کردی!\nآیا می‌خوای اطلاعات قبلیت پاک بشه و از اول برای این روز گزارش بنویسی؟");
-                if(!res) return; // اگر پشیمون شد، هیچی تغییر نمی‌کنه
+                let res = confirm("⚠️ تو قبلاً گزارش این روز رو ثبت کردی! می‌خوای از اول بنویسی و قبلی پاک بشه؟");
+                if(!res) return;
             }
-            
             document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('active'));
             element.classList.add('active');
             selectedDate = dateStr;
@@ -263,25 +190,19 @@
             courseCount++;
             const container = document.getElementById('courseContainer');
             const div = document.createElement('div');
-            div.className = 'course-card';
-            div.id = `course_${courseCount}`;
-
+            div.className = 'course-card'; div.id = `course_${courseCount}`;
             let optionsHtml = globalSubjects.map(s => `<option value="${s}">${s}</option>`).join('');
-            
             div.innerHTML = `
                 ${courseCount > 1 ? `<button class="del-btn" onclick="document.getElementById('${div.id}').remove()">🗑️</button>` : ''}
                 <select class="modern-select c-name">${optionsHtml}</select>
-                
                 <div class="slider-group">
                     <div class="slider-header"><span class="slider-label">کلاس/مدرسه (آموزش)</span><span class="slider-val" id="v_edu_${courseCount}">0 ساعت</span></div>
                     <input type="range" class="c-edu" min="0" max="10" step="0.5" value="0" oninput="document.getElementById('v_edu_${courseCount}').innerText = this.value + ' ساعت'">
                 </div>
-                
                 <div class="slider-group">
                     <div class="slider-header"><span class="slider-label">مطالعه شخصی (تست/تشریحی)</span><span class="slider-val" id="v_std_${courseCount}">0 ساعت</span></div>
                     <input type="range" class="c-std" min="0" max="10" step="0.5" value="0" oninput="document.getElementById('v_std_${courseCount}').innerText = this.value + ' ساعت'">
                 </div>
-
                 <div class="slider-group" style="background: rgba(217, 119, 6, 0.05); border-color: rgba(217, 119, 6, 0.2);">
                     <div class="slider-header"><span class="slider-label">تعداد تست زده شده</span><span class="slider-val" style="color:var(--accent);" id="v_tst_${courseCount}">0 تست</span></div>
                     <input type="range" class="c-tst" min="0" max="400" step="5" value="0" oninput="document.getElementById('v_tst_${courseCount}').innerText = this.value + ' تست'">
@@ -298,41 +219,27 @@
 
         function setMood(elem, val) {
             document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
-            elem.classList.add('active'); 
-            document.getElementById("life_mood").value = val;
+            elem.classList.add('active'); document.getElementById("life_mood").value = val;
         }
 
         async function deleteReport() {
-            if(!confirm(`آیا مطمئنی می‌خوای کل گزارشِ تاریخ (${selectedDate}) رو از سیستم پاک کنی؟ این کار قابل برگشت نیست!`)) return;
-            
+            if(!confirm(`مطمئنی کل گزارشِ (${selectedDate}) پاک بشه؟`)) return;
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
-                const response = await fetch(`${cleanUrl}/rest/v1/daily_reports?chat_id=eq.${userId}&report_date=eq.${selectedDate}`, {
-                    method: 'DELETE',
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                });
-
-                if (!response.ok) throw new Error("Network error");
-                alert("✅ گزارش این روز با موفقیت از سیستم پاک شد. حالا می‌تونی از صفر فرم رو پر کنی.");
-                window.location.reload(); // رفرش صفحه برای آپدیت شدن تیک‌های سبز
-            } catch (e) { alert("⚠️ مشکلی پیش آمد. لطفاً اینترنت خود رو چک کن."); }
+                await fetch(`${cleanUrl}/rest/v1/daily_reports?chat_id=eq.${userId}&report_date=eq.${selectedDate}`, { method: 'DELETE', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+                alert("✅ پاک شد."); window.location.reload();
+            } catch (e) { alert("⚠️ خطا در اینترنت."); }
         }
 
         async function submitReport() {
-            // چک امنیتی نهایی
             if (completedDates.includes(selectedDate)) {
-                if(!confirm("⚠️ توجه: این روز قبلاً گزارش داشته. با ثبت فرم جدید، اطلاعات قبلی کاملاً پاک شده و این فرم جایگزین می‌شود. مطمئنی؟")) {
-                    return;
-                }
+                if(!confirm("⚠️ با ثبت این فرم، اطلاعات قبلی این روز کاملاً جایگزین می‌شه. مطمئنی؟")) return;
             }
 
             const btn = document.getElementById('submitBtn');
-            btn.innerText = "در حال انتقال به دیتابیس... ⏳";
-            btn.disabled = true;
+            btn.innerText = "در حال انتقال... ⏳"; btn.disabled = true;
 
-            let coursesData = [];
-            let totalStudy = 0;
-            let totalTests = 0;
+            let coursesData = []; let totalStudy = 0; let totalTests = 0;
 
             document.querySelectorAll(".course-card").forEach(card => {
                 let name = card.querySelector(".c-name").value; 
@@ -340,31 +247,26 @@
                 let std = parseFloat(card.querySelector(".c-std").value) || 0; 
                 let tst = parseInt(card.querySelector(".c-tst").value) || 0;
                 
+                // فرم بدون وارد کردن ساعت هم ثبت می‌شود
                 if(edu > 0 || std > 0 || tst > 0) {
                     coursesData.push({ name: name, edu: edu, study: std, tests: tst });
-                    totalStudy += (edu + std);
-                    totalTests += tst;
+                    totalStudy += (edu + std); totalTests += tst;
                 }
             });
-
-            if(coursesData.length === 0) {
-                alert("⚠️ رفیق، حداقل اطلاعات یک درس رو وارد کن!");
-                btn.innerText = "🚀 ثبت نهایی گزارش"; btn.disabled = false; return;
-            }
 
             let feedbackMsg = "";
             if (totalStudy >= 8 || totalTests >= 150) {
                 feedbackMsg = "شاهکار بود! 🌟 با همین فرمون پیش بری، هدف تو مشتته.";
             } else if (totalStudy >= 4) {
                 feedbackMsg = "خدا قوت! 🍃 روز خوبی ساختی، اما می‌دونم پتانسیلت حتی بیشتر از اینه.";
-            } else {
+            } else if (totalStudy > 0) {
                 feedbackMsg = "ثبت شد! ☕ امروز شاید روز اوجت نبود، اما مهم اینه که تو مسیر موندی.";
+            } else {
+                feedbackMsg = "ثبت شد! 🔋 گاهی وقتا بدن نیاز به ریکاوری داره تا با قدرت بیشتری برگرده.";
             }
 
             const payload = {
-                chat_id: userId,
-                report_date: selectedDate,
-                courses: coursesData,
+                chat_id: userId, report_date: selectedDate, courses: coursesData,
                 lifestyle: {
                     sleepLast: document.getElementById("val_sleep").innerText,
                     wakeToday: document.getElementById("val_wake").innerText,
@@ -376,29 +278,17 @@
 
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
-                
                 const response = await fetch(`${cleanUrl}/rest/v1/daily_reports?on_conflict=chat_id,report_date`, {
                     method: 'POST',
-                    headers: { 
-                        'apikey': SUPABASE_KEY, 
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
-                        'Content-Type': 'application/json',
-                        'Prefer': 'resolution=merge-duplicates' 
-                    },
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
                     body: JSON.stringify(payload)
                 });
-
-                if (!response.ok) throw new Error("مشکل در ارتباط با سرور");
+                if (!response.ok) throw new Error("Server Error");
 
                 document.getElementById('appContent').style.opacity = '0';
-                setTimeout(() => {
-                    alert(feedbackMsg); 
-                    window.location.href = 'menu.html';
-                }, 400);
-
+                setTimeout(() => { alert(feedbackMsg); window.location.href = 'menu.html'; }, 400);
             } catch (error) {
-                alert("⚠️ اتصال قطع شد. لطفاً اینترنتت رو چک کن و دوباره دکمه ثبت رو بزن.");
-                btn.innerText = "🚀 ثبت نهایی گزارش"; btn.disabled = false;
+                alert("⚠️ اتصال قطع شد."); btn.innerText = "🚀 ثبت نهایی گزارش"; btn.disabled = false;
             }
         }
     </script>
