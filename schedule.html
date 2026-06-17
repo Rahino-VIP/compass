@@ -218,15 +218,22 @@
         const userId = '999999';
         if (!userId) window.location.href = 'index.html';
 
-        window.onload = async function() {
-    // await checkVipSettings(); // موقتاً برای تست غیرفعال شد تا گیر نده
-
-    // نمایش مستقیم داشبورد بدون گیر دادن به تنظیمات اولیه
-    document.getElementById('mainLoader').style.display = 'none';
-    document.getElementById('appContent').style.display = 'block';
+        window.onload = function() {
+        console.log("God Mode Active: Loading dashboard...");
     
-    checkIfFriday();
-};
+        // ۱. مخفی کردن فوری لودر
+        const loader = document.getElementById('mainLoader');
+        if (loader) loader.style.display = 'none';
+
+        // ۲. نمایش فوری محتوا
+        const content = document.getElementById('appContent');
+        if (content) content.style.display = 'block';
+    
+        // ۳. فعال کردن دستی فرم جمعه (بدون چک کردن روز)
+        checkIfFriday(); 
+    
+        console.log("Dashboard Loaded Successfully!");
+        };
 
         // ==========================================
         // 🔐 گیت امنیتی: بررسی تنظیمات VIP
