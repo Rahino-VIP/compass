@@ -215,7 +215,7 @@
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
 
-        const userId = localStorage.getItem('qotbnama_user_id');
+        const userId = '999999';
         if (!userId) window.location.href = 'index.html';
 
         window.onload = async function() {
@@ -320,22 +320,22 @@
         // ==========================================
         // 🎁 منطق باز شدن فرم جمعه‌ها
         // ==========================================
-        function checkIfFriday() {
-            // دریافت نام روز هفته به شمسی
-            let today = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(new Date());
-            
-            // برای تست می‌تونی کلمه 'جمعه' رو به روز دیگه‌ای تغییر بدی تا باز شدنش رو ببینی
-            if (today.includes('جمعه')) {
-                document.getElementById('fridayActionBox').classList.remove('locked');
-                document.getElementById('fridayIcon').innerText = '🎁';
-                document.getElementById('fridayTitle').innerText = 'بستن استراتژی هفته جدید';
-                document.getElementById('fridayDesc').innerText = 'دستیار هوشمند آماده است تا با تحلیل اطلاعات گذشته و یادداشت شما، یک برنامه قدرتمند برای هفته پیش‌رو تدوین کند.';
-                document.getElementById('fridayForm').style.display = 'block';
-                
-                // اضافه کردن نشانگر به تب بالا
-                document.getElementById('fridayTabBtn').innerHTML = '🎁 دریافت برنامه <span style="background:var(--danger);width:8px;height:8px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:5px;"></span>';
-            }
-        }
+        // ==========================================
+// 🎁 منطق باز شدن فرم (حالت تست: همیشه باز)
+// ==========================================
+function checkIfFriday() {
+    // در نسخه نهایی اینجا شرط (today.includes('جمعه')) قرار می‌گیرد
+    // اما برای تست، درها را همیشه باز می‌گذاریم:
+    
+    document.getElementById('fridayActionBox').classList.remove('locked');
+    document.getElementById('fridayIcon').innerText = '🎁';
+    document.getElementById('fridayTitle').innerText = 'بستن استراتژی هفته جدید (حالت تست)';
+    document.getElementById('fridayDesc').innerText = 'دستیار هوشمند آماده تدوین برنامه است. (قفل جمعه موقتاً برای تست باز است)';
+    document.getElementById('fridayForm').style.display = 'block';
+    
+    // اضافه کردن نشانگر قرمز به تب بالا
+    document.getElementById('fridayTabBtn').innerHTML = '🎁 دریافت برنامه <span style="background:var(--danger);width:8px;height:8px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:5px;"></span>';
+}
         // ==========================================
 // 🚀 اتصال به موتور برنامه‌ریزی هوش مصنوعی
 // ==========================================
