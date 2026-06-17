@@ -204,7 +204,7 @@
                 
                 <div id="fridayForm" style="display: none; text-align: right;">
                     <textarea class="modern-input" id="nextWeekNote" rows="4" placeholder="آیا برای هفته بعد برنامه‌ی خاصی داری؟ (مهمانی، امتحان مدرسه، یا درسی که بخوای بیشتر روش وقت بذاری؟)"></textarea>
-                    <button class="btn-gold" onclick="alert('این یادداشت به همراه وضعیت دروس شما برای هسته برنامه‌ریز ارسال شد!')">تدوین برنامه هفته جدید 🚀</button>
+                    <button class="btn-gold" id="btnRequestPlan" onclick="requestNewSchedule()">تدوین برنامه هفته جدید 🚀</button>
                 </div>
             </div>
         </div>
@@ -336,6 +336,55 @@
                 document.getElementById('fridayTabBtn').innerHTML = '🎁 دریافت برنامه <span style="background:var(--danger);width:8px;height:8px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:5px;"></span>';
             }
         }
+        // ==========================================
+// 🚀 اتصال به موتور برنامه‌ریزی هوش مصنوعی
+// ==========================================
+const GAS_WEBAPP_URL = 'لینک_وب‌اپلیکیشن_شما_در_گوگل_اسکریپت';
+
+async function requestNewSchedule() {
+    const note = document.getElementById('nextWeekNote').value.trim();
+    const btn = document.getElementById('btnRequestPlan');
+
+    // استایل دکمه در حالت پردازش
+    const originalText = btn.innerHTML;
+    btn.innerHTML = 'در حال پردازش توسط هوش مصنوعی... ⏳';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+
+    try {
+        const response = await fetch(GAS_WEBAPP_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+                action: 'generate_schedule',
+                student_id: userId,
+                student_note: note
+                // سرور به صورت خودکار بر اساس تاریخ و پروفایل کاربر، آزمون و هفته (اول/دوم) را تشخیص می‌دهد
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // مخفی کردن فرم و نمایش پیام موفقیت
+            document.getElementById('fridayForm').innerHTML = `
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px; margin-top: 15px;">
+                    <div style="font-size: 30px; margin-bottom: 10px;">✅</div>
+                    <h3 style="color: var(--success); margin-bottom: 5px;">درخواست با موفقیت ثبت شد!</h3>
+                    <p style="font-size: 13px; color: var(--text-muted);">برنامه شما در حال تدوین است و پس از تأیید مشاور ارشد، در تقویم شما قرار می‌گیرد.</p>
+                </div>
+            `;
+        } else {
+            throw new Error(result.error);
+        }
+
+    } catch (error) {
+        alert('❌ متاسفانه خطایی رخ داد: ' + error.message);
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    }
+}
     </script>
 </body>
 </html>
