@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>برنامه مطالعاتی VIP | قطب‌نمای راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         :root { 
             --vip-bg: #0f172a; --vip-surface: #1e293b; --vip-border: #334155;
             --gold: #f59e0b; --gold-light: #fbbf24; --gold-fade: rgba(245, 158, 11, 0.1);
-            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --info: #3b82f6; --purple: #8b5cf6;
             --text-main: #f8fafc; --text-muted: #94a3b8;
             --shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
@@ -29,7 +30,7 @@
 
         /* 📑 تب‌های ناوبری */
         .tabs-container { display: flex; background: var(--vip-surface); border-radius: 16px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--vip-border); }
-        .tab-btn { flex: 1; text-align: center; padding: 12px 5px; font-size: 13px; font-weight: bold; color: var(--text-muted); cursor: pointer; border-radius: 12px; transition: 0.3s; }
+        .tab-btn { flex: 1; text-align: center; padding: 12px 2px; font-size: 12px; font-weight: bold; color: var(--text-muted); cursor: pointer; border-radius: 12px; transition: 0.3s; }
         .tab-btn.active { background: var(--gold); color: #000; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); }
 
         /* 📌 محتوای تب‌ها */
@@ -40,7 +41,7 @@
         .daily-note { background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.05)); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 20px; padding: 20px; margin-bottom: 25px; position: relative; }
         .daily-note::before { content: '💡'; position: absolute; top: -15px; right: 20px; font-size: 25px; background: var(--vip-surface); border-radius: 50%; padding: 5px; border: 1px solid var(--gold); }
         .daily-note-title { font-size: 12px; color: var(--gold); font-weight: bold; margin-bottom: 5px; }
-        .daily-note-text { font-size: 14px; color: var(--text-main); line-height: 1.8; font-weight: bold; }
+        .daily-note-text { font-size: 13px; color: var(--text-main); line-height: 1.8; font-weight: bold; }
 
         /* 📊 نوار پیشرفت امروز */
         .progress-box { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 16px; padding: 15px 20px; margin-bottom: 20px; }
@@ -49,31 +50,42 @@
         .progress-bar-fill { height: 100%; background: var(--success); width: 0%; transition: 1s ease-out; }
 
         /* 🎯 کارت‌های مأموریت درسی */
-        .quest-card { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; position: relative; overflow: hidden; }
-        .quest-card.completed { background: rgba(16, 185, 129, 0.05); border-color: var(--success); opacity: 0.8; }
+        .quest-card { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 20px; padding: 18px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; position: relative; overflow: hidden; border-right: 4px solid var(--vip-border); }
+        .quest-card.completed { background: rgba(16, 185, 129, 0.05) !important; border-color: var(--success) !important; opacity: 0.7; border-right-color: var(--success) !important; }
         .quest-card.banked { display: none; }
         
-        .quest-info { flex: 1; }
-        .quest-time { font-size: 11px; color: var(--text-muted); font-weight: bold; background: var(--vip-bg); padding: 3px 8px; border-radius: 6px; display: inline-block; margin-bottom: 5px; }
-        .quest-title { font-size: 16px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; transition: 0.3s; }
-        .quest-card.completed .quest-title { text-decoration: line-through; color: var(--success); }
-        .quest-desc { font-size: 12px; color: var(--text-muted); }
-
-        .quest-actions { display: flex; gap: 8px; }
-        .action-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 2px solid var(--vip-border); background: var(--vip-bg); font-size: 16px; transition: 0.2s; }
+        /* رنگ‌بندی داینامیک پارت‌ها */
+        .type-bio { border-right-color: var(--success); background: linear-gradient(90deg, rgba(16, 185, 129, 0.05), transparent); }
+        .type-math { border-right-color: var(--warning); background: linear-gradient(90deg, rgba(245, 158, 11, 0.05), transparent); }
+        .type-chem { border-right-color: var(--info); background: linear-gradient(90deg, rgba(59, 130, 246, 0.05), transparent); }
+        .type-phys { border-right-color: var(--purple); background: linear-gradient(90deg, rgba(139, 92, 246, 0.05), transparent); }
+        .type-break { border-right-color: var(--text-muted); opacity: 0.8; }
         
+        .quest-info { flex: 1; }
+        .quest-time { font-size: 11px; color: var(--text-main); font-weight: bold; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; display: inline-block; margin-bottom: 8px; letter-spacing: 1px; }
+        .quest-title { font-size: 15px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; transition: 0.3s; }
+        .quest-card.completed .quest-title { text-decoration: line-through; color: var(--success); }
+        .quest-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+        .quest-actions { display: flex; gap: 8px; flex-direction: column; justify-content: center; }
+        .action-circle { width: 35px; height: 35px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 1px solid var(--vip-border); background: var(--vip-bg); font-size: 14px; transition: 0.2s; }
         .btn-check:hover { background: var(--success); border-color: var(--success); color: white; }
         .quest-card.completed .btn-check { background: var(--success); border-color: var(--success); color: white; }
-        
-        .btn-timer:hover { background: var(--primary); border-color: var(--primary); color: white; }
-        .btn-bank:hover { background: var(--warning); border-color: var(--warning); color: white; }
+        .btn-timer:hover { background: var(--info); border-color: var(--info); color: white; }
 
-        /* 🗓️ تب نمای هفته */
-        .week-grid-placeholder { text-align: center; padding: 40px 20px; color: var(--text-muted); border: 2px dashed var(--vip-border); border-radius: 20px; }
+        /* 🗓️ نمای هفته (تایم‌لاین عمودی) */
+        .week-motivation { background: rgba(139, 92, 246, 0.1); border: 1px dashed var(--purple); color: #c4b5fd; padding: 15px; border-radius: 16px; font-size: 13px; margin-bottom: 20px; line-height: 1.6; text-align: center; font-weight: bold; }
+        .day-group { margin-bottom: 20px; background: var(--vip-surface); border-radius: 16px; overflow: hidden; border: 1px solid var(--vip-border); }
+        .day-header { background: rgba(0,0,0,0.2); padding: 12px 15px; font-weight: bold; color: var(--gold); font-size: 14px; border-bottom: 1px solid var(--vip-border); display: flex; justify-content: space-between; }
+        .day-blocks { padding: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .mini-block { display: flex; justify-content: space-between; font-size: 11px; padding: 8px 10px; background: var(--vip-bg); border-radius: 8px; color: var(--text-main); }
+        .mini-time { color: var(--text-muted); font-family: monospace; }
+        
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); border: 2px dashed var(--vip-border); border-radius: 20px; margin-top: 20px; }
 
         /* 🔒 تب دریافت برنامه (جمعه‌ها) */
         .friday-box { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 24px; padding: 30px 20px; text-align: center; margin-top: 20px; }
-        .friday-box.locked { opacity: 0.6; pointer-events: none; }
+        .friday-box.locked { opacity: 0.6; pointer-events: none; filter: grayscale(100%); }
         .friday-icon { font-size: 60px; margin-bottom: 15px; display: block; }
         .friday-title { font-size: 20px; font-weight: 900; color: var(--gold); margin-bottom: 10px; }
         .friday-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 25px; line-height: 1.8; }
@@ -84,12 +96,12 @@
         .btn-gold { background: linear-gradient(135deg, var(--gold), #d97706); color: #000; width: 100%; padding: 18px; border-radius: 16px; border: none; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 10px 20px rgba(245, 158, 11, 0.2); transition: 0.2s; }
         
         /* ⏱️ مدال تایمر پومودورو */
-        .timer-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .timer-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; }
         .timer-display { font-size: 80px; font-weight: 900; color: var(--gold); font-family: monospace; letter-spacing: 5px; margin: 20px 0; text-shadow: 0 0 30px rgba(245, 158, 11, 0.4); }
-        .timer-subject { font-size: 20px; color: white; font-weight: bold; }
+        .timer-subject { font-size: 20px; color: white; font-weight: bold; text-align: center; padding: 0 20px; }
         .btn-timer-close { background: transparent; border: 2px solid var(--danger); color: var(--danger); padding: 10px 30px; border-radius: 12px; font-weight: bold; margin-top: 30px; cursor: pointer; }
 
-        .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--vip-bg); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
+        .loader-overlay { position: fixed; inset: 0; background: var(--vip-bg); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; transition: 0.5s; }
         .spinner { font-size: 50px; animation: spin 1.5s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
@@ -97,11 +109,10 @@
 <body>
 
     <div class="loader-overlay" id="mainLoader">
-        <div class="spinner">🔐</div>
-        <h3 style="color: var(--gold);">در حال تأیید هویت VIP...</h3>
+        <div class="spinner">🧭</div>
+        <h3 style="color: var(--gold); margin-top: 10px;">در حال بارگذاری قطب‌نما...</h3>
     </div>
 
-    <!-- تایمر پومودورو -->
     <div class="timer-modal" id="timerModal">
         <div class="timer-subject" id="timerSubjectName">در حال مطالعه...</div>
         <div class="timer-display" id="timerDisplay">90:00</div>
@@ -113,8 +124,8 @@
         
         <div class="nav-header">
             <a href="menu.html" class="action-btn">🔙</a>
-            <div class="page-title">داشبورد برنامه‌ریزی</div>
-            <a href="vip-setup.html" class="action-btn" title="تنظیمات برنامه">⚙️</a>
+            <div class="page-title">قطب‌نمای راهینو</div>
+            <a href="vip-setup.html" class="action-btn" title="تنظیمات">⚙️</a>
         </div>
 
         <div class="tabs-container">
@@ -123,12 +134,10 @@
             <div class="tab-btn" id="fridayTabBtn" onclick="switchTab('tabFriday', this)">🎁 دریافت برنامه</div>
         </div>
 
-        <!-- 🎯 تب امروز -->
         <div class="tab-content active" id="tabToday">
-            
-            <div class="daily-note">
-                <div class="daily-note-title">یادداشت مربی برای امروز:</div>
-                <div class="daily-note-text" id="dailyNoteContent">رفیق، امروز قراره قورباغه‌ات رو همون اول صبح قورت بدی. پارت‌های زیستت سنگینه، پس بینشون حتماً آب بخور و کشش یادت نره. بترکون! 🔥</div>
+            <div class="daily-note" id="dailyNoteBox" style="display: none;">
+                <div class="daily-note-title">هوش مصنوعی راهینو:</div>
+                <div class="daily-note-text" id="dailyNoteContent">در حال پردازش پیام امروز...</div>
             </div>
 
             <div class="progress-box">
@@ -142,60 +151,17 @@
             </div>
 
             <div id="questsContainer">
-                <!-- پارت‌های فرضی برای نمایش UI -->
-                
-                <div class="quest-card" id="q1">
-                    <div class="quest-info">
-                        <div class="quest-time">⏱️ 07:00 الی 08:30</div>
-                        <div class="quest-title">زیست شناسی (پارت ۱)</div>
-                        <div class="quest-desc">تست آموزشی از فصل قلب</div>
-                    </div>
-                    <div class="quest-actions">
-                        <div class="action-circle btn-bank" onclick="bankQuest('q1')" title="انتقال به جبرانی جمعه">🔄</div>
-                        <div class="action-circle btn-timer" onclick="openTimer('زیست شناسی')" title="شروع تایمر تمرکز">▶️</div>
-                        <div class="action-circle btn-check" onclick="toggleQuest('q1')" title="تیک انجام">✅</div>
-                    </div>
                 </div>
-
-                <div class="quest-card" id="q2">
-                    <div class="quest-info">
-                        <div class="quest-time">⏱️ 08:45 الی 10:15</div>
-                        <div class="quest-title">شیمی (پارت ۱)</div>
-                        <div class="quest-desc">تشریحی - مسائل استوکیومتری</div>
-                    </div>
-                    <div class="quest-actions">
-                        <div class="action-circle btn-bank" onclick="bankQuest('q2')" title="انتقال به جبرانی جمعه">🔄</div>
-                        <div class="action-circle btn-timer" onclick="openTimer('شیمی')" title="شروع تایمر تمرکز">▶️</div>
-                        <div class="action-circle btn-check" onclick="toggleQuest('q2')" title="تیک انجام">✅</div>
-                    </div>
-                </div>
-
-                <div class="quest-card" id="q3">
-                    <div class="quest-info">
-                        <div class="quest-time">⏱️ 10:30 الی 12:00</div>
-                        <div class="quest-title">ریاضیات (پارت ۱)</div>
-                        <div class="quest-desc">تست زمان‌دار تابع</div>
-                    </div>
-                    <div class="quest-actions">
-                        <div class="action-circle btn-bank" onclick="bankQuest('q3')" title="انتقال به جبرانی جمعه">🔄</div>
-                        <div class="action-circle btn-timer" onclick="openTimer('ریاضیات')" title="شروع تایمر تمرکز">▶️</div>
-                        <div class="action-circle btn-check" onclick="toggleQuest('q3')" title="تیک انجام">✅</div>
-                    </div>
-                </div>
-
-            </div>
         </div>
 
-        <!-- 🗓️ تب نمای هفته -->
         <div class="tab-content" id="tabWeek">
-            <div class="week-grid-placeholder">
-                <span style="font-size: 50px; display: block; margin-bottom: 15px;">🚧</span>
-                <h3>جدول گرافیکی در حال ساخت...</h3>
-                <p style="font-size: 13px; margin-top: 10px;">در آپدیت بعدی، در این بخش کل تقویم هفته شما با رنگ‌بندی تفکیک‌شده‌ی دروس نمایش داده می‌شود.</p>
-            </div>
+            <div class="week-motivation" id="weekMotivationBox" style="display: none;">
+                </div>
+            
+            <div id="weekTimelineContainer">
+                </div>
         </div>
 
-        <!-- 🎁 تب جمعه (درخواست برنامه جدید) -->
         <div class="tab-content" id="tabFriday">
             <div class="friday-box locked" id="fridayActionBox">
                 <span class="friday-icon" id="fridayIcon">🔒</span>
@@ -212,87 +178,204 @@
     </div>
 
     <script>
+        // ==========================================
+        // 🔗 تنظیمات و متغیرهای سراسری
+        // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); 
+        
+        // لینک وب‌اپلیکیشن گوگل اسکریپت (همونی که الان تو کدهات هست)
+        const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
 
-        const userId = '999999';
-        if (!userId) window.location.href = 'index.html';
+        // گرفتن آیدی کاربر از حافظه (یا استفاده از آیدی تست)
+        const userId = localStorage.getItem('qotbnama_user_id') || '999999';
 
-        window.onload = function() {
-        console.log("God Mode Active: Loading dashboard...");
-    
-        // ۱. مخفی کردن فوری لودر
-        const loader = document.getElementById('mainLoader');
-        if (loader) loader.style.display = 'none';
+        // نام روز امروز به شمسی
+        const todayNameFa = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(new Date());
 
-        // ۲. نمایش فوری محتوا
-        const content = document.getElementById('appContent');
-        if (content) content.style.display = 'block';
-    
-        // ۳. فعال کردن دستی فرم جمعه (بدون چک کردن روز)
-        checkIfFriday(); 
-    
-        console.log("Dashboard Loaded Successfully!");
+        window.onload = async function() {
+            if (!userId) { window.location.href = 'index.html'; return; }
+            
+            // نمایش مستقیم محتوا (دور زدن چک VIP برای تست سریع‌تر)
+            document.getElementById('appContent').style.display = 'block';
+            
+            // دریافت آخرین برنامه‌ی تایید شده از دیتابیس
+            await loadCurrentSchedule();
+            
+            // چک کردن فرم جمعه
+            checkIfFriday();
         };
 
         // ==========================================
-        // 🔐 گیت امنیتی: بررسی تنظیمات VIP
+        // 📥 دریافت برنامه از دیتابیس
         // ==========================================
-        async function checkVipSettings() {
+        async function loadCurrentSchedule() {
             try {
-                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
-                const response = await fetch(`${cleanUrl}/rest/v1/vip_settings?chat_id=eq.${userId}&select=chat_id`, {
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                });
-                const data = await response.json();
-                
-                if (data.length === 0) {
-                    // اگه هیچی تو دیتابیس نبود، پرتش کن تو فرم تنظیمات!
-                    window.location.href = 'vip-setup.html';
+                const { data, error } = await supabaseClient
+                    .from('ai_schedules')
+                    .select('*')
+                    .eq('chat_id', String(userId))
+                    .eq('status', 'approved')
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    const schedule = data[0];
+                    renderTodayTab(schedule);
+                    renderWeekTab(schedule);
                 } else {
-                    document.getElementById('mainLoader').style.display = 'none';
-                    document.getElementById('appContent').style.display = 'block';
-                    updateProgressBar();
+                    showEmptyStates();
                 }
-            } catch (e) {
-                alert("⚠️ خطا در اتصال به سرور");
+            } catch (err) {
+                console.error("خطا در دریافت برنامه:", err);
+                showEmptyStates();
+            } finally {
+                // مخفی کردن لودینگ
+                const loader = document.getElementById('mainLoader');
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 500);
             }
         }
 
+        function showEmptyStates() {
+            const msg = `
+                <div class="empty-state">
+                    <span style="font-size: 50px; display: block; margin-bottom: 15px;">🏜️</span>
+                    <h3>هنوز برنامه‌ای نداری!</h3>
+                    <p style="font-size: 13px; margin-top: 10px;">روز جمعه از بخش دریافت برنامه، استراتژی هفته جدید رو درخواست بده.</p>
+                </div>
+            `;
+            document.getElementById('questsContainer').innerHTML = msg;
+            document.getElementById('weekTimelineContainer').innerHTML = msg;
+        }
+
         // ==========================================
-        // 📑 مدیریت تب‌ها
+        // 🎯 رندر تب امروز
+        // ==========================================
+        function renderTodayTab(schedule) {
+            const planArr = schedule.raw_plan || [];
+            const motivations = schedule.ai_motivations || {};
+            
+            // ۱. تنظیم پیام انگیزشی امروز
+            if (motivations.daily_motivations && motivations.daily_motivations[todayNameFa]) {
+                document.getElementById('dailyNoteBox').style.display = 'block';
+                document.getElementById('dailyNoteContent').innerText = motivations.daily_motivations[todayNameFa];
+            }
+
+            // ۲. فیلتر پارت‌های امروز
+            const todaysBlocks = planArr.filter(p => p.day === todayNameFa);
+            const container = document.getElementById('questsContainer');
+            container.innerHTML = '';
+
+            if (todaysBlocks.length === 0) {
+                container.innerHTML = '<div class="empty-state">امروز استراحت مطلقی! هیچ پارتی در تقویم ثبت نشده. 🏖️</div>';
+                return;
+            }
+
+            // ۳. ساخت کارت‌ها
+            todaysBlocks.forEach((part, index) => {
+                const cardId = `quest_${index}`;
+                
+                // مدیریت دکمه تایمر (برای تایم‌های ناهار و استراحت دکمه تایمر رو مخفی می‌کنیم)
+                const isBreak = part.type === 'break' || part.subject.includes('ناهار') || part.subject.includes('شام');
+                const timerBtnHTML = isBreak ? '' : `<div class="action-circle btn-timer" onclick="openTimer('${part.subject}', '${part.end_time}', '${part.start_time}')" title="شروع تایمر">▶️</div>`;
+
+                const html = `
+                    <div class="quest-card type-${part.type}" id="${cardId}">
+                        <div class="quest-info">
+                            <div class="quest-time">⏱️ ${part.start_time} الی ${part.end_time}</div>
+                            <div class="quest-title">${part.subject}</div>
+                            <div class="quest-desc">${part.topic || ''}</div>
+                        </div>
+                        <div class="quest-actions">
+                            ${timerBtnHTML}
+                            <div class="action-circle btn-check" onclick="toggleQuest('${cardId}')" title="انجام شد">✅</div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+
+            updateProgressBar();
+        }
+
+        // ==========================================
+        // 🗓️ رندر تب نمای هفته
+        // ==========================================
+        function renderWeekTab(schedule) {
+            const planArr = schedule.raw_plan || [];
+            const motivations = schedule.ai_motivations || {};
+
+            // پیام کل هفته
+            if (motivations.weekly_motivation) {
+                const wBox = document.getElementById('weekMotivationBox');
+                wBox.style.display = 'block';
+                wBox.innerText = `« ${motivations.weekly_motivation} »`;
+            }
+
+            const container = document.getElementById('weekTimelineContainer');
+            container.innerHTML = '';
+
+            // گروه‌بندی بر اساس روز
+            const daysOrder = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+            
+            daysOrder.forEach(day => {
+                const dayBlocks = planArr.filter(p => p.day === day);
+                if (dayBlocks.length === 0) return;
+
+                let blocksHTML = '';
+                dayBlocks.forEach(p => {
+                    let style = '';
+                    if(p.type === 'bio') style = 'border-right: 3px solid var(--success);';
+                    if(p.type === 'math') style = 'border-right: 3px solid var(--warning);';
+                    if(p.type === 'chem') style = 'border-right: 3px solid var(--info);';
+                    if(p.type === 'phys') style = 'border-right: 3px solid var(--purple);';
+                    if(p.type === 'break') style = 'opacity: 0.6;';
+
+                    blocksHTML += `
+                        <div class="mini-block" style="${style}">
+                            <span>${p.subject}</span>
+                            <span class="mini-time">${p.start_time} تا ${p.end_time}</span>
+                        </div>
+                    `;
+                });
+
+                const groupHTML = `
+                    <div class="day-group">
+                        <div class="day-header">
+                            <span>${day}</span>
+                            <span>${dayBlocks.length} پارت</span>
+                        </div>
+                        <div class="day-blocks">
+                            ${blocksHTML}
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', groupHTML);
+            });
+        }
+
+        // ==========================================
+        // 📑 مدیریت تب‌ها و گیمیفیکیشن
         // ==========================================
         function switchTab(tabId, btnElement) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            
             document.getElementById(tabId).classList.add('active');
             btnElement.classList.add('active');
         }
 
-        // ==========================================
-        // 🎮 گیمیفیکیشن: تیک زدن و بانک جبرانی
-        // ==========================================
         function toggleQuest(cardId) {
-            const card = document.getElementById(cardId);
-            card.classList.toggle('completed');
+            document.getElementById(cardId).classList.toggle('completed');
             updateProgressBar();
         }
 
-        function bankQuest(cardId) {
-            if(confirm("آیا مطمئنی می‌خوای این پارت رو به بانک جبرانیِ جمعه منتقل کنی؟")) {
-                const card = document.getElementById(cardId);
-                card.classList.add('banked');
-                card.classList.remove('completed');
-                updateProgressBar();
-                // TODO: بعداً اینجا کد ذخیره در دیتابیس برای جمعه اضافه می‌شه
-            }
-        }
-
         function updateProgressBar() {
-            const total = document.querySelectorAll('.quest-card:not(.banked)').length;
-            const completed = document.querySelectorAll('.quest-card.completed:not(.banked)').length;
-            
+            const total = document.querySelectorAll('.quest-card').length;
+            const completed = document.querySelectorAll('.quest-card.completed').length;
             let percent = 0;
             if (total > 0) percent = Math.round((completed / total) * 100);
             
@@ -301,27 +384,39 @@
         }
 
         // ==========================================
-        // ⏱️ تایمر پومودورو
+        // ⏱️ تایمر پومودورو هوشمند
         // ==========================================
         let timerInterval;
-        function openTimer(subject) {
-            document.getElementById('timerSubjectName').innerText = "در حال مطالعه: " + subject;
-            document.getElementById('timerDisplay').innerText = "90:00";
+        function openTimer(subject, endTime, startTime) {
+            document.getElementById('timerSubjectName').innerText = subject;
             document.getElementById('timerModal').style.display = 'flex';
             
-            // شروع شمارش معکوس
-            let totalSeconds = 90 * 60;
+            // محاسبه دقیق زمان پارت بر اساس ساعت شروع و پایان
+            let startParts = startTime.split(':');
+            let endParts = endTime.split(':');
+            let startMins = (parseInt(startParts[0]) * 60) + parseInt(startParts[1]);
+            let endMins = (parseInt(endParts[0]) * 60) + parseInt(endParts[1]);
+            
+            let totalSeconds = (endMins - startMins) * 60;
+            if (totalSeconds <= 0) totalSeconds = 90 * 60; // دیفالت
+
+            updateTimerDisplay(totalSeconds);
+
             timerInterval = setInterval(() => {
                 totalSeconds--;
-                let m = Math.floor(totalSeconds / 60);
-                let s = totalSeconds % 60;
-                document.getElementById('timerDisplay').innerText = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+                updateTimerDisplay(totalSeconds);
                 if(totalSeconds <= 0) {
                     clearInterval(timerInterval);
-                    alert("⏰ زمان پارت به پایان رسید! خسته نباشی.");
+                    alert("⏰ زمان این پارت به پایان رسید! خسته نباشی رفیق.");
                     closeTimer();
                 }
             }, 1000);
+        }
+
+        function updateTimerDisplay(totalSecs) {
+            let m = Math.floor(totalSecs / 60);
+            let s = totalSecs % 60;
+            document.getElementById('timerDisplay').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
         function closeTimer() {
@@ -330,73 +425,59 @@
         }
 
         // ==========================================
-        // 🎁 منطق باز شدن فرم جمعه‌ها
+        // 🎁 بخش درخواست استراتژی هفته (جمعه‌ها)
         // ==========================================
-        // ==========================================
-// 🎁 منطق باز شدن فرم (حالت تست: همیشه باز)
-// ==========================================
-function checkIfFriday() {
-    // در نسخه نهایی اینجا شرط (today.includes('جمعه')) قرار می‌گیرد
-    // اما برای تست، درها را همیشه باز می‌گذاریم:
-    
-    document.getElementById('fridayActionBox').classList.remove('locked');
-    document.getElementById('fridayIcon').innerText = '🎁';
-    document.getElementById('fridayTitle').innerText = 'بستن استراتژی هفته جدید (حالت تست)';
-    document.getElementById('fridayDesc').innerText = 'دستیار هوشمند آماده تدوین برنامه است. (قفل جمعه موقتاً برای تست باز است)';
-    document.getElementById('fridayForm').style.display = 'block';
-    
-    // اضافه کردن نشانگر قرمز به تب بالا
-    document.getElementById('fridayTabBtn').innerHTML = '🎁 دریافت برنامه <span style="background:var(--danger);width:8px;height:8px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:5px;"></span>';
-}
-        // ==========================================
-// 🚀 اتصال به موتور برنامه‌ریزی هوش مصنوعی
-// ==========================================
-const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
-
-async function requestNewSchedule() {
-    const note = document.getElementById('nextWeekNote').value.trim();
-    const btn = document.getElementById('btnRequestPlan');
-
-    // استایل دکمه در حالت پردازش
-    const originalText = btn.innerHTML;
-    btn.innerHTML = 'در حال پردازش توسط هوش مصنوعی... ⏳';
-    btn.disabled = true;
-    btn.style.opacity = '0.7';
-
-    try {
-        const response = await fetch(GAS_WEBAPP_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-                action: 'generate_schedule',
-                student_id: userId,
-                student_note: note
-                // سرور به صورت خودکار بر اساس تاریخ و پروفایل کاربر، آزمون و هفته (اول/دوم) را تشخیص می‌دهد
-            })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            // مخفی کردن فرم و نمایش پیام موفقیت
-            document.getElementById('fridayForm').innerHTML = `
-                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px; margin-top: 15px;">
-                    <div style="font-size: 30px; margin-bottom: 10px;">✅</div>
-                    <h3 style="color: var(--success); margin-bottom: 5px;">درخواست با موفقیت ثبت شد!</h3>
-                    <p style="font-size: 13px; color: var(--text-muted);">برنامه شما در حال تدوین است و پس از تأیید مشاور ارشد، در تقویم شما قرار می‌گیرد.</p>
-                </div>
-            `;
-        } else {
-            throw new Error(result.error);
+        function checkIfFriday() {
+            // قفل موقتاً برای تست باز است
+            document.getElementById('fridayActionBox').classList.remove('locked');
+            document.getElementById('fridayIcon').innerText = '🎁';
+            document.getElementById('fridayTitle').innerText = 'استراتژی هفته جدید';
+            document.getElementById('fridayDesc').innerText = 'الگوریتم‌های راهینو آماده تدوین یک برنامه‌ی شخصی‌سازی شده برای شما هستند.';
+            document.getElementById('fridayForm').style.display = 'block';
+            document.getElementById('fridayTabBtn').innerHTML = '🎁 دریافت برنامه <span style="background:var(--danger);width:8px;height:8px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:5px;"></span>';
         }
 
-    } catch (error) {
-        alert('❌ متاسفانه خطایی رخ داد: ' + error.message);
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-        btn.style.opacity = '1';
-    }
-}
+        async function requestNewSchedule() {
+            const note = document.getElementById('nextWeekNote').value.trim();
+            const btn = document.getElementById('btnRequestPlan');
+
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'در حال پردازش در هسته الگوریتم... ⏳';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+
+            try {
+                const response = await fetch(GAS_WEBAPP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'generate_schedule',
+                        student_id: userId,
+                        student_note: note
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('fridayForm').innerHTML = `
+                        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px; margin-top: 15px;">
+                            <div style="font-size: 30px; margin-bottom: 10px;">✅</div>
+                            <h3 style="color: var(--success); margin-bottom: 5px;">الگوریتم اجرا شد!</h3>
+                            <p style="font-size: 13px; color: var(--text-muted);">اسکلت برنامه‌ی شما ساخته شد و هم‌اکنون در اتاق جراحی منتظر تایید و بررسی نهایی مشاور ارشد است.</p>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(result.error);
+                }
+
+            } catch (error) {
+                alert('❌ خطایی رخ داد: ' + error.message);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        }
     </script>
 </body>
 </html>
