@@ -322,11 +322,24 @@
         // ==========================================
         // 🔄 عملیات تیک و شیفت هوشمند (با ذخیره در دیتابیس)
         // ==========================================
+        // ==========================================
+        // 🔄 عملیات تیک و شیفت (مجهز به سیستم عیب‌یاب)
+        // ==========================================
         async function savePlanToDB() {
-            // ذخیره بدون مسدود کردن UI
-            supabaseClient.from('ai_schedules')
-                .update({ raw_plan: currentScheduleObj.raw_plan })
-                .eq('id', currentScheduleObj.id).then();
+            try {
+                const { error } = await supabaseClient
+                    .from('ai_schedules')
+                    .update({ raw_plan: currentScheduleObj.raw_plan })
+                    .eq('id', currentScheduleObj.id);
+                
+                if (error) {
+                    throw error;
+                }
+                console.log("✅ با موفقیت در دیتابیس ذخیره شد.");
+            } catch (err) {
+                alert("❌ خطای دیتابیس در ذخیره وضعیت:\n" + err.message);
+                console.error(err);
+            }
         }
 
         function toggleQuest(blockId) {
