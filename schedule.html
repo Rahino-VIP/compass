@@ -11,256 +11,138 @@
     <style>
         :root { 
             --vip-bg: #0f172a; --vip-surface: #1e293b; --vip-border: #334155;
-            --gold: #f59e0b; --gold-light: #fbbf24;
-            --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --info: #3b82f6; --purple: #8b5cf6;
+            --gold: #f59e0b; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
             --text-main: #f8fafc; --text-muted: #94a3b8;
         }
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; user-select: none; }
         body { background: var(--vip-bg); color: var(--text-main); line-height: 1.6; padding-bottom: 80px; }
-        .app-container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .app-container { max-width: 800px; margin: 0 auto; padding: 20px; }
         
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .action-btn { background: var(--vip-surface); border: 1px solid var(--vip-border); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; transition: 0.2s; cursor: pointer; }
+        .action-btn { background: var(--vip-surface); border: 1px solid var(--vip-border); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; cursor: pointer; }
         .page-title { font-size: 18px; font-weight: 900; color: var(--gold); display: flex; flex-direction: column; align-items: center; }
-        .page-subtitle { font-size: 11px; color: var(--text-muted); font-weight: normal; }
+        
+        /* منوی کشویی انتخاب هفته */
+        select.week-selector { background: var(--vip-surface); border: 1px solid var(--gold); color: var(--gold); padding: 5px 10px; border-radius: 8px; outline: none; font-size: 11px; margin-top: 5px; font-family: 'Vazirmatn'; }
 
         .tabs-container { display: flex; background: var(--vip-surface); border-radius: 16px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--vip-border); }
-        .tab-btn { flex: 1; text-align: center; padding: 12px 2px; font-size: 12px; font-weight: bold; color: var(--text-muted); cursor: pointer; border-radius: 12px; transition: 0.3s; }
-        .tab-btn.active { background: var(--gold); color: #000; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); }
+        .tab-btn { flex: 1; text-align: center; padding: 12px; font-size: 13px; font-weight: bold; color: var(--text-muted); cursor: pointer; border-radius: 12px; transition: 0.3s; }
+        .tab-btn.active { background: var(--gold); color: #000; }
 
-        .tab-content { display: none; animation: fadeIn 0.4s; }
-        .tab-content.active { display: block; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* پیام مشاور */
-        .daily-note { background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.05)); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 20px; padding: 20px 20px 20px 50px; margin-bottom: 20px; position: relative; }
-        .daily-note-icon { position: absolute; left: 15px; top: 15px; font-size: 28px; }
-        .daily-note-title { font-size: 12px; color: var(--gold); font-weight: bold; margin-bottom: 5px; }
-        .daily-note-text { font-size: 13px; color: var(--text-main); line-height: 1.8; font-weight: bold; }
-
-        /* دکمه ثبت غیبت آنلاین */
-        .missed-class-btn { background: rgba(239, 68, 68, 0.1); border: 1px dashed var(--danger); color: #fca5a5; width: 100%; padding: 12px; border-radius: 16px; font-size: 13px; font-weight: bold; cursor: pointer; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s; }
-        .missed-class-btn:hover { background: rgba(239, 68, 68, 0.2); }
-
-        /* نوار پیشرفت */
-        .progress-box { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 16px; padding: 15px 20px; margin-bottom: 20px; }
-        .progress-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 10px; }
-        .progress-bar-bg { width: 100%; height: 8px; background: var(--vip-bg); border-radius: 10px; overflow: hidden; }
-        .progress-bar-fill { height: 100%; background: var(--success); width: 0%; transition: 1s cubic-bezier(0.4, 0, 0.2, 1); }
-
-        /* کارت مأموریت */
-        .quest-card { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 20px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; border-right: 4px solid var(--vip-border); position: relative; overflow: hidden; }
-        .quest-card.completed { background: rgba(16, 185, 129, 0.05); border-color: var(--success); border-right-color: var(--success); opacity: 0.7; }
-        .quest-card.shifted { display: none; }
+        /* کارت مأموریت امروز */
+        .quest-card { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 20px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid var(--vip-border); }
+        .quest-card.completed { background: rgba(16, 185, 129, 0.05); border-color: var(--success); border-right-color: var(--success); opacity: 0.6; }
+        .quest-time { font-size: 11px; color: var(--text-muted); background: var(--vip-bg); padding: 4px 8px; border-radius: 6px; display: inline-block; margin-bottom: 8px; }
+        .quest-title { font-size: 14px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; }
+        .quest-desc { font-size: 11px; color: var(--text-muted); }
+        .action-circle { width: 34px; height: 34px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 1px solid var(--vip-border); background: var(--vip-bg); transition: 0.2s; }
         
-        .type-bio { border-right-color: var(--success); } .type-math { border-right-color: var(--warning); }
-        .type-chem { border-right-color: var(--info); } .type-phys { border-right-color: var(--purple); }
-        .type-online_debt { border-right-color: var(--danger); background: rgba(239, 68, 68, 0.05); }
-
-        .quest-info { flex: 1; padding-left: 10px; }
-        .quest-time { font-size: 11px; color: var(--text-muted); font-weight: bold; background: var(--vip-bg); padding: 4px 8px; border-radius: 6px; display: inline-block; margin-bottom: 8px; }
-        .quest-title { font-size: 14px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; transition: 0.3s; }
-        .quest-card.completed .quest-title { text-decoration: line-through; color: var(--success); }
-        .quest-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
-
-        .quest-actions { display: flex; gap: 6px; flex-direction: column; justify-content: center; }
-        .action-circle { width: 34px; height: 34px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 1px solid var(--vip-border); background: var(--vip-bg); font-size: 13px; transition: 0.2s; }
-        .btn-check { color: var(--text-muted); }
-        .btn-check:hover, .quest-card.completed .btn-check { background: var(--success); border-color: var(--success); color: white; }
-        .btn-timer:hover { background: var(--info); border-color: var(--info); color: white; }
-        .btn-shift:hover { background: var(--danger); border-color: var(--danger); color: white; }
-
-        /* 🗓️ نمای هفته */
-        .week-stats { display: flex; justify-content: space-between; background: rgba(139, 92, 246, 0.1); padding: 15px; border-radius: 16px; border: 1px dashed var(--purple); margin-bottom: 20px; font-size: 12px; color: #c4b5fd; font-weight: bold; }
+        /* 🗓️ تقویم گوگلی (Google Calendar Style) */
+        .gcal-wrapper { overflow-x: auto; background: var(--vip-surface); border-radius: 16px; border: 1px solid var(--vip-border); margin-top: 10px; }
+        .gcal-container { display: grid; grid-template-columns: 50px repeat(7, minmax(100px, 1fr)); grid-template-rows: 40px repeat(18, 60px); /* 6:00 to 24:00 */ position: relative; min-width: 800px; }
         
-        .week-day-card { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 16px; margin-bottom: 15px; overflow: hidden; }
-        .week-day-header { background: rgba(0,0,0,0.2); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--vip-border); }
-        .wd-title { font-size: 13px; font-weight: 900; color: var(--gold); }
-        .wd-date { font-size: 11px; color: var(--text-muted); font-family: monospace; }
+        .gcal-header { background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--vip-border); border-left: 1px solid var(--vip-border); text-align: center; padding: 10px 0; font-size: 12px; font-weight: bold; color: var(--text-main); position: sticky; top: 0; z-index: 10; }
+        .gcal-time-col { border-bottom: 1px solid var(--vip-border); text-align: center; font-size: 10px; color: var(--text-muted); transform: translateY(-8px); }
         
-        .week-day-body { padding: 10px; display: flex; flex-direction: column; gap: 5px; }
-        .w-block { display: flex; justify-content: space-between; font-size: 11px; padding: 10px; background: var(--vip-bg); border-radius: 8px; border-right: 3px solid var(--vip-border); color: var(--text-main); }
-        .w-block.completed { border-right-color: var(--success); opacity: 0.6; }
-        .w-block.shifted { border-right-color: var(--danger); text-decoration: line-through; opacity: 0.5; }
-        .w-block.is-makeup { background: rgba(255,255,255,0.02); border-right-style: dashed; }
-        .w-time { color: var(--text-muted); font-family: monospace; }
-
-        /* فرم درخواست برنامه */
-        .friday-box { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 24px; padding: 30px 20px; text-align: center; }
-        .friday-title { font-size: 20px; font-weight: 900; color: var(--gold); margin-bottom: 10px; }
-        .friday-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 25px; line-height: 1.8; }
+        .gcal-cell { border-bottom: 1px dashed var(--vip-border); border-left: 1px solid var(--vip-border); position: relative; }
         
-        .toggle-row { display: flex; justify-content: space-between; align-items: center; background: var(--vip-bg); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--vip-border); cursor: pointer; text-align: right; }
-        .toggle-label { font-size: 13px; font-weight: bold; color: var(--text-main); }
-        .toggle-switch { position: relative; width: 44px; height: 24px; }
-        .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--vip-border); transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--success); }
-        input:checked + .slider:before { transform: translateX(20px); }
+        .gcal-event { position: absolute; left: 2px; right: 2px; border-radius: 6px; padding: 4px; font-size: 10px; color: white; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border-right: 3px solid rgba(255,255,255,0.5); z-index: 5; }
+        .gcal-event.completed { opacity: 0.5; background: var(--success) !important; }
+        .gcal-event.shifted { opacity: 0.3; background: var(--danger) !important; text-decoration: line-through; }
+        .gcal-event.class-type { background: #475569; border-right-color: #94a3b8; } /* رنگ مدرسه */
 
-        textarea.modern-input { width: 100%; padding: 15px; border-radius: 16px; border: 1px solid var(--vip-border); background: var(--vip-bg); color: var(--text-main); font-size: 13px; resize: none; outline: none; margin-top: 10px; margin-bottom: 20px; }
-        .btn-gold { background: linear-gradient(135deg, var(--gold), #d97706); color: #000; width: 100%; padding: 18px; border-radius: 16px; border: none; font-size: 15px; font-weight: 900; cursor: pointer; box-shadow: 0 10px 20px rgba(245, 158, 11, 0.2); transition: 0.2s; }
-
-        /* مدال‌ها */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
-        .modal-box { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 24px; padding: 25px; width: 100%; max-width: 350px; }
-        .timer-display { font-size: 70px; font-weight: 900; color: var(--gold); font-family: monospace; letter-spacing: 5px; margin: 20px 0; }
-        .btn-outline { background: transparent; border: 2px solid var(--danger); color: var(--danger); padding: 10px 30px; border-radius: 12px; font-weight: bold; margin-top: 20px; cursor: pointer; }
+        .g-event-title { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .g-event-time { font-size: 8px; opacity: 0.8; font-family: monospace; }
         
-        .loader-overlay { position: fixed; inset: 0; background: var(--vip-bg); display: flex; justify-content: center; align-items: center; z-index: 1000; transition: 0.5s; }
-        .spinner { font-size: 50px; animation: spin 1.5s linear infinite; margin-bottom: 15px; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div class="loader-overlay" id="mainLoader">
-        <div class="spinner">🧭</div>
-        <h3 style="color: var(--gold);">همگام‌سازی با اتاق فکر...</h3>
-    </div>
-
-    <div class="modal-overlay" id="timerModal">
-        <div class="timer-subject" id="timerSubjectName" style="color:white; font-size: 20px; font-weight: bold;">آماده‌سازی ذهن...</div>
-        <div class="timer-display" id="timerDisplay">🧘‍♂️</div>
-        <div style="font-size: 14px; color: var(--text-muted);" id="timerSubText">یک نفس عمیق بکش و با تمام تمرکز شروع کن.</div>
-        <button class="btn-outline" onclick="closeTimer()" id="btnCancelTimer" style="display:none;">توقف و خروج</button>
-    </div>
-
-    <div class="modal-overlay" id="classModal">
-        <div class="modal-box">
-            <h3 style="color: var(--danger); margin-bottom: 15px;">ثبت غیبت کلاس آنلاین</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">کدوم کلاس رو از دست دادی؟ اسمش رو بنویس تا سیستم یه تایم جبرانی برای دیدن آفلاینش برات پیدا کنه.</p>
-            <input type="text" id="missedClassName" placeholder="مثلاً: کلاس فیزیک استاد..." style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--vip-border); background: var(--vip-bg); color: white; outline: none; margin-bottom: 15px;">
-            <div style="display: flex; gap: 10px;">
-                <button class="btn-gold" style="padding: 12px;" onclick="submitMissedClass()">ثبت و جبران 🔄</button>
-                <button class="btn-outline" style="margin-top: 0; padding: 12px; border-color: var(--text-muted); color: var(--text-muted);" onclick="document.getElementById('classModal').style.display='none'">انصراف</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="app-container" id="appContent" style="display: none;">
-        
+    <div class="app-container" id="appContent">
         <div class="nav-header">
             <a href="menu.html" class="action-btn">🔙</a>
             <div class="page-title">
                 قطب‌نمای راهینو
-                <div class="page-subtitle" id="topDateDisplay">در حال دریافت تاریخ...</div>
+                <select id="weekSelector" class="week-selector" onchange="changeWeek(this.value)"></select>
             </div>
-            <a href="vip-setup.html" class="action-btn" title="تنظیمات">⚙️</a>
+            <a href="vip-setup.html" class="action-btn">⚙️</a>
         </div>
 
         <div class="tabs-container">
-            <div class="tab-btn active" onclick="switchTab('tabToday', this)">🎯 عملیات امروز</div>
-            <div class="tab-btn" onclick="switchTab('tabWeek', this)">🗓️ نمای کل هفته</div>
-            <div class="tab-btn" id="fridayTabBtn" onclick="switchTab('tabFriday', this)">🎁 اتاق فکر</div>
+            <div class="tab-btn active" onclick="switchTab('tabToday', this)">🎯 امروز</div>
+            <div class="tab-btn" onclick="switchTab('tabWeek', this)">🗓️ تقویم هفته</div>
+            <div class="tab-btn" onclick="switchTab('tabFriday', this)">🎁 اتاق فکر</div>
         </div>
 
         <div class="tab-content active" id="tabToday">
-            
-            <div class="daily-note" id="dailyNoteBox" style="display: none;">
-                <div class="daily-note-icon">👨‍🏫</div>
-                <div class="daily-note-title">پیام مشاور شما:</div>
-                <div class="daily-note-text" id="dailyNoteContent">...</div>
-            </div>
-
-            <button class="missed-class-btn" onclick="document.getElementById('classModal').style.display='flex'">
-                <span>⚠️</span> ثبت غیبت در کلاس آنلاین (آفلاین دیدن)
-            </button>
-
-            <div class="progress-box">
-                <div class="progress-header">
-                    <span>پیشرفت مأموریت‌های امروز</span>
-                    <span id="progressText" style="color: var(--gold);">0%</span>
-                </div>
-                <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" id="progressBar"></div>
-                </div>
-            </div>
-
             <div id="questsContainer"></div>
         </div>
 
         <div class="tab-content" id="tabWeek">
-            <div class="week-stats" id="weekStats">
-                <span>تایم‌های جبرانی باقی‌مانده: <span id="makeupCount" style="color:white">...</span></span>
-                <span>وضعیت: <span id="weekStatus" style="color:var(--success)">عالی</span></span>
+            <div class="gcal-wrapper">
+                <div class="gcal-container" id="gcalGrid">
+                    </div>
             </div>
-            <div id="weekTimelineContainer"></div>
         </div>
-
+        
         <div class="tab-content" id="tabFriday">
-            <div class="friday-box" id="fridayActionBox">
-                <span style="font-size: 50px; display: block; margin-bottom: 10px;">📨</span>
-                <h2 class="friday-title">ارتباط با اتاق فکر</h2>
-                <p class="friday-desc">فرم درخواست استراتژی هفته آینده برای شما باز است. اولویت‌های خود را مشخص کنید تا مشاوران ما بهترین برنامه را برایتان تدوین کنند.</p>
-                
-                <div id="fridayForm">
-                    <label class="toggle-row">
-                        <span class="toggle-label">تمایل به پیشروی مباحث پایه دارم</span>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="opt_base">
-                            <span class="slider"></span>
-                        </label>
-                    </label>
-                    <label class="toggle-row">
-                        <span class="toggle-label">این هفته درگیر امتحانات مدرسه هستم</span>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="opt_exam">
-                            <span class="slider"></span>
-                        </label>
-                    </label>
-                    
-                    <textarea class="modern-input" id="nextWeekNote" rows="3" placeholder="یادداشت برای مشاور (مثلاً: سه‌شنبه تا دیروقت مدرسه‌ام...)"></textarea>
-                    
-                    <button class="btn-gold" id="btnRequestPlan" onclick="requestNewSchedule()">ارسال اطلاعات به اتاق فکر 🚀</button>
-                </div>
+            <div style="text-align:center; padding:30px; background:var(--vip-surface); border-radius:16px;">
+                <h2>دستیار تدوین برنامه</h2>
+                <p>گزینه‌های درخواستی خود را اینجا وارد کنید.</p>
             </div>
         </div>
-
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const SUPABASE_URL = 'لینک_شما'; 
+        const SUPABASE_KEY = 'کلید_شما'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); 
-        const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
 
         const userId = localStorage.getItem('qotbnama_user_id') || '999999';
-        const todayDateObj = new Date();
-        const todayNameFa = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(todayDateObj);
-        const todayStrFa = new Intl.DateTimeFormat('fa-IR', { day: 'numeric', month: 'long' }).format(todayDateObj);
+        const todayNameFa = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(new Date());
 
+        let allSchedules = [];
         let currentScheduleObj = null;
 
         window.onload = async function() {
-            document.getElementById('topDateDisplay').innerText = `امروز: ${todayNameFa} ${todayStrFa}`;
-            document.getElementById('appContent').style.display = 'block';
-            await loadCurrentSchedule();
+            await loadAllSchedules();
         };
 
-        // ==========================================
-        // 📥 بارگذاری دیتابیس
-        // ==========================================
-        async function loadCurrentSchedule() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('ai_schedules').select('*').eq('chat_id', String(userId)).eq('status', 'approved')
-                    .order('created_at', { ascending: false }).limit(1);
+        // 📥 گرفتن تمام برنامه‌های تاریخچه دانش‌آموز
+        async function loadAllSchedules() {
+            const { data, error } = await supabaseClient
+                .from('ai_schedules').select('*').eq('chat_id', String(userId))
+                .order('created_at', { ascending: false });
+            
+            if(data && data.length > 0) {
+                allSchedules = data;
+                
+                // پر کردن منوی کشویی
+                const selector = document.getElementById('weekSelector');
+                selector.innerHTML = '';
+                allSchedules.forEach((sch, index) => {
+                    let opt = document.createElement('option');
+                    opt.value = index;
+                    opt.text = sch.week_label + (index === 0 ? " (هفته جاری)" : "");
+                    selector.appendChild(opt);
+                });
 
-                if (data && data.length > 0) {
-                    currentScheduleObj = data[0];
-                    renderTodayTab();
-                    renderWeekTab();
-                } else {
-                    document.getElementById('questsContainer').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-muted);">در انتظار استراتژی جدید از طرف مشاور...</div>`;
-                }
-            } catch (err) {
-                console.error(err);
-            } finally {
-                document.getElementById('mainLoader').style.display = 'none';
+                currentScheduleObj = allSchedules[0]; // دیفالت رو آخرین هفته
+                renderTodayTab();
+                renderGCal();
             }
+        }
+
+        // تغییر هفته از منوی کشویی
+        function changeWeek(index) {
+            currentScheduleObj = allSchedules[index];
+            renderTodayTab();
+            renderGCal();
         }
 
         // ==========================================
@@ -269,29 +151,16 @@
         function renderTodayTab() {
             if(!currentScheduleObj) return;
             const planArr = currentScheduleObj.raw_plan || [];
-            const motivations = currentScheduleObj.ai_motivations || {};
             
-            if (motivations.daily_motivations && motivations.daily_motivations[todayNameFa]) {
-                document.getElementById('dailyNoteBox').style.display = 'block';
-                document.getElementById('dailyNoteContent').innerText = motivations.daily_motivations[todayNameFa];
-            }
-
-            // فیلتر: امروز، حذف غذاها، حذف پارت‌های بانک جبرانیِ خالی
+            // فیلتر: فقط درس‌های امروز که کلاس یا بانک خالی نیستن
             const todaysBlocks = planArr.filter(p => 
                 p.day === todayNameFa && 
-                !p.subject.includes('ناهار') && 
-                !p.subject.includes('شام') &&
-                !(p.subject.includes('جبرانی') && p.status === 'pending') // بانک خالی رو نشون نده
+                p.type !== 'class' && 
+                p.subject !== 'بانک جبرانی'
             );
             
             const container = document.getElementById('questsContainer');
             container.innerHTML = '';
-
-            if (todaysBlocks.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding: 30px; color: var(--text-muted);">امروز هیچ مأموریت درسی نداری! 🏖️</div>';
-                updateProgressBar();
-                return;
-            }
 
             todaysBlocks.forEach((part) => {
                 if(part.status === 'shifted') return; 
@@ -300,45 +169,33 @@
                 const cardClass = isCompleted ? 'completed' : '';
                 
                 const html = `
-                    <div class="quest-card type-${part.type} ${cardClass}" id="card_${part.block_id}">
+                    <div class="quest-card ${cardClass}" id="card_${part.block_id}">
                         <div class="quest-info">
-                            <div class="quest-time">⏱️ ${part.start_time} الی ${part.end_time}</div>
+                            <div class="quest-time">${part.start_time} - ${part.end_time}</div>
                             <div class="quest-title">${part.subject}</div>
                             <div class="quest-desc">${part.topic || ''}</div>
                         </div>
-                        <div class="quest-actions">
-                            <div class="action-circle btn-shift" onclick="shiftQuest('${part.block_id}')" title="انتقال به جبرانی">🔄</div>
-                            <div class="action-circle btn-timer" onclick="openTimer('${part.subject}', '${part.start_time}', '${part.end_time}')" title="تایمر تمرکز">▶️</div>
-                            <div class="action-circle btn-check" onclick="toggleQuest('${part.block_id}')" title="تیک انجام">✅</div>
+                        <div style="display:flex; gap:8px;">
+                            <div class="action-circle" onclick="shiftQuest('${part.block_id}')">🔄</div>
+                            <div class="action-circle" onclick="toggleQuest('${part.block_id}')">✅</div>
                         </div>
                     </div>
                 `;
                 container.insertAdjacentHTML('beforeend', html);
             });
-
-            updateProgressBar();
         }
 
         // ==========================================
-        // 🔄 عملیات تیک و شیفت هوشمند (با ذخیره در دیتابیس)
-        // ==========================================
-        // ==========================================
-        // 🔄 عملیات تیک و شیفت (مجهز به سیستم عیب‌یاب)
+        // 🔄 عملیات دکمه‌ها
         // ==========================================
         async function savePlanToDB() {
             try {
-                const { error } = await supabaseClient
-                    .from('ai_schedules')
-                    .update({ raw_plan: currentScheduleObj.raw_plan })
-                    .eq('id', currentScheduleObj.id);
-                
-                if (error) {
-                    throw error;
-                }
-                console.log("✅ با موفقیت در دیتابیس ذخیره شد.");
+                const { error } = await supabaseClient.from('ai_schedules')
+                    .update({ raw_plan: currentScheduleObj.raw_plan }).eq('id', currentScheduleObj.id);
+                if (error) throw error;
+                console.log("ذخیره شد!");
             } catch (err) {
-                alert("❌ خطای دیتابیس در ذخیره وضعیت:\n" + err.message);
-                console.error(err);
+                alert("خطا در ذخیره دیتابیس!");
             }
         }
 
@@ -349,203 +206,94 @@
             
             block.status = block.status === 'completed' ? 'pending' : 'completed';
             document.getElementById('card_' + blockId).classList.toggle('completed');
-            
-            updateProgressBar();
             savePlanToDB();
-            renderWeekTab(); // آپدیت آمار هفته
+            renderGCal(); // آپدیت تقویم
         }
 
         function shiftQuest(blockId) {
-            if(!confirm("آیا مطمئنی؟ این پارت به اولین تایمِ خالیِ جبرانی در روزهای آینده منتقل می‌شود.")) return;
-
+            if(!confirm("ارسال به جبرانی؟")) return;
             let planArr = currentScheduleObj.raw_plan;
             let origIdx = planArr.findIndex(p => p.block_id === blockId);
-            if(origIdx === -1) return;
-            
             let origBlock = planArr[origIdx];
 
-            // پیدا کردن بانک جبرانی خالی (بعد از این پارت تو آرایه)
-            let makeupIdx = planArr.findIndex((p, idx) => idx > origIdx && p.subject.includes("جبرانی") && p.status === 'pending');
+            let makeupIdx = planArr.findIndex((p, idx) => idx > origIdx && p.subject === "بانک جبرانی" && p.status === 'pending');
+            if(makeupIdx === -1) { alert("تایم جبرانی خالی نداریم!"); return; }
 
-            if(makeupIdx === -1) {
-                alert("⚠️ هیچ تایم جبرانی خالی تو ادامه‌ی هفته برات نمونده! لطفاً این پارت رو حتماً بخون.");
-                return;
-            }
-
-            // جایگزینی اطلاعات در بانک جبرانی
             planArr[makeupIdx].subject = origBlock.subject + " (جبرانی)";
-            planArr[makeupIdx].topic = origBlock.topic;
             planArr[makeupIdx].type = origBlock.type;
-            
-            // مارک کردن اصلی به عنوان شیفت شده
             origBlock.status = 'shifted';
             
             document.getElementById('card_' + blockId).style.display = 'none';
-            alert(`✅ منتقل شد به: ${planArr[makeupIdx].day} ساعت ${planArr[makeupIdx].start_time}`);
-            
-            updateProgressBar();
             savePlanToDB();
-            renderWeekTab();
+            renderGCal();
         }
 
         // ==========================================
-        // 📺 غیبت کلاس آنلاین
+        // 🗓️ ساخت تقویم گوگلی (Grid)
         // ==========================================
-        function submitMissedClass() {
-            const className = document.getElementById('missedClassName').value.trim();
-            if(!className) return;
-
-            let planArr = currentScheduleObj.raw_plan;
-            
-            // پیدا کردن اولین جبرانی از امروز به بعد
-            let todayIndex = planArr.findIndex(p => p.day === todayNameFa);
-            if(todayIndex === -1) todayIndex = 0;
-
-            let makeupIdx = planArr.findIndex((p, idx) => idx >= todayIndex && p.subject.includes("جبرانی") && p.status === 'pending');
-
-            if(makeupIdx === -1) {
-                alert("⚠️ ظرفیت جبرانی‌ها در این هفته پر شده است.");
-                return;
-            }
-
-            planArr[makeupIdx].subject = className + " (آفلاین)";
-            planArr[makeupIdx].topic = "تماشای ویدیو و جزوه‌نویسی";
-            planArr[makeupIdx].type = "online_debt"; // رنگ نارنجی/قرمز
-            
-            document.getElementById('classModal').style.display = 'none';
-            document.getElementById('missedClassName').value = '';
-            
-            alert(`✅ کلاس شما برای روز ${planArr[makeupIdx].day} ثبت شد تا آفلاین ببینید.`);
-            
-            savePlanToDB();
-            renderTodayTab();
-            renderWeekTab();
-        }
-
-        // ==========================================
-        // 📊 آمارگیر و جشن 100%
-        // ==========================================
-        function updateProgressBar() {
-            const planArr = currentScheduleObj.raw_plan || [];
-            const activeToday = planArr.filter(p => p.day === todayNameFa && p.type !== 'break' && !p.subject.includes('ناهار') && !p.subject.includes('شام') && p.status !== 'shifted' && !(p.subject.includes('جبرانی') && p.status === 'pending'));
-            const completedToday = activeToday.filter(p => p.status === 'completed');
-            
-            let percent = 0;
-            if (activeToday.length > 0) percent = Math.round((completedToday.length / activeToday.length) * 100);
-            
-            document.getElementById('progressText').innerText = percent + '%';
-            document.getElementById('progressBar').style.width = percent + '%';
-
-            if(percent === 100 && activeToday.length > 0) {
-                triggerConfetti();
-            }
-        }
-
-        function triggerConfetti() {
-            var duration = 3 * 1000; var end = Date.now() + duration;
-            (function frame() {
-                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#f59e0b', '#10b981'] });
-                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#f59e0b', '#10b981'] });
-                if (Date.now() < end) requestAnimationFrame(frame);
-            }());
-        }
-
-        // ==========================================
-        // ⏱️ تایمر با مدیتیشن
-        // ==========================================
-        let timerInterval;
-        function openTimer(subject, startTime, endTime) {
-            document.getElementById('timerModal').style.display = 'flex';
-            const subjEl = document.getElementById('timerSubjectName');
-            const dispEl = document.getElementById('timerDisplay');
-            const btnEl = document.getElementById('btnCancelTimer');
-            const subText = document.getElementById('timerSubText');
-            
-            subjEl.innerText = "آماده‌سازی ذهن..."; dispEl.innerText = "🧘‍♂️";
-            subText.innerText = "یک نفس عمیق بکش و با تمام تمرکز شروع کن.";
-            btnEl.style.display = 'none';
-
-            setTimeout(() => {
-                subjEl.innerText = "مأموریت: " + subject;
-                subText.innerText = "گوشیت رو بذار کنار. زمان در حال سپری شدنه.";
-                btnEl.style.display = 'block';
-                
-                let startMins = timeStrToMins(startTime); let endMins = timeStrToMins(endTime);
-                let totalSeconds = (endMins - startMins) * 60;
-                if(totalSeconds <= 0) totalSeconds = 90 * 60;
-
-                updateTimerDisplay(totalSeconds);
-
-                timerInterval = setInterval(() => {
-                    totalSeconds--; updateTimerDisplay(totalSeconds);
-                    if(totalSeconds <= 0) {
-                        clearInterval(timerInterval);
-                        alert("⏰ زمان پارت تمام شد! خسته نباشی.");
-                        closeTimer();
-                    }
-                }, 1000);
-            }, 3000);
-        }
-
-        function updateTimerDisplay(t) {
-            let m = Math.floor(t / 60); let s = t % 60;
-            document.getElementById('timerDisplay').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-        }
-        function closeTimer() { clearInterval(timerInterval); document.getElementById('timerModal').style.display = 'none'; }
-        function timeStrToMins(timeStr) { let p = timeStr.split(':'); return (parseInt(p[0]) * 60) + parseInt(p[1]); }
-
-        // ==========================================
-        // 🗓️ نمای حرفه‌ای کل هفته
-        // ==========================================
-        function renderWeekTab() {
-            if(!currentScheduleObj) return;
-            const planArr = currentScheduleObj.raw_plan || [];
-            
-            // آمارگیری جبرانی‌ها
-            const availableMakeups = planArr.filter(p => p.subject.includes('جبرانی') && p.status === 'pending').length;
-            document.getElementById('makeupCount').innerText = availableMakeups + " پارت";
-            const wStatus = document.getElementById('weekStatus');
-            if(availableMakeups > 3) { wStatus.innerText = "ایمن 🟢"; wStatus.style.color = "var(--success)"; }
-            else if(availableMakeups > 0) { wStatus.innerText = "هشدار 🟠"; wStatus.style.color = "var(--warning)"; }
-            else { wStatus.innerText = "بحرانی 🔴"; wStatus.style.color = "var(--danger)"; }
-
-            const container = document.getElementById('weekTimelineContainer');
+        function renderGCal() {
+            const container = document.getElementById('gcalGrid');
             container.innerHTML = '';
-
-            const daysOrder = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
             
-            daysOrder.forEach(day => {
-                const dayBlocks = planArr.filter(p => p.day === day && !p.subject.includes('ناهار') && !p.subject.includes('شام'));
-                if (dayBlocks.length === 0) return;
+            // ۱. ساخت هدر روزها
+            const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+            container.innerHTML += `<div class="gcal-header" style="grid-column: 1; grid-row: 1;">ساعت</div>`;
+            days.forEach((day, index) => {
+                container.innerHTML += `<div class="gcal-header" style="grid-column: ${index+2}; grid-row: 1;">${day}</div>`;
+            });
 
-                // محاسبه تاریخ واقعی این روز (اگه تو دیتابیس actual_date باشه)
-                let actualDate = dayBlocks[0].actual_date || "...";
+            // ۲. ساخت ستون ساعت‌ها (از ۶ تا ۲۳)
+            for(let i = 0; i <= 17; i++) {
+                let hour = i + 6;
+                container.innerHTML += `<div class="gcal-time-col" style="grid-column: 1; grid-row: ${i+2};">${hour}:00</div>`;
+                // خطوط شبکه‌ی تقویم
+                for(let j=0; j<7; j++) {
+                    container.innerHTML += `<div class="gcal-cell" style="grid-column: ${j+2}; grid-row: ${i+2};"></div>`;
+                }
+            }
 
-                let blocksHTML = '';
-                dayBlocks.forEach(p => {
-                    let statusClass = p.status === 'completed' ? 'completed' : (p.status === 'shifted' ? 'shifted' : '');
-                    let isMakeup = (p.subject.includes('جبرانی') && p.status === 'pending') ? 'is-makeup' : '';
-                    blocksHTML += `
-                        <div class="w-block ${statusClass} ${isMakeup}">
-                            <span>${p.subject}</span>
-                            <span class="w-time">${p.start_time} - ${p.end_time}</span>
-                        </div>
-                    `;
-                });
+            // ۳. کاشتن رویدادها روی تقویم
+            const planArr = currentScheduleObj.raw_plan || [];
+            planArr.forEach(part => {
+                if(part.subject === "بانک جبرانی" && part.status === "pending") return; // مخفی کردن بانک‌های خالی
 
-                const groupHTML = `
-                    <div class="week-day-card">
-                        <div class="week-day-header">
-                            <span class="wd-title">${day}</span>
-                            <span class="wd-date">${actualDate}</span>
-                        </div>
-                        <div class="week-day-body">
-                            ${blocksHTML}
-                        </div>
+                let colIndex = days.indexOf(part.day) + 2;
+                if(colIndex < 2) return;
+
+                // محاسبه موقعیت بر اساس زمان
+                let startMins = timeStrToMins(part.start_time);
+                let endMins = timeStrToMins(part.end_time);
+                
+                // شروع از ساعت 6 صبح (360 دقیقه)
+                let startOffset = startMins - 360; 
+                if(startOffset < 0) startOffset = 0;
+                
+                // هر 60 دقیقه = 60 پیکسل (grid-row height)
+                let topPx = startOffset;
+                let heightPx = endMins - startMins;
+
+                // رنگ‌بندی
+                let bgColor = "#64748b"; // default
+                if(part.type === 'class') bgColor = "#475569";
+                else if(part.subject.includes("زیست")) bgColor = "#10b981";
+                else if(part.subject.includes("ریاضی") || part.subject.includes("فیزیک")) bgColor = "#f59e0b";
+
+                let statusClass = part.status === 'completed' ? 'completed' : (part.status === 'shifted' ? 'shifted' : '');
+                
+                // تزریق بلوک رویداد (ما از grid-row: 2 / span 18 استفاده می‌کنیم تا بتونیم absolute position بدیم)
+                let eventHtml = `
+                    <div class="gcal-event ${statusClass}" style="grid-column: ${colIndex}; grid-row: 2 / span 18; top: ${topPx}px; height: ${heightPx}px; background: ${bgColor};">
+                        <div class="g-event-title">${part.subject}</div>
+                        <div class="g-event-time">${part.start_time}-${part.end_time}</div>
                     </div>
                 `;
-                container.insertAdjacentHTML('beforeend', groupHTML);
+                container.innerHTML += eventHtml;
             });
+        }
+
+        function timeStrToMins(timeStr) {
+            if(!timeStr) return 0;
+            let p = timeStr.split(':'); return (parseInt(p[0]) * 60) + parseInt(p[1]);
         }
 
         function switchTab(tabId, btnElement) {
@@ -553,43 +301,6 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             btnElement.classList.add('active');
-        }
-
-        // ==========================================
-        // 📨 اتاق فکر (همیشه باز برای تست)
-        // ==========================================
-        async function requestNewSchedule() {
-            const note = document.getElementById('nextWeekNote').value.trim();
-            const optBase = document.getElementById('opt_base').checked;
-            const optExam = document.getElementById('opt_exam').checked;
-            const btn = document.getElementById('btnRequestPlan');
-
-            const originalText = btn.innerHTML;
-            btn.innerHTML = 'در حال ارسال... ⏳'; btn.disabled = true;
-
-            try {
-                const response = await fetch(GAS_WEBAPP_URL, {
-                    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        action: 'generate_schedule', student_id: userId, student_note: note,
-                        student_options: { "pishrovi_payeh": optBase, "school_exams_focus": optExam }
-                    })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    document.getElementById('fridayForm').innerHTML = `
-                        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px; margin-top: 15px;">
-                            <div style="font-size: 30px; margin-bottom: 10px;">✅</div>
-                            <h3 style="color: var(--success); margin-bottom: 5px;">ارسال شد</h3>
-                            <p style="font-size: 13px; color: var(--text-muted);">اطلاعات شما با موفقیت به اتاق فکر مشاوران ارسال گردید.</p>
-                        </div>
-                    `;
-                } else throw new Error(result.error);
-            } catch (error) {
-                alert('❌ خطا: ' + error.message);
-                btn.innerHTML = originalText; btn.disabled = false;
-            }
         }
     </script>
 </body>
