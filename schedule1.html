@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عملیات امروز | قطب‌نما</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root { 
+            --vip-bg: #0f172a; --vip-surface: #1e293b; --vip-border: #334155;
+            --gold: #f59e0b; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+            --info: #3b82f6; --purple: #8b5cf6; --text-main: #f8fafc; --text-muted: #94a3b8;
+        }
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; user-select: none; }
+        body { background: var(--vip-bg); color: var(--text-main); line-height: 1.6; padding-bottom: 90px; }
+        .app-container { max-width: 700px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* هدر و تب‌ها */
+        .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .action-btn { background: var(--vip-surface); border: 1px solid var(--vip-border); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; cursor: pointer; }
+        .page-title { font-size: 18px; font-weight: 900; color: var(--gold); }
+        
+        .tabs-container { display: flex; background: var(--vip-surface); border-radius: 16px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--vip-border); }
+        .tab-btn { flex: 1; text-align: center; padding: 12px 2px; font-size: 13px; font-weight: bold; color: var(--text-muted); text-decoration: none; border-radius: 12px; transition: 0.3s; }
+        .tab-btn.active { background: var(--gold); color: #000; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); }
+
+        /* باکس‌ها و کارت‌ها */
+        .daily-note { background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.05)); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 20px; padding: 20px 20px 20px 50px; margin-bottom: 20px; position: relative; }
+        .daily-note-icon { position: absolute; left: 15px; top: 18px; font-size: 28px; }
+        .daily-note-title { font-size: 12px; color: var(--gold); font-weight: bold; margin-bottom: 5px; }
+        .daily-note-text { font-size: 13px; color: var(--text-main); font-weight: bold; }
+
+        .missed-class-btn { background: rgba(239, 68, 68, 0.1); border: 1px dashed var(--danger); color: #fca5a5; width: 100%; padding: 12px; border-radius: 16px; font-size: 13px; font-weight: bold; cursor: pointer; margin-bottom: 20px; display: flex; justify-content: center; gap: 8px; }
+        
+        .progress-box { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 16px; padding: 15px 20px; margin-bottom: 20px; }
+        .progress-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 10px; }
+        .progress-bar-bg { width: 100%; height: 8px; background: var(--vip-bg); border-radius: 10px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: var(--success); width: 0%; transition: 1s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        .quest-card { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 20px; padding: 18px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid var(--vip-border); }
+        .quest-card.completed { background: rgba(16, 185, 129, 0.05); border-color: var(--success); border-right-color: var(--success); opacity: 0.6; }
+        .type-bio { border-right-color: var(--success); } .type-math { border-right-color: var(--warning); } .type-chem { border-right-color: var(--info); } .type-phys { border-right-color: var(--purple); }
+        .quest-info { flex: 1; padding-left: 10px; }
+        .quest-time { font-size: 11px; color: var(--text-muted); font-weight: bold; background: var(--vip-bg); padding: 4px 8px; border-radius: 6px; display: inline-block; margin-bottom: 8px; }
+        .quest-title { font-size: 15px; font-weight: 900; margin-bottom: 5px; }
+        .quest-card.completed .quest-title { text-decoration: line-through; color: var(--success); }
+        .quest-desc { font-size: 11px; color: var(--text-muted); }
+        .quest-actions { display: flex; gap: 8px; flex-direction: column; justify-content: center; }
+        .action-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 1px solid var(--vip-border); background: var(--vip-bg); font-size: 14px; }
+        .btn-check:hover, .quest-card.completed .btn-check { background: var(--success); border-color: var(--success); color: white; }
+
+        /* مدال‌ها */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
+        .modal-box { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 24px; padding: 25px; width: 100%; max-width: 400px; }
+        .timer-display { font-size: 70px; font-weight: 900; color: var(--gold); font-family: monospace; letter-spacing: 5px; margin: 20px 0; }
+        .btn-gold { background: linear-gradient(135deg, var(--gold), #d97706); color: #000; width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-outline { background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted); width: 100%; padding: 15px; border-radius: 12px; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="modal-overlay" id="timerModal">
+        <div id="timerSubjectName" style="font-size:20px;color:white;font-weight:bold;">آماده‌سازی ذهن...</div>
+        <div class="timer-display" id="timerDisplay">🧘‍♂️</div>
+        <div id="timerSubText" style="color:var(--text-muted);font-size:14px;">یک نفس عمیق بکش...</div>
+        <button class="btn-outline" onclick="closeTimer()" id="btnCancelTimer" style="display:none;max-width:200px;margin-top:30px;border-color:var(--danger);color:var(--danger);">توقف</button>
+    </div>
+
+    <div class="modal-overlay" id="classModal">
+        <div class="modal-box">
+            <h3 style="color: var(--danger); margin-bottom: 15px;">ثبت غیبت در کلاس</h3>
+            <input type="text" id="missedClassName" placeholder="مثلاً: کلاس فیزیک استاد..." style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--vip-border); background: var(--vip-bg); color: white; outline: none; margin-bottom: 20px;">
+            <button class="btn-gold" onclick="submitMissedClass()">ثبت و جبران 🔄</button>
+            <button class="btn-outline" onclick="document.getElementById('classModal').style.display='none'">انصراف</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="celebrationModal">
+        <div class="modal-box" style="border-color: var(--success);">
+            <div style="font-size: 50px;">🏆</div>
+            <h2 style="color: var(--success); margin: 10px 0;">فوق‌العاده بودی!</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">مأموریت‌های امروز رو کامل کردی.</p>
+            <button class="btn-gold" onclick="document.getElementById('celebrationModal').style.display='none'">بستن</button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <div class="nav-header">
+            <a href="menu.html" class="action-btn">🔙</a>
+            <div class="page-title">قطب‌نمای راهینو</div>
+            <a href="vip-setup.html" class="action-btn">⚙️</a>
+        </div>
+
+        <div class="tabs-container">
+            <a href="schedule.html" class="tab-btn active">🎯 عملیات امروز</a>
+            <a href="week.html" class="tab-btn">🗓️ تقویم هفته</a>
+            <a href="request.html" class="tab-btn">🎁 اتاق فکر</a>
+        </div>
+
+        <div class="daily-note" id="dailyNoteBox" style="display: none;">
+            <div class="daily-note-icon">👨‍🏫</div>
+            <div class="daily-note-title">پیام مشاور شما:</div>
+            <div class="daily-note-text" id="dailyNoteContent">...</div>
+        </div>
+
+        <button class="missed-class-btn" onclick="document.getElementById('classModal').style.display='flex'">
+            <span>⚠️</span> ثبت غیبت در کلاس (درخواست تایم آفلاین)
+        </button>
+
+        <div class="progress-box">
+            <div class="progress-header"><span>پیشرفت مأموریت‌ها</span><span id="progressText" style="color:var(--gold);">0%</span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+        </div>
+
+        <div id="questsContainer">
+            <div style="text-align:center; padding: 40px; color: var(--text-muted);">در حال دریافت اطلاعات...</div>
+        </div>
+    </div>
+
+    <script>
+        // --- تنظیمات دیتابیس ---
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); 
+        const userId = localStorage.getItem('qotbnama_user_id') || '999999';
+        const todayNameFa = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(new Date());
+        let currentScheduleObj = null;
+
+        window.onload = async function() {
+            if (!userId) { window.location.href = 'index.html'; return; }
+            await loadCurrentSchedule();
+        };
+
+        async function loadCurrentSchedule() {
+            const { data, error } = await supabaseClient.from('ai_schedules').select('*')
+                .eq('chat_id', String(userId)).eq('status', 'approved').order('created_at', { ascending: false }).limit(1);
+            if (data && data.length > 0) {
+                currentScheduleObj = data[0]; renderTodayTab();
+            } else {
+                document.getElementById('questsContainer').innerHTML = '<div style="text-align:center;color:var(--text-muted);">برنامه‌ای یافت نشد.</div>';
+            }
+        }
+
+        function renderTodayTab() {
+            const planArr = currentScheduleObj.raw_plan || [];
+            const motivations = currentScheduleObj.ai_motivations || {};
+            
+            if (motivations.daily_motivations && motivations.daily_motivations[todayNameFa]) {
+                document.getElementById('dailyNoteBox').style.display = 'block';
+                document.getElementById('dailyNoteContent').innerText = motivations.daily_motivations[todayNameFa];
+            }
+
+            const todaysBlocks = planArr.filter(p => p.day === todayNameFa && p.subject !== 'بانک جبرانی' && !p.subject.includes('ناهار') && !p.subject.includes('شام'));
+            const container = document.getElementById('questsContainer'); container.innerHTML = '';
+
+            if (todaysBlocks.length === 0) { container.innerHTML = '<div style="text-align:center;color:var(--text-muted);">امروز مأموریتی نداری! 🏖️</div>'; updateProgressBar(); return; }
+
+            todaysBlocks.forEach((part) => {
+                if(part.status === 'shifted') return; 
+                let cardClass = part.status === 'completed' ? 'completed' : '';
+                
+                container.innerHTML += `
+                    <div class="quest-card type-${part.type || 'default'} ${cardClass}" id="card_${part.block_id}">
+                        <div class="quest-info">
+                            <div class="quest-time">${part.start_time} - ${part.end_time}</div>
+                            <div class="quest-title">${part.subject}</div>
+                            <div class="quest-desc">${part.topic || ''}</div>
+                        </div>
+                        <div class="quest-actions">
+                            <div class="action-circle" onclick="shiftQuest('${part.block_id}')" title="انتقال">🔄</div>
+                            <div class="action-circle" onclick="openTimer('${part.subject}', '${part.start_time}', '${part.end_time}')" title="تایمر">▶️</div>
+                            <div class="action-circle btn-check" onclick="toggleQuest('${part.block_id}')" title="انجام شد">✅</div>
+                        </div>
+                    </div>
+                `;
+            });
+            updateProgressBar();
+        }
+
+        async function savePlanToDB() { await supabaseClient.from('ai_schedules').update({ raw_plan: currentScheduleObj.raw_plan }).eq('id', currentScheduleObj.id); }
+
+        function toggleQuest(blockId) {
+            let block = currentScheduleObj.raw_plan.find(p => p.block_id === blockId); if(!block) return;
+            block.status = block.status === 'completed' ? 'pending' : 'completed';
+            document.getElementById('card_' + blockId).classList.toggle('completed');
+            updateProgressBar(); savePlanToDB();
+        }
+
+        function shiftQuest(blockId) {
+            let planArr = currentScheduleObj.raw_plan;
+            let origIdx = planArr.findIndex(p => p.block_id === blockId);
+            let origBlock = planArr[origIdx];
+            let isClass = (origBlock.type === 'class');
+            if(!confirm(isClass ? "غیبت در کلاس؟ (انتقال به جبرانی برای مشاهده آفلاین)" : "انتقال به اولین جبرانی خالی؟")) return;
+
+            let makeupIdx = planArr.findIndex((p, idx) => idx > origIdx && p.subject === "بانک جبرانی" && p.status === 'pending');
+            if(makeupIdx === -1) { alert("ظرفیت بانک جبرانی هفته پر شده است!"); return; }
+
+            if (isClass) { planArr[makeupIdx].subject = origBlock.subject + " (آفلاین)"; planArr[makeupIdx].topic = "تماشای ویدیو"; planArr[makeupIdx].type = 'online_debt'; } 
+            else { planArr[makeupIdx].subject = origBlock.subject + " (جبرانی)"; planArr[makeupIdx].topic = origBlock.topic; planArr[makeupIdx].type = origBlock.type; }
+            
+            origBlock.status = 'shifted'; document.getElementById('card_' + blockId).style.display = 'none';
+            alert(`✅ منتقل شد به: ${planArr[makeupIdx].day} ساعت ${planArr[makeupIdx].start_time}`);
+            updateProgressBar(); savePlanToDB();
+        }
+
+        function submitMissedClass() {
+            let className = document.getElementById('missedClassName').value.trim(); if(!className) return;
+            let planArr = currentScheduleObj.raw_plan;
+            let todayIndex = planArr.findIndex(p => p.day === todayNameFa); if(todayIndex === -1) todayIndex = 0;
+            let makeupIdx = planArr.findIndex((p, idx) => idx >= todayIndex && p.subject === "بانک جبرانی" && p.status === 'pending');
+            if(makeupIdx === -1) { alert("ظرفیت جبرانی پر است."); return; }
+
+            planArr[makeupIdx].subject = className + " (آفلاین)"; planArr[makeupIdx].topic = "تماشای ویدیو"; planArr[makeupIdx].type = "online_debt"; 
+            document.getElementById('classModal').style.display = 'none'; document.getElementById('missedClassName').value = '';
+            alert(`✅ کلاس برای روز ${planArr[makeupIdx].day} ثبت شد.`);
+            savePlanToDB(); renderTodayTab();
+        }
+
+        function updateProgressBar() {
+            const activeToday = currentScheduleObj.raw_plan.filter(p => p.day === todayNameFa && p.type !== 'break' && p.type !== 'class' && !p.subject.includes('ناهار') && !p.subject.includes('شام') && p.status !== 'shifted' && p.subject !== 'بانک جبرانی');
+            const completedToday = activeToday.filter(p => p.status === 'completed');
+            let percent = activeToday.length > 0 ? Math.round((completedToday.length / activeToday.length) * 100) : 0;
+            
+            document.getElementById('progressText').innerText = percent + '%';
+            document.getElementById('progressBar').style.width = percent + '%';
+            if(percent === 100 && activeToday.length > 0) { document.getElementById('celebrationModal').style.display = 'flex'; triggerConfetti(); }
+        }
+
+        function triggerConfetti() {
+            var end = Date.now() + 3000;
+            (function frame() {
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#f59e0b', '#10b981'] });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#f59e0b', '#10b981'] });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+
+        let timerInterval;
+        function openTimer(subject, startTime, endTime) {
+            document.getElementById('timerModal').style.display = 'flex';
+            document.getElementById('timerSubjectName').innerText = "آماده‌سازی ذهن..."; document.getElementById('timerDisplay').innerText = "🧘‍♂️";
+            document.getElementById('btnCancelTimer').style.display = 'none';
+
+            setTimeout(() => {
+                document.getElementById('timerSubjectName').innerText = subject;
+                document.getElementById('btnCancelTimer').style.display = 'block';
+                let t = ((parseInt(endTime.split(':')[0])*60 + parseInt(endTime.split(':')[1])) - (parseInt(startTime.split(':')[0])*60 + parseInt(startTime.split(':')[1]))) * 60;
+                if(t <= 0) t = 90 * 60;
+
+                timerInterval = setInterval(() => {
+                    t--; document.getElementById('timerDisplay').innerText = `${Math.floor(t/60).toString().padStart(2,'0')}:${(t%60).toString().padStart(2,'0')}`;
+                    if(t <= 0) { clearInterval(timerInterval); alert("⏰ پایان پارت!"); closeTimer(); }
+                }, 1000);
+            }, 3000);
+        }
+        function closeTimer() { clearInterval(timerInterval); document.getElementById('timerModal').style.display = 'none'; }
+    </script>
+</body>
+</html>
