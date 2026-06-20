@@ -103,11 +103,14 @@
         function changeWeek(index) { currentScheduleObj = allSchedules[index]; renderGCal(); }
 
         // تبدیل تاریخ میلادی به رشته شمسی (مثلاً ۲۴ مهر)
+       // تبدیل تاریخ بدون باگ منطقه زمانی
         function getShamsiDateStr(isoDateStr) {
             if(!isoDateStr) return "";
-            return new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' }).format(new Date(isoDateStr));
+            // جدا کردن سال، ماه و روز برای جلوگیری از باگ UTC
+            let parts = isoDateStr.split('-');
+            let dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+            return new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' }).format(dateObj);
         }
-
         function renderGCal() {
             const container = document.getElementById('gcalGrid'); container.innerHTML = '';
             const daysArr = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
