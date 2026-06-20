@@ -8,11 +8,15 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        :root { --vip-bg: #0f172a; --vip-surface: #1e293b; --vip-border: #334155; --gold: #f59e0b; --success: #10b981; --danger: #ef4444; --text-main: #f8fafc; --text-muted: #94a3b8; }
-        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        :root { --vip-bg: #f8fafc; --vip-surface: #ffffff; --vip-border: #e2e8f0; --gold: #d97706; --success: #10b981; --danger: #ef4444; --text-main: #0f172a; --text-muted: #64748b; }
+        [data-theme="dark"] { --vip-bg: #0f172a; --vip-surface: #1e293b; --vip-border: #334155; --gold: #f59e0b; --success: #10b981; --danger: #ef4444; --text-main: #f8fafc; --text-muted: #94a3b8; }
+        
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
         body { background: var(--vip-bg); color: var(--text-main); line-height: 1.6; padding-bottom: 90px; }
         .app-container { max-width: 800px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .theme-toggle { background: var(--vip-surface); border: 1px solid var(--vip-border); color: var(--text-main); width: 45px; height: 45px; border-radius: 14px; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; }
 
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .action-btn { background: var(--vip-surface); border: 1px solid var(--vip-border); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; }
@@ -27,10 +31,11 @@
         .gcal-wrapper { overflow-x: auto; background: var(--vip-surface); border-radius: 16px; border: 1px solid var(--vip-border); direction: rtl; }
         .gcal-container { display: flex; min-width: 850px; background: var(--vip-bg); position: relative; }
         .gcal-time-col { width: 50px; flex-shrink: 0; border-left: 1px solid var(--vip-border); background: var(--vip-surface); position: sticky; right: 0; z-index: 10; }
-        .gcal-time-header { height: 40px; border-bottom: 1px solid var(--vip-border); display: flex; justify-content: center; align-items: center; font-size: 11px; font-weight: bold; color: var(--gold); }
+        .gcal-time-header { height: 45px; border-bottom: 1px solid var(--vip-border); display: flex; justify-content: center; align-items: center; font-size: 11px; font-weight: bold; color: var(--gold); }
         .gcal-time-slot { height: 60px; border-bottom: 1px dashed var(--vip-border); font-size: 10px; color: var(--text-muted); text-align: center; padding-top: 5px; font-family: monospace; }
         .gcal-day-col { flex: 1; border-left: 1px solid var(--vip-border); position: relative; min-width: 110px; }
-        .gcal-day-header { height: 40px; border-bottom: 1px solid var(--vip-border); display: flex; justify-content: center; align-items: center; font-size: 13px; font-weight: bold; background: var(--vip-surface); position: sticky; top: 0; z-index: 9; }
+        .gcal-day-header { height: 45px; border-bottom: 1px solid var(--vip-border); display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; background: var(--vip-surface); position: sticky; top: 0; z-index: 9; }
+        .gcal-day-date { font-size: 9px; color: var(--text-muted); font-weight: normal; }
         .gcal-day-grid { position: relative; height: 1080px; background-image: linear-gradient(to bottom, transparent 59px, var(--vip-border) 60px); background-size: 100% 60px; }
         .gcal-event { position: absolute; left: 4px; right: 4px; border-radius: 6px; padding: 6px; font-size: 10px; color: white; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border-right: 3px solid rgba(255,255,255,0.4); z-index: 5; }
         .gcal-event.completed { opacity: 0.5; background: var(--success) !important; border-right-color: rgba(255,255,255,0.2); }
@@ -41,7 +46,7 @@
 
     <div class="app-container">
         <div class="nav-header">
-            <a href="menu.html" class="action-btn">🔙</a>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
             <div class="page-title">
                 قطب‌نمای راهینو
                 <br><select id="weekSelector" class="week-selector" onchange="changeWeek(this.value)"></select>
@@ -67,6 +72,17 @@
         const userId = localStorage.getItem('qotbnama_user_id') || '999999';
         let allSchedules = []; let currentScheduleObj = null;
 
+        // 🌗 سیستم دارک مود
+        const themeBtn = document.getElementById('themeBtn');
+        const currentTheme = localStorage.getItem('theme') || 'dark'; // پیش فرض دارک
+        if (currentTheme === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); themeBtn.innerText = '☀️'; } else { themeBtn.innerText = '🌙'; }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); themeBtn.innerText = '🌙'; } 
+            else { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); themeBtn.innerText = '☀️'; }
+        }
+
         window.onload = async function() { await loadAllSchedules(); };
 
         async function loadAllSchedules() {
@@ -86,6 +102,12 @@
 
         function changeWeek(index) { currentScheduleObj = allSchedules[index]; renderGCal(); }
 
+        // تبدیل تاریخ میلادی به رشته شمسی (مثلاً ۲۴ مهر)
+        function getShamsiDateStr(isoDateStr) {
+            if(!isoDateStr) return "";
+            return new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' }).format(new Date(isoDateStr));
+        }
+
         function renderGCal() {
             const container = document.getElementById('gcalGrid'); container.innerHTML = '';
             const daysArr = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
@@ -95,9 +117,19 @@
             container.innerHTML += timeColHtml + `</div>`;
 
             const planArr = currentScheduleObj.raw_plan || [];
+            
             daysArr.forEach(day => {
-                let dayHtml = `<div class="gcal-day-col"><div class="gcal-day-header">${day}</div><div class="gcal-day-grid">`;
                 let dayBlocks = planArr.filter(p => p.day === day && p.subject !== "بانک جبرانی");
+                
+                // استخراج تاریخ واقعی این روز از اولین پارتِ همون روز
+                let actualDateShamsi = "تاریخ نامعلوم";
+                if(dayBlocks.length > 0 && dayBlocks[0].actual_date) {
+                    actualDateShamsi = getShamsiDateStr(dayBlocks[0].actual_date);
+                }
+
+                let dayHtml = `<div class="gcal-day-col">
+                                <div class="gcal-day-header">${day}<span class="gcal-day-date">${actualDateShamsi}</span></div>
+                                <div class="gcal-day-grid">`;
                 
                 dayBlocks.forEach(part => {
                     let startMins = (parseInt(part.start_time.split(':')[0])*60) + parseInt(part.start_time.split(':')[1]);
