@@ -9,32 +9,41 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
+        /* 🎨 سیستم رنگ‌بندی داینامیک */
         :root { 
+            --vip-bg: #f8fafc; --vip-surface: #ffffff; --vip-border: #e2e8f0;
+            --gold: #d97706; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+            --info: #3b82f6; --purple: #8b5cf6; --text-main: #0f172a; --text-muted: #64748b;
+        }
+
+        [data-theme="dark"] { 
             --vip-bg: #0f172a; --vip-surface: #1e293b; --vip-border: #334155;
             --gold: #f59e0b; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
             --info: #3b82f6; --purple: #8b5cf6; --text-main: #f8fafc; --text-muted: #94a3b8;
         }
-        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; user-select: none; }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; user-select: none; transition: background-color 0.3s, color 0.3s; }
         body { background: var(--vip-bg); color: var(--text-main); line-height: 1.6; padding-bottom: 90px; }
-        .app-container { max-width: 700px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s ease-out; }
+        .app-container { max-width: 700px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s ease-out; position: relative; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* هدر و تب‌ها */
+        .theme-toggle { background: var(--vip-surface); border: 1px solid var(--vip-border); color: var(--text-main); width: 45px; height: 45px; border-radius: 14px; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; }
+
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .action-btn { background: var(--vip-surface); border: 1px solid var(--vip-border); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; cursor: pointer; }
-        .page-title { font-size: 18px; font-weight: 900; color: var(--gold); }
+        .page-title { font-size: 18px; font-weight: 900; color: var(--gold); display: flex; flex-direction: column; align-items: center;}
+        .page-subtitle { font-size: 12px; color: var(--text-muted); font-weight: normal; }
         
         .tabs-container { display: flex; background: var(--vip-surface); border-radius: 16px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--vip-border); }
         .tab-btn { flex: 1; text-align: center; padding: 12px 2px; font-size: 13px; font-weight: bold; color: var(--text-muted); text-decoration: none; border-radius: 12px; transition: 0.3s; }
         .tab-btn.active { background: var(--gold); color: #000; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); }
 
-        /* باکس‌ها و کارت‌ها */
         .daily-note { background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.05)); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 20px; padding: 20px 20px 20px 50px; margin-bottom: 20px; position: relative; }
         .daily-note-icon { position: absolute; left: 15px; top: 18px; font-size: 28px; }
         .daily-note-title { font-size: 12px; color: var(--gold); font-weight: bold; margin-bottom: 5px; }
         .daily-note-text { font-size: 13px; color: var(--text-main); font-weight: bold; }
 
-        .missed-class-btn { background: rgba(239, 68, 68, 0.1); border: 1px dashed var(--danger); color: #fca5a5; width: 100%; padding: 12px; border-radius: 16px; font-size: 13px; font-weight: bold; cursor: pointer; margin-bottom: 20px; display: flex; justify-content: center; gap: 8px; }
+        .missed-class-btn { background: rgba(239, 68, 68, 0.1); border: 1px dashed var(--danger); color: var(--danger); width: 100%; padding: 12px; border-radius: 16px; font-size: 13px; font-weight: bold; cursor: pointer; margin-bottom: 20px; display: flex; justify-content: center; gap: 8px; }
         
         .progress-box { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 16px; padding: 15px 20px; margin-bottom: 20px; }
         .progress-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 10px; }
@@ -73,7 +82,7 @@
     <div class="modal-overlay" id="classModal">
         <div class="modal-box">
             <h3 style="color: var(--danger); margin-bottom: 15px;">ثبت غیبت در کلاس</h3>
-            <input type="text" id="missedClassName" placeholder="مثلاً: کلاس فیزیک استاد..." style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--vip-border); background: var(--vip-bg); color: white; outline: none; margin-bottom: 20px;">
+            <input type="text" id="missedClassName" placeholder="مثلاً: کلاس فیزیک استاد..." style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--vip-border); background: var(--vip-bg); color: var(--text-main); outline: none; margin-bottom: 20px;">
             <button class="btn-gold" onclick="submitMissedClass()">ثبت و جبران 🔄</button>
             <button class="btn-outline" onclick="document.getElementById('classModal').style.display='none'">انصراف</button>
         </div>
@@ -90,8 +99,11 @@
 
     <div class="app-container">
         <div class="nav-header">
-            <a href="menu.html" class="action-btn">🔙</a>
-            <div class="page-title">قطب‌نمای راهینو</div>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+            <div class="page-title">
+                قطب‌نمای راهینو
+                <span class="page-subtitle" id="todayDateLabel">...</span>
+            </div>
             <a href="vip-setup.html" class="action-btn">⚙️</a>
         </div>
 
@@ -130,8 +142,23 @@
         const todayNameFa = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(new Date());
         let currentScheduleObj = null;
 
+        // 🌗 سیستم دارک مود
+        const themeBtn = document.getElementById('themeBtn');
+        const currentTheme = localStorage.getItem('theme') || 'dark'; // پیش فرض دارک
+        if (currentTheme === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); themeBtn.innerText = '☀️'; } 
+        else { themeBtn.innerText = '🌙'; }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); themeBtn.innerText = '🌙'; } 
+            else { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); themeBtn.innerText = '☀️'; }
+        }
+
         window.onload = async function() {
             if (!userId) { window.location.href = 'index.html'; return; }
+            // ست کردن تاریخ شمسی امروز در هدر
+            const todayShamsi = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
+            document.getElementById('todayDateLabel').innerText = todayShamsi;
             await loadCurrentSchedule();
         };
 
