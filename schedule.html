@@ -140,6 +140,8 @@
         const userId = localStorage.getItem('qotbnama_user_id') || '999999';
         const todayNameFa = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(new Date());
         let currentScheduleObj = null;
+        let isInitialLoad = true;
+        let hasCelebratedToday = false;
 
         // 🌗 سیستم دارک مود
         const themeBtn = document.getElementById('themeBtn');
@@ -210,8 +212,8 @@
                 `;
             });
             updateProgressBar();
+            isInitialLoad = false; // این خط اضافه شود
         }
-
         async function savePlanToDB() { await supabaseClient.from('ai_schedules').update({ raw_plan: currentScheduleObj.raw_plan }).eq('id', currentScheduleObj.id); }
 
         function toggleQuest(blockId) {
@@ -300,7 +302,16 @@
             
             document.getElementById('progressText').innerText = percent + '%';
             document.getElementById('progressBar').style.width = percent + '%';
-            if(percent === 100 && activeToday.length > 0) { document.getElementById('celebrationModal').style.display = 'flex'; triggerConfetti(); }
+            
+            if(percent === 100 && activeToday.length > 0) { 
+                if (!isInitialLoad && !hasCelebratedToday) {
+                    document.getElementById('celebrationModal').style.display = 'flex'; 
+                    triggerConfetti(); 
+                    hasCelebratedToday = true;
+                }
+            } else {
+                hasCelebratedToday = false; // اگر تیک رو برداشت، دوباره ریست بشه
+            }
         }
 
         function triggerConfetti() {
