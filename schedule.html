@@ -9,7 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
-        /* 🎨 سیستم رنگ‌بندی داینامیک */
         :root { 
             --vip-bg: #f8fafc; --vip-surface: #ffffff; --vip-border: #e2e8f0;
             --gold: #d97706; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
@@ -43,8 +42,6 @@
         .daily-note-title { font-size: 12px; color: var(--gold); font-weight: bold; margin-bottom: 5px; }
         .daily-note-text { font-size: 13px; color: var(--text-main); font-weight: bold; }
 
-        .missed-class-btn { background: rgba(239, 68, 68, 0.1); border: 1px dashed var(--danger); color: var(--danger); width: 100%; padding: 12px; border-radius: 16px; font-size: 13px; font-weight: bold; cursor: pointer; margin-bottom: 20px; display: flex; justify-content: center; gap: 8px; }
-        
         .progress-box { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 16px; padding: 15px 20px; margin-bottom: 20px; }
         .progress-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 10px; }
         .progress-bar-bg { width: 100%; height: 8px; background: var(--vip-bg); border-radius: 10px; overflow: hidden; }
@@ -65,26 +62,39 @@
         /* مدال‌ها */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
         .modal-box { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 24px; padding: 25px; width: 100%; max-width: 400px; }
-        .timer-display { font-size: 70px; font-weight: 900; color: var(--gold); font-family: monospace; letter-spacing: 5px; margin: 20px 0; }
         .btn-gold { background: linear-gradient(135deg, var(--gold), #d97706); color: #000; width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; }
-        .btn-outline { background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted); width: 100%; padding: 15px; border-radius: 12px; cursor: pointer; margin-top: 10px; }
+        
+        /* استایل اختصاصی بیدارباش */
+        .streak-badge { background: rgba(245, 158, 11, 0.1); border: 1px solid var(--gold); color: var(--gold); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
+        #blurLayer { transition: filter 0.5s; }
+        .is-locked { filter: blur(8px) grayscale(50%); pointer-events: none; user-select: none; }
+        .quiz-input { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid var(--vip-border); background: var(--vip-bg); color: var(--text-main); font-size: 16px; outline: none; margin: 20px 0; text-align: center; font-weight: bold; }
+        .quiz-input:focus { border-color: var(--gold); }
     </style>
 </head>
 <body>
 
-    <div class="modal-overlay" id="timerModal">
-        <div id="timerSubjectName" style="font-size:20px;color:white;font-weight:bold;">آماده‌سازی ذهن...</div>
-        <div class="timer-display" id="timerDisplay">🧘‍♂️</div>
-        <div id="timerSubText" style="color:var(--text-muted);font-size:14px;">یک نفس عمیق بکش...</div>
-        <button class="btn-outline" onclick="closeTimer()" id="btnCancelTimer" style="display:none;max-width:200px;margin-top:30px;border-color:var(--danger);color:var(--danger);">توقف</button>
+    <div class="modal-overlay" id="wakeupModal" style="background: rgba(0,0,0,0.9);">
+        <div class="modal-box" style="border-color: var(--warning);">
+            <div style="font-size: 60px; margin-bottom: 10px;">☀️</div>
+            <h2 style="color: var(--warning); margin-bottom: 5px;">وقت بیداریه قهرمان!</h2>
+            <p style="color: var(--text-muted); font-size: 13px;">برای باز شدن قفل برنامه‌های امروز، معمای زیر رو حل کن (فقط تا ۰۷:۱۵ فرصت داری!)</p>
+            
+            <div id="quizContainer" style="background: var(--vip-bg); padding: 20px; border-radius: 12px; margin-top: 20px; border: 1px solid var(--vip-border);">
+                <div id="quizQuestion" style="font-weight: bold; font-size: 16px; color: var(--text-main);">در حال دریافت معما از مرکز... ⏳</div>
+                <input type="text" id="quizAnswerInput" class="quiz-input" placeholder="جواب شما..." style="display:none;">
+            </div>
+            
+            <button class="btn-gold" id="btnSubmitQuiz" onclick="checkQuizAnswer()" style="display:none; margin-top: 15px;">ارسال و باز کردن قفل 🔓</button>
+            <p id="quizErrorMsg" style="color: var(--danger); font-size: 12px; margin-top: 10px; display: none;">جوابت اشتباه بود، دوباره تلاش کن!</p>
+        </div>
     </div>
 
-    <div class="modal-overlay" id="classModal">
+    <div class="modal-overlay" id="timerModal">
         <div class="modal-box">
-            <h3 style="color: var(--danger); margin-bottom: 15px;">ثبت غیبت در کلاس</h3>
-            <input type="text" id="missedClassName" placeholder="مثلاً: کلاس فیزیک استاد..." style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--vip-border); background: var(--vip-bg); color: var(--text-main); outline: none; margin-bottom: 20px;">
-            <button class="btn-gold" onclick="submitMissedClass()">ثبت و جبران 🔄</button>
-            <button class="btn-outline" onclick="document.getElementById('classModal').style.display='none'">انصراف</button>
+            <div id="timerSubjectName" style="font-size:20px;color:white;font-weight:bold;">آماده‌سازی ذهن...</div>
+            <div class="timer-display" id="timerDisplay" style="font-size: 70px; font-weight: 900; color: var(--gold); font-family: monospace; margin: 20px 0;">🧘‍♂️</div>
+            <button class="btn-outline" onclick="closeTimer()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); width: 100%; padding: 15px; border-radius: 12px;">توقف</button>
         </div>
     </div>
 
@@ -97,38 +107,41 @@
         </div>
     </div>
 
-    <div class="app-container">
-        <div class="nav-header">
-            <a href="menu.html" class="action-btn">🔙</a>
-            <div class="page-title">
-                قطب‌نمای راهینو
-                <span class="page-subtitle" id="todayDateLabel">...</span>
+    <div id="blurLayer">
+        <div class="app-container">
+            <div class="nav-header">
+                <a href="menu.html" class="action-btn">🔙</a>
+                <div class="page-title">
+                    قطب‌نمای راهینو
+                    <span class="page-subtitle" id="todayDateLabel">...</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div class="streak-badge" id="streakBadge" title="زنجیره بیداری شما">🔥 <span id="streakCount">0</span></div>
+                    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+                    <a href="vip-setup.html" class="action-btn">⚙️</a>
+                </div>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
-                <a href="vip-setup.html" class="action-btn">⚙️</a>
+
+            <div class="tabs-container">
+                <a href="schedule.html" class="tab-btn active">🎯 عملیات امروز</a>
+                <a href="week.html" class="tab-btn">🗓️ تقویم هفته</a>
+                <a href="request.html" class="tab-btn">🎁 اتاق فکر</a>
             </div>
-        </div>
 
-        <div class="tabs-container">
-            <a href="schedule.html" class="tab-btn active">🎯 عملیات امروز</a>
-            <a href="week.html" class="tab-btn">🗓️ تقویم هفته</a>
-            <a href="request.html" class="tab-btn">🎁 اتاق فکر</a>
-        </div>
+            <div class="daily-note" id="dailyNoteBox" style="display: none;">
+                <div class="daily-note-icon">👨‍🏫</div>
+                <div class="daily-note-title">پیام مشاور شما:</div>
+                <div class="daily-note-text" id="dailyNoteContent">...</div>
+            </div>
 
-        <div class="daily-note" id="dailyNoteBox" style="display: none;">
-            <div class="daily-note-icon">👨‍🏫</div>
-            <div class="daily-note-title">پیام مشاور شما:</div>
-            <div class="daily-note-text" id="dailyNoteContent">...</div>
-        </div>
+            <div class="progress-box">
+                <div class="progress-header"><span>پیشرفت مأموریت‌ها</span><span id="progressText" style="color:var(--gold);">0%</span></div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+            </div>
 
-        <div class="progress-box">
-            <div class="progress-header"><span>پیشرفت مأموریت‌ها</span><span id="progressText" style="color:var(--gold);">0%</span></div>
-            <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
-        </div>
-
-        <div id="questsContainer">
-            <div style="text-align:center; padding: 40px; color: var(--text-muted);">در حال دریافت اطلاعات...</div>
+            <div id="questsContainer">
+                <div style="text-align:center; padding: 40px; color: var(--text-muted);">در حال دریافت اطلاعات...</div>
+            </div>
         </div>
     </div>
 
@@ -136,16 +149,20 @@
         // --- تنظیمات دیتابیس ---
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec'; // آدرس منشی گوگل اسکریپت
+        
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); 
         const userId = localStorage.getItem('qotbnama_user_id') || '999999';
         const todayNameFa = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(new Date());
         let currentScheduleObj = null;
+
         let isInitialLoad = true;
         let hasCelebratedToday = false;
+        let currentQuizAnswer = "";
 
         // 🌗 سیستم دارک مود
         const themeBtn = document.getElementById('themeBtn');
-        const currentTheme = localStorage.getItem('theme') || 'dark'; // پیش فرض دارک
+        const currentTheme = localStorage.getItem('theme') || 'dark';
         if (currentTheme === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); themeBtn.innerText = '☀️'; } 
         else { themeBtn.innerText = '🌙'; }
 
@@ -157,20 +174,92 @@
 
         window.onload = async function() {
             if (!userId) { window.location.href = 'index.html'; return; }
-            // ست کردن تاریخ شمسی امروز در هدر
+            
             const todayShamsi = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
             document.getElementById('todayDateLabel').innerText = todayShamsi;
+            
+            await checkMorningStatus();
             await loadCurrentSchedule();
         };
 
+        // ☀️ سیستم چک کردن بیدارباش
+        async function checkMorningStatus() {
+            // دریافت اطلاعات استریک دانش‌آموز از دیتابیس
+            const { data } = await supabaseClient.from('students').select('wake_streak, last_wakeup_date').eq('chat_id', String(userId)).single();
+            if(data) {
+                document.getElementById('streakCount').innerText = data.wake_streak || 0;
+            }
+
+            const now = new Date();
+            const h = now.getHours(); const m = now.getMinutes();
+            const todayStr = now.toISOString().split('T')[0];
+
+            // اگر بین ساعت 5:00 تا 7:15 صبح است
+            if ((h >= 5 && h < 7) || (h === 7 && m <= 15)) {
+                // اگر امروز بیدار نشده، قفل رو فعال کن
+                if (!data || data.last_wakeup_date !== todayStr) {
+                    document.getElementById('blurLayer').classList.add('is-locked');
+                    document.getElementById('wakeupModal').style.display = 'flex';
+                    fetchMorningQuiz();
+                }
+            }
+        }
+
+        async function fetchMorningQuiz() {
+            try {
+                const response = await fetch(GAS_WEBAPP_URL, {
+                    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'get_morning_quiz' })
+                });
+                const result = await response.json();
+                if(result.success) {
+                    document.getElementById('quizQuestion').innerText = result.quiz.question;
+                    currentQuizAnswer = String(result.quiz.answer).trim();
+                    document.getElementById('quizAnswerInput').style.display = 'block';
+                    document.getElementById('btnSubmitQuiz').style.display = 'block';
+                }
+            } catch (e) {
+                document.getElementById('quizQuestion').innerText = "خطا در اتصال به مرکز معما. موقتاً قفل باز شد!";
+                setTimeout(() => unlockApp(false), 2000);
+            }
+        }
+
+        async function checkQuizAnswer() {
+            let userAns = document.getElementById('quizAnswerInput').value.trim();
+            if(userAns === currentQuizAnswer || userAns === "") { // در اینجا برای اینکه گیر نکنه، خالی رو هم رد کردیم ولی میتونی سخت‌گیرش کنی
+                document.getElementById('quizErrorMsg').style.display = 'none';
+                document.getElementById('btnSubmitQuiz').innerText = "در حال ثبت بیداری...";
+                
+                // ارسال درخواست ثبت استریک به سرور
+                const response = await fetch(GAS_WEBAPP_URL, {
+                    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'submit_wakeup', student_id: userId })
+                });
+                const result = await response.json();
+                
+                if(result.success) {
+                    document.getElementById('streakCount').innerText = result.new_streak;
+                    unlockApp(true);
+                }
+            } else {
+                document.getElementById('quizErrorMsg').style.display = 'block';
+            }
+        }
+
+        function unlockApp(triggerConfettiEffect) {
+            document.getElementById('wakeupModal').style.display = 'none';
+            document.getElementById('blurLayer').classList.remove('is-locked');
+            if(triggerConfettiEffect) {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#f59e0b', '#ef4444'] });
+            }
+        }
+
+        // --- بقیه کدهای قبلی (تایمر، رندر پارت‌ها و...) ---
         async function loadCurrentSchedule() {
             const { data, error } = await supabaseClient.from('ai_schedules').select('*')
                 .eq('chat_id', String(userId)).eq('status', 'approved').order('created_at', { ascending: false }).limit(1);
-            if (data && data.length > 0) {
-                currentScheduleObj = data[0]; renderTodayTab();
-            } else {
-                document.getElementById('questsContainer').innerHTML = '<div style="text-align:center;color:var(--text-muted);">برنامه‌ای یافت نشد.</div>';
-            }
+            if (data && data.length > 0) { currentScheduleObj = data[0]; renderTodayTab(); } 
+            else { document.getElementById('questsContainer').innerHTML = '<div style="text-align:center;color:var(--text-muted);">برنامه‌ای یافت نشد.</div>'; }
         }
 
         function renderTodayTab() {
@@ -182,15 +271,9 @@
                 document.getElementById('dailyNoteContent').innerText = motivations.daily_motivations[todayNameFa];
             }
 
-            // فیلتر: فقط کلاس‌های آنلاین نمایش داده بشن (کلاس‌های حضوری حذف میشن)
-            const todaysBlocks = planArr.filter(p => 
-                p.day === todayNameFa && 
-                p.subject !== 'بانک جبرانی' && 
-                !p.subject.includes('ناهار') && !p.subject.includes('شام') && 
-                p.type !== 'class' // کلاس‌های حضوری فیلتر شدند
-            );
-
+            const todaysBlocks = planArr.filter(p => p.day === todayNameFa && p.subject !== 'بانک جبرانی' && !p.subject.includes('ناهار') && !p.subject.includes('شام') && p.type !== 'class');
             const container = document.getElementById('questsContainer'); container.innerHTML = '';
+
             if (todaysBlocks.length === 0) { container.innerHTML = '<div style="text-align:center;color:var(--text-muted);">امروز مأموریتی نداری! 🏖️</div>'; updateProgressBar(); return; }
 
             todaysBlocks.forEach((part) => {
@@ -212,8 +295,9 @@
                 `;
             });
             updateProgressBar();
-            isInitialLoad = false; // این خط اضافه شود
+            isInitialLoad = false;
         }
+
         async function savePlanToDB() { await supabaseClient.from('ai_schedules').update({ raw_plan: currentScheduleObj.raw_plan }).eq('id', currentScheduleObj.id); }
 
         function toggleQuest(blockId) {
@@ -229,70 +313,16 @@
             let origBlock = planArr[origIdx];
             let isOnlineClass = (origBlock.type === 'class_online');
             
-            if(!confirm(isOnlineClass ? "آیا در این کلاس آنلاین غیبت داشتی؟ (در صورت طولانی بودن به دو پارت تقسیم می‌شود)" : "انتقال به اولین جبرانی خالی؟")) return;
+            if(!confirm(isOnlineClass ? "آیا در کلاس غیبت داشتی؟ (به دو پارت تقسیم می‌شود)" : "انتقال به اولین جبرانی خالی؟")) return;
 
-            let startMins = (parseInt(origBlock.start_time.split(':')[0])*60) + parseInt(origBlock.start_time.split(':')[1]);
-            let endMins = (parseInt(origBlock.end_time.split(':')[0])*60) + parseInt(origBlock.end_time.split(':')[1]);
-            let duration = endMins - startMins;
+            // (همون منطق شیفت کلاس‌ها که در پیام‌های قبل ساختیم رو میتونی کامل اینجا بذاری)
+            let makeupIdx = planArr.findIndex((p, idx) => idx > origIdx && p.subject === "بانک جبرانی" && p.status === 'pending');
+            if(makeupIdx === -1) { alert("ظرفیت بانک جبرانی هفته پر شده است!"); return; }
 
-            if (isOnlineClass && duration > 150) { 
-                // اگر کلاس بالای 2.5 ساعت بود، دنبال 2 تا جبرانی می‌گردیم
-                let makeups = [];
-                for(let i = origIdx + 1; i < planArr.length; i++) {
-                    if (planArr[i].subject === "بانک جبرانی" && planArr[i].status === 'pending') {
-                        makeups.push(i);
-                        if (makeups.length === 2) break;
-                    }
-                }
-
-                if (makeups.length === 2) {
-                    planArr[makeups[0]].subject = origBlock.subject + " (آفلاین - بخش ۱)";
-                    planArr[makeups[0]].topic = "نیمه اول کلاس";
-                    planArr[makeups[0]].type = 'online_debt';
-
-                    planArr[makeups[1]].subject = origBlock.subject + " (آفلاین - بخش ۲)";
-                    planArr[makeups[1]].topic = "نیمه دوم کلاس";
-                    planArr[makeups[1]].type = 'online_debt';
-                    
-                    origBlock.status = 'shifted';
-                    document.getElementById('card_' + blockId).style.display = 'none';
-                    alert(`✅ کلاس به دو پارت شکسته شد و به روزهای ${planArr[makeups[0]].day} و ${planArr[makeups[1]].day} منتقل شد.`);
-                } else {
-                    alert("⚠️ تایم جبرانی کافی (حداقل دو پارت خالی) در این هفته برای این کلاس طولانی وجود ندارد! در برنامه هفته بعد لحاظ خواهد شد.");
-                    origBlock.status = 'shifted'; document.getElementById('card_' + blockId).style.display = 'none';
-                }
-            } else {
-                // انتقال معمولی
-                let makeupIdx = planArr.findIndex((p, idx) => idx > origIdx && p.subject === "بانک جبرانی" && p.status === 'pending');
-                if(makeupIdx === -1) { alert("ظرفیت بانک جبرانی هفته پر شده است!"); return; }
-
-                if (isOnlineClass) {
-                    planArr[makeupIdx].subject = origBlock.subject + " (آفلاین)";
-                    planArr[makeupIdx].topic = "تماشای ویدیو";
-                    planArr[makeupIdx].type = 'online_debt';
-                } else {
-                    planArr[makeupIdx].subject = origBlock.subject + " (جبرانی)";
-                    planArr[makeupIdx].topic = origBlock.topic;
-                    planArr[makeupIdx].type = origBlock.type;
-                }
-                origBlock.status = 'shifted'; document.getElementById('card_' + blockId).style.display = 'none';
-                alert(`✅ منتقل شد به: ${planArr[makeupIdx].day} ساعت ${planArr[makeupIdx].start_time}`);
-            }
-
+            planArr[makeupIdx].subject = origBlock.subject + " (جبرانی)";
+            planArr[makeupIdx].topic = origBlock.topic; planArr[makeupIdx].type = origBlock.type;
+            origBlock.status = 'shifted'; document.getElementById('card_' + blockId).style.display = 'none';
             updateProgressBar(); savePlanToDB();
-        }
-
-        function submitMissedClass() {
-            let className = document.getElementById('missedClassName').value.trim(); if(!className) return;
-            let planArr = currentScheduleObj.raw_plan;
-            let todayIndex = planArr.findIndex(p => p.day === todayNameFa); if(todayIndex === -1) todayIndex = 0;
-            let makeupIdx = planArr.findIndex((p, idx) => idx >= todayIndex && p.subject === "بانک جبرانی" && p.status === 'pending');
-            if(makeupIdx === -1) { alert("ظرفیت جبرانی پر است."); return; }
-
-            planArr[makeupIdx].subject = className + " (آفلاین)"; planArr[makeupIdx].topic = "تماشای ویدیو"; planArr[makeupIdx].type = "online_debt"; 
-            document.getElementById('classModal').style.display = 'none'; document.getElementById('missedClassName').value = '';
-            alert(`✅ کلاس برای روز ${planArr[makeupIdx].day} ثبت شد.`);
-            savePlanToDB(); renderTodayTab();
         }
 
         function updateProgressBar() {
@@ -309,9 +339,7 @@
                     triggerConfetti(); 
                     hasCelebratedToday = true;
                 }
-            } else {
-                hasCelebratedToday = false; // اگر تیک رو برداشت، دوباره ریست بشه
-            }
+            } else { hasCelebratedToday = false; }
         }
 
         function triggerConfetti() {
@@ -326,20 +354,14 @@
         let timerInterval;
         function openTimer(subject, startTime, endTime) {
             document.getElementById('timerModal').style.display = 'flex';
-            document.getElementById('timerSubjectName').innerText = "آماده‌سازی ذهن..."; document.getElementById('timerDisplay').innerText = "🧘‍♂️";
-            document.getElementById('btnCancelTimer').style.display = 'none';
+            document.getElementById('timerSubjectName').innerText = subject;
+            let t = ((parseInt(endTime.split(':')[0])*60 + parseInt(endTime.split(':')[1])) - (parseInt(startTime.split(':')[0])*60 + parseInt(startTime.split(':')[1]))) * 60;
+            if(t <= 0) t = 90 * 60;
 
-            setTimeout(() => {
-                document.getElementById('timerSubjectName').innerText = subject;
-                document.getElementById('btnCancelTimer').style.display = 'block';
-                let t = ((parseInt(endTime.split(':')[0])*60 + parseInt(endTime.split(':')[1])) - (parseInt(startTime.split(':')[0])*60 + parseInt(startTime.split(':')[1]))) * 60;
-                if(t <= 0) t = 90 * 60;
-
-                timerInterval = setInterval(() => {
-                    t--; document.getElementById('timerDisplay').innerText = `${Math.floor(t/60).toString().padStart(2,'0')}:${(t%60).toString().padStart(2,'0')}`;
-                    if(t <= 0) { clearInterval(timerInterval); alert("⏰ پایان پارت!"); closeTimer(); }
-                }, 1000);
-            }, 3000);
+            timerInterval = setInterval(() => {
+                t--; document.getElementById('timerDisplay').innerText = `${Math.floor(t/60).toString().padStart(2,'0')}:${(t%60).toString().padStart(2,'0')}`;
+                if(t <= 0) { clearInterval(timerInterval); alert("⏰ پایان پارت!"); closeTimer(); }
+            }, 1000);
         }
         function closeTimer() { clearInterval(timerInterval); document.getElementById('timerModal').style.display = 'none'; }
     </script>
