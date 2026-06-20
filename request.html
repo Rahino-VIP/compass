@@ -7,11 +7,15 @@
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
 
     <style>
-        :root { --vip-bg: #0f172a; --vip-surface: #1e293b; --vip-border: #334155; --gold: #f59e0b; --success: #10b981; --text-main: #f8fafc; --text-muted: #94a3b8; }
-        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        :root { --vip-bg: #f8fafc; --vip-surface: #ffffff; --vip-border: #e2e8f0; --gold: #d97706; --success: #10b981; --text-main: #0f172a; --text-muted: #64748b; }
+        [data-theme="dark"] { --vip-bg: #0f172a; --vip-surface: #1e293b; --vip-border: #334155; --gold: #f59e0b; --success: #10b981; --text-main: #f8fafc; --text-muted: #94a3b8; }
+        
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
         body { background: var(--vip-bg); color: var(--text-main); line-height: 1.6; padding-bottom: 90px; }
         .app-container { max-width: 700px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .theme-toggle { background: var(--vip-surface); border: 1px solid var(--vip-border); color: var(--text-main); width: 45px; height: 45px; border-radius: 14px; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; }
 
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .action-btn { background: var(--vip-surface); border: 1px solid var(--vip-border); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; }
@@ -41,7 +45,7 @@
 
     <div class="app-container">
         <div class="nav-header">
-            <a href="menu.html" class="action-btn">🔙</a>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
             <div class="page-title">قطب‌نمای راهینو</div>
             <a href="vip-setup.html" class="action-btn">⚙️</a>
         </div>
@@ -58,16 +62,14 @@
             <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">اولویت‌های خود را مشخص کنید تا مشاوران بهترین برنامه را تدوین کنند.</p>
             
             <div id="fridayForm">
-                <label class="toggle-row">
-                    <span style="font-size:13px;font-weight:bold;">تمایل به پیشروی مباحث پایه دارم</span>
-                    <label class="toggle-switch"><input type="checkbox" id="opt_base"><span class="slider"></span></label>
-                </label>
-                <label class="toggle-row">
-                    <span style="font-size:13px;font-weight:bold;">این هفته درگیر امتحانات مدرسه هستم</span>
-                    <label class="toggle-switch"><input type="checkbox" id="opt_exam"><span class="slider"></span></label>
-                </label>
+                <div id="dynamicSwitchesArea">
+                    <label class="toggle-row">
+                        <span style="font-size:13px;font-weight:bold;">این هفته درگیر امتحانات مدرسه هستم</span>
+                        <label class="toggle-switch"><input type="checkbox" id="opt_exam"><span class="slider"></span></label>
+                    </label>
+                </div>
                 
-                <textarea class="modern-input" id="nextWeekNote" rows="3" placeholder="یادداشت برای مشاور (مثلاً: سه‌شنبه تا دیروقت مدرسه‌ام...)"></textarea>
+                <textarea class="modern-input" id="nextWeekNote" rows="3" placeholder="یادداشت برای مشاور (مثلاً: سه‌شنبه تا دیروقت مدرسه‌ام یا این هفته حسابی خسته‌ام...)"></textarea>
                 <button class="btn-gold" id="btnRequestPlan" onclick="requestNewSchedule()">ارسال اطلاعات به اتاق فکر 🚀</button>
             </div>
         </div>
@@ -77,9 +79,19 @@
         const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
         const userId = localStorage.getItem('qotbnama_user_id') || '999999';
 
+        // 🌗 سیستم دارک مود
+        const themeBtn = document.getElementById('themeBtn');
+        const currentTheme = localStorage.getItem('theme') || 'dark'; // پیش فرض دارک
+        if (currentTheme === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); themeBtn.innerText = '☀️'; } else { themeBtn.innerText = '🌙'; }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); themeBtn.innerText = '🌙'; } 
+            else { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); themeBtn.innerText = '☀️'; }
+        }
+
         async function requestNewSchedule() {
             const note = document.getElementById('nextWeekNote').value.trim();
-            const optBase = document.getElementById('opt_base').checked;
             const optExam = document.getElementById('opt_exam').checked;
             const btn = document.getElementById('btnRequestPlan');
 
@@ -88,7 +100,7 @@
             try {
                 const response = await fetch(GAS_WEBAPP_URL, {
                     method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'generate_schedule', student_id: userId, student_note: note, student_options: { "pishrovi_payeh": optBase, "school_exams_focus": optExam } })
+                    body: JSON.stringify({ action: 'generate_schedule', student_id: userId, student_note: note, student_options: { "school_exams_focus": optExam } })
                 });
 
                 const result = await response.json();
