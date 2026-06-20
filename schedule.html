@@ -116,21 +116,24 @@
         /* ==========================================
            🗓️ تقویم گرافیکی (Google Calendar Style)
            ========================================== */
-        .gcal-wrapper { overflow-x: auto; background: var(--vip-surface); border-radius: 16px; border: 1px solid var(--vip-border); margin-top: 10px; direction: ltr; /* برای اسکرول صحیح تایم‌لاین */ }
-        .gcal-container { display: grid; grid-template-columns: 50px repeat(7, minmax(110px, 1fr)); grid-template-rows: 40px repeat(18, 60px); position: relative; min-width: 850px; background: var(--vip-bg); }
+        .gcal-wrapper { overflow-x: auto; background: var(--vip-surface); border-radius: 16px; border: 1px solid var(--vip-border); margin-top: 10px; direction: rtl; }
+        .gcal-container { display: flex; min-width: 850px; background: var(--vip-bg); position: relative; }
         
-        .gcal-header { background: var(--vip-surface); border-bottom: 1px solid var(--vip-border); border-right: 1px solid var(--vip-border); text-align: center; padding: 10px 0; font-size: 13px; font-weight: bold; color: var(--text-main); position: sticky; top: 0; z-index: 10; font-family: 'Vazirmatn'; }
-        .gcal-time-col { border-bottom: 1px solid var(--vip-border); border-right: 1px solid var(--vip-border); text-align: center; font-size: 10px; color: var(--text-muted); background: var(--vip-surface); position: sticky; left: 0; z-index: 9; padding-top: 5px; font-family: monospace; }
-        .gcal-cell { border-bottom: 1px dashed var(--vip-border); border-right: 1px solid var(--vip-border); position: relative; }
+        .gcal-time-col { width: 50px; flex-shrink: 0; border-left: 1px solid var(--vip-border); background: var(--vip-surface); position: sticky; right: 0; z-index: 10; }
+        .gcal-time-header { height: 40px; border-bottom: 1px solid var(--vip-border); display: flex; justify-content: center; align-items: center; font-size: 11px; font-weight: bold; color: var(--gold); }
+        .gcal-time-slot { height: 60px; border-bottom: 1px dashed var(--vip-border); font-size: 10px; color: var(--text-muted); text-align: center; padding-top: 5px; font-family: monospace; }
         
-        .gcal-event { position: absolute; left: 3px; right: 3px; border-radius: 6px; padding: 5px; font-size: 10px; color: white; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border-left: 3px solid rgba(255,255,255,0.4); z-index: 5; font-family: 'Vazirmatn'; direction: rtl; text-align: right; transition: 0.2s; cursor: pointer; }
+        .gcal-day-col { flex: 1; border-left: 1px solid var(--vip-border); position: relative; min-width: 110px; }
+        .gcal-day-header { height: 40px; border-bottom: 1px solid var(--vip-border); display: flex; justify-content: center; align-items: center; font-size: 13px; font-weight: bold; color: var(--text-main); background: var(--vip-surface); position: sticky; top: 0; z-index: 9; }
+        .gcal-day-grid { position: relative; height: 1080px; /* 18 hours * 60px */ background-image: linear-gradient(to bottom, transparent 59px, var(--vip-border) 60px); background-size: 100% 60px; }
+        
+        .gcal-event { position: absolute; left: 4px; right: 4px; border-radius: 6px; padding: 6px; font-size: 10px; color: white; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border-right: 3px solid rgba(255,255,255,0.4); z-index: 5; transition: 0.2s; cursor: pointer; }
         .gcal-event:hover { z-index: 8; filter: brightness(1.1); transform: scale(1.02); }
-        .gcal-event.completed { opacity: 0.5; background: var(--success) !important; border-left-color: rgba(255,255,255,0.2); }
+        .gcal-event.completed { opacity: 0.5; background: var(--success) !important; border-right-color: rgba(255,255,255,0.2); }
         .gcal-event.shifted { opacity: 0.4; background: var(--danger) !important; text-decoration: line-through; }
         
-        .g-event-title { font-weight: 900; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+        .g-event-title { font-weight: 900; font-size: 11px; margin-bottom: 2px; line-height: 1.2; }
         .g-event-time { font-size: 9px; opacity: 0.8; font-family: monospace; font-weight: bold; }
-
         /* ==========================================
            🔒 تب دریافت استراتژی (جمعه‌ها)
            ========================================== */
