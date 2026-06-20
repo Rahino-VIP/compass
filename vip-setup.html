@@ -22,7 +22,7 @@
             --shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
 
-        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
         body { background: var(--vip-bg); color: var(--text-main); line-height: 1.6; padding-bottom: 80px; }
         
         .app-container { max-width: 600px; margin: 0 auto; padding: 20px; animation: fadeIn 0.5s ease-out; position: relative; }
@@ -39,11 +39,14 @@
 
         .section-title { font-size: 16px; font-weight: bold; color: var(--gold-light); margin: 35px 0 15px 0; display: flex; align-items: center; gap: 8px; border-bottom: 1px dashed var(--vip-border); padding-bottom: 10px; }
         
-        /* 💊 سیستم کپسولی (Chips) برای انتخاب‌های چندگانه */
+        /* 💊 سیستم کپسولی (Chips) */
         .chips-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
         .chip { padding: 10px 16px; border-radius: 20px; border: 2px solid var(--vip-border); background: var(--vip-surface); color: var(--text-muted); font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; user-select: none; }
         .chip.active { background: var(--gold); border-color: var(--gold); color: #fff; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); transform: translateY(-2px); }
         [data-theme="dark"] .chip.active { color: #000; }
+
+        /* استایل خاص برای کپسول آنلاین/حضوری */
+        .type-chip { flex: 1; text-align: center; }
 
         input.modern-input { width: 100%; padding: 15px; border-radius: 16px; border: 2px solid var(--vip-border); background: var(--vip-bg); color: var(--text-main); font-size: 14px; font-weight: bold; outline: none; transition: 0.3s; margin-top: 10px; }
         input.modern-input:focus { border-color: var(--gold); box-shadow: 0 0 0 4px var(--gold-fade); }
@@ -80,7 +83,7 @@
 </head>
 <body>
 
-    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="تغییر حالت شب/روز">🌙</button>
 
     <div class="loader-overlay" id="mainLoader">
         <div class="spinner">⚙️</div>
@@ -113,7 +116,7 @@
         <div id="skillsContainer"></div>
 
         <div class="section-title">📝 ۴. برنامه آزمون‌ها</div>
-        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">در کدام آزمون‌ها شرکت می‌کنی؟ (می‌تونی چند مورد رو انتخاب کنی. اگر آزمون نمی‌دی، هیچ‌کدوم رو نزن)</p>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">در کدام آزمون‌ها شرکت می‌کنی؟ (می‌تونی چند مورد رو انتخاب کنی)</p>
         <div class="chips-container" id="examsContainer">
             <div class="chip exam-chip" onclick="this.classList.toggle('active')" data-exam="قلم‌چی">قلم‌چی (دوهفته یک‌بار)</div>
             <div class="chip exam-chip" onclick="this.classList.toggle('active')" data-exam="ماز">ماز (دوهفته یک‌بار)</div>
@@ -137,10 +140,14 @@
 
         // 🌗 سیستم دارک مود
         const themeBtn = document.getElementById('themeBtn');
-        const currentTheme = localStorage.getItem('theme') || 'light';
+        const currentTheme = localStorage.getItem('theme') || 'dark'; // پیش فرض دارک
+        
         if (currentTheme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
             themeBtn.innerText = '☀️';
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            themeBtn.innerText = '🌙';
         }
 
         function toggleTheme() {
@@ -166,19 +173,19 @@
         // دیکشنری کامل دروس
         const subjectsDict = { 
             "دهم": { 
-                "ریاضی": ["هندسه ۱", "ریاضی ۱", "فیزیک ۱", "شیمی ۱", "فارسی ۱", "عربی ۱", "دینی ۱", "زبان ۱", "جغرافیا ایران", "سایر"], 
-                "تجربی": ["زیست ۱", "ریاضی ۱", "فیزیک ۱", "شیمی ۱", "فارسی ۱", "عربی ۱", "دینی ۱", "زبان ۱", "جغرافیا ایران", "سایر"], 
-                "انسانی": ["ریاضی و آمار ۱", "اقتصاد", "علوم و فنون ۱", "عربی انسانی ۱", "تاریخ ۱", "جامعه‌شناسی ۱", "منطق", "فارسی ۱", "دینی ۱", "زبان ۱", "جغرافیا ۱", "سایر"] 
+                "ریاضی": ["هندسه ۱", "ریاضی ۱", "فیزیک ۱", "شیمی ۱", "فارسی ۱", "عربی ۱", "دینی ۱", "زبان ۱", "جغرافیا ایران"], 
+                "تجربی": ["زیست ۱", "ریاضی ۱", "فیزیک ۱", "شیمی ۱", "فارسی ۱", "عربی ۱", "دینی ۱", "زبان ۱", "جغرافیا ایران"], 
+                "انسانی": ["ریاضی و آمار ۱", "اقتصاد", "علوم و فنون ۱", "عربی انسانی ۱", "تاریخ ۱", "جامعه‌شناسی ۱", "منطق", "فارسی ۱", "دینی ۱", "زبان ۱", "جغرافیا ۱"] 
             }, 
             "یازدهم": { 
-                "ریاضی": ["حسابان ۱", "هندسه ۲", "آمار و احتمال", "فیزیک ۲", "شیمی ۲", "فارسی", "عربی", "دینی", "زبان", "تاریخ معاصر", "زمین‌شناسی", "سایر"], 
-                "تجربی": ["زیست ۲", "ریاضی ۲", "فیزیک ۲", "شیمی ۲", "زمین‌شناسی", "فارسی", "عربی", "دینی", "زبان", "تاریخ معاصر", "سایر"], 
-                "انسانی": ["ریاضی و آمار ۲", "علوم و فنون ۲", "عربی انسانی ۲", "تاریخ ۲", "جامعه‌شناسی ۲", "فلسفه ۱", "روان‌شناسی", "فارسی ۲", "دینی ۲", "زبان ۲", "سایر"] 
+                "ریاضی": ["حسابان ۱", "هندسه ۲", "آمار و احتمال", "فیزیک ۲", "شیمی ۲", "فارسی", "عربی", "دینی", "زبان", "تاریخ معاصر", "زمین‌شناسی"], 
+                "تجربی": ["زیست ۲", "ریاضی ۲", "فیزیک ۲", "شیمی ۲", "زمین‌شناسی", "فارسی", "عربی", "دینی", "زبان", "تاریخ معاصر"], 
+                "انسانی": ["ریاضی و آمار ۲", "علوم و فنون ۲", "عربی انسانی ۲", "تاریخ ۲", "جامعه‌شناسی ۲", "فلسفه ۱", "روان‌شناسی", "فارسی ۲", "دینی ۲", "زبان ۲"] 
             }, 
             "دوازدهم": { 
-                "ریاضی": ["حسابان ۲", "ریاضیات پایه", "هندسه ۱", "هندسه ۲", "هندسه ۳", "گسسته", "آمار و احتمال", "فیزیک ۱", "فیزیک ۲", "فیزیک ۳", "شیمی ۱", "شیمی ۲", "شیمی ۳", "فارسی", "عربی", "دینی", "زبان", "سلامت و بهداشت", "هویت اجتماعی", "سایر"], 
-                "تجربی": ["ریاضیات پایه", "ریاضی ۳", "زیست ۱", "زیست ۲", "زیست ۳", "زمین شناسی", "فیزیک ۱", "فیزیک ۲", "فیزیک ۳", "شیمی ۱", "شیمی ۲", "شیمی ۳", "فارسی", "عربی", "دینی", "زبان", "سلامت و بهداشت", "هویت اجتماعی", "سایر"], 
-                "انسانی": ["علوم و فنون ۱", "علوم و فنون ۲", "علوم و فنون ۳", "ریاضی و آمار ۱", "ریاضی و آمار ۲", "ریاضی و آمار ۳", "عربی انسانی ۱", "عربی انسانی ۲", "عربی انسانی ۳", "تاریخ ۱", "تاریخ ۲", "تاریخ ۳", "جامعه‌شناسی ۱", "جامعه‌شناسی ۲", "جامعه‌شناسی ۳", "جغرافیا ۱", "جغرافیا ۲", "جغرافیا ۳", "منطق", "فلسفه ۱", "فلسفه ۲", "اقتصاد", "روان‌شناسی", "فارسی", "دینی", "زبان", "سلامت و بهداشت", "سایر"] 
+                "ریاضی": ["حسابان ۲", "ریاضیات پایه", "هندسه ۱", "هندسه ۲", "هندسه ۳", "گسسته", "آمار و احتمال", "فیزیک ۱", "فیزیک ۲", "فیزیک ۳", "شیمی ۱", "شیمی ۲", "شیمی ۳", "فارسی", "عربی", "دینی", "زبان", "سلامت و بهداشت", "هویت اجتماعی"], 
+                "تجربی": ["ریاضیات پایه", "ریاضی ۳", "زیست ۱", "زیست ۲", "زیست ۳", "زمین شناسی", "فیزیک ۱", "فیزیک ۲", "فیزیک ۳", "شیمی ۱", "شیمی ۲", "شیمی ۳", "فارسی", "عربی", "دینی", "زبان", "سلامت و بهداشت", "هویت اجتماعی"], 
+                "انسانی": ["علوم و فنون ۱", "علوم و فنون ۲", "علوم و فنون ۳", "ریاضی و آمار ۱", "ریاضی و آمار ۲", "ریاضی و آمار ۳", "عربی انسانی ۱", "عربی انسانی ۲", "عربی انسانی ۳", "تاریخ ۱", "تاریخ ۲", "تاریخ ۳", "جامعه‌شناسی ۱", "جامعه‌شناسی ۲", "جامعه‌شناسی ۳", "جغرافیا ۱", "جغرافیا ۲", "جغرافیا ۳", "منطق", "فلسفه ۱", "فلسفه ۲", "اقتصاد", "روان‌شناسی", "فارسی", "دینی", "زبان", "سلامت و بهداشت"] 
             } 
         };
 
@@ -215,18 +222,15 @@
         }
 
         function populateUI() {
-            // مقادیر قبلی از دیتابیس
             if (existingSettings) {
                 selectedStartSubjects = existingSettings.start_subject || [];
                 selectedEndSubjects = existingSettings.end_subject || [];
                 
-                // تنظیم آزمون‌های قبلی
                 if(existingSettings.exam_type) {
                     document.querySelectorAll('.exam-chip').forEach(chip => {
                         if(existingSettings.exam_type.includes(chip.dataset.exam)) chip.classList.add('active');
                     });
                     
-                    // پیدا کردن آزمون دلخواه
                     let predefined = ['قلم‌چی', 'ماز', 'گزینه دو'];
                     let customExams = existingSettings.exam_type.filter(ex => !predefined.includes(ex));
                     if(customExams.length > 0) document.getElementById('customExam').value = customExams.join('، ');
@@ -238,15 +242,12 @@
             let skillsContainer = document.getElementById('skillsContainer');
             
             globalSubjects.forEach((subj, index) => {
-                // کپسول دروس شروع
                 let isStart = selectedStartSubjects.includes(subj) ? 'active' : '';
                 startContainer.innerHTML += `<div class="chip ${isStart}" onclick="toggleSubject(this, '${subj}', 'start')">${subj}</div>`;
                 
-                // کپسول دروس پایان
                 let isEnd = selectedEndSubjects.includes(subj) ? 'active' : '';
                 endContainer.innerHTML += `<div class="chip ${isEnd}" onclick="toggleSubject(this, '${subj}', 'end')">${subj}</div>`;
 
-                // اسلایدرهای سطح دروس
                 let defaultScore = 3;
                 if (existingSettings && existingSettings.subject_skills) {
                     let found = existingSettings.subject_skills.find(s => s.subject === subj);
@@ -271,16 +272,13 @@
             }
         }
 
-        // سیستم انتخاب حداکثر 3 درس
         function toggleSubject(element, subj, type) {
             let targetArray = type === 'start' ? selectedStartSubjects : selectedEndSubjects;
             
             if (targetArray.includes(subj)) {
-                // اگر بود، حذفش کن
                 targetArray.splice(targetArray.indexOf(subj), 1);
                 element.classList.remove('active');
             } else {
-                // اگر نبود، چک کن پر نشده باشه
                 if (targetArray.length >= 3) {
                     alert("⚠️ رفیق، می‌تونی حداکثر ۳ تا درس رو برای این بخش انتخاب کنی!");
                     return;
@@ -288,6 +286,14 @@
                 targetArray.push(subj);
                 element.classList.add('active');
             }
+        }
+
+        // تابع انتخاب حضوری/آنلاین
+        function selectClassType(element, isOnline) {
+            let parent = element.closest('.class-type-container');
+            parent.querySelectorAll('.type-chip').forEach(c => c.classList.remove('active'));
+            element.classList.add('active');
+            parent.setAttribute('data-online', isOnline);
         }
 
         // 🏫 مدیریت کلاس‌ها
@@ -302,6 +308,7 @@
             let startNum = existingClass ? existingClass.startNum : 16;
             let endNum = existingClass ? existingClass.endNum : 17.5;
             let days = existingClass ? existingClass.days : [];
+            let isOnline = existingClass ? existingClass.isOnline : false; // وضعیت پیش‌فرض
 
             let startLabel = formatTimeDisplay(startNum);
             let endLabel = formatTimeDisplay(endNum);
@@ -310,10 +317,18 @@
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; gap: 10px; margin-bottom: 15px;">
                     <input type="text" class="modern-input c-name" placeholder="نام برنامه (مثلاً مدرسه، کلاس فیزیک...)" value="${nameVal}" style="flex:1; padding: 12px 15px; margin-top:0;">
-                    <button class="del-btn" onclick="document.getElementById('class_${classCount}').remove()">🗑️</button>
+                    <button class="del-btn" onclick="document.getElementById('class_${classCount}').remove()" title="حذف این کلاس">🗑️</button>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="font-size:12px; color:var(--text-muted); margin-bottom:8px; display:block;">نوع برگزاری کلاس:</label>
+                    <div class="chips-container class-type-container" data-online="${isOnline}" style="gap: 10px; margin-bottom:0;">
+                        <div class="chip type-chip ${isOnline ? '' : 'active'}" onclick="selectClassType(this, 'false')">حضوری 🏫</div>
+                        <div class="chip type-chip ${isOnline ? 'active' : ''}" onclick="selectClassType(this, 'true')">آنلاین 💻</div>
+                    </div>
                 </div>
                 
-                <label class="input-label">چه روزهایی این برنامه رو داری؟</label>
+                <label style="font-size:12px; color:var(--text-muted); margin-bottom:8px; display:block;">چه روزهایی این برنامه رو داری؟</label>
                 <div class="days-container">
                     <div class="day-circle ${isDayActive('شنبه')}" onclick="this.classList.toggle('active')" data-day="شنبه">ش</div>
                     <div class="day-circle ${isDayActive('یکشنبه')}" onclick="this.classList.toggle('active')" data-day="یکشنبه">ی</div>
@@ -352,7 +367,6 @@
             btn.innerText = "در حال ثبت در هسته هوشمند... ⏳";
             btn.disabled = true;
 
-            // استخراج آزمون‌ها
             let selectedExams = [];
             document.querySelectorAll('.exam-chip.active').forEach(chip => selectedExams.push(chip.dataset.exam));
             let customEx = document.getElementById('customExam').value.trim();
@@ -366,12 +380,19 @@
             let classesData = [];
             document.querySelectorAll('.class-card').forEach(card => {
                 let name = card.querySelector('.c-name').value.trim();
+                
+                // استخراج وضعیت آنلاین بودن
+                let isOnlineStr = card.querySelector('.class-type-container').getAttribute('data-online');
+                let isOnline = (isOnlineStr === 'true');
+
                 let activeDays = [];
                 card.querySelectorAll('.day-circle.active').forEach(circle => activeDays.push(circle.dataset.day));
                 
                 if (name !== "" && activeDays.length > 0) {
                     classesData.push({
-                        name: name, days: activeDays,
+                        name: name, 
+                        isOnline: isOnline, // <--- اطلاعات جدید اضافه شد
+                        days: activeDays,
                         start: document.getElementById('v_start_' + card.id.split('_')[1]).innerText,
                         end: document.getElementById('v_end_' + card.id.split('_')[1]).innerText,
                         startNum: parseFloat(card.querySelector('.c-start').value),
@@ -382,9 +403,9 @@
 
             const payload = {
                 chat_id: userId,
-                exam_type: selectedExams, // ذخیره به صورت آرایه (JSONB)
-                start_subject: selectedStartSubjects, // آرایه
-                end_subject: selectedEndSubjects, // آرایه
+                exam_type: selectedExams, 
+                start_subject: selectedStartSubjects, 
+                end_subject: selectedEndSubjects, 
                 subject_skills: skills,
                 class_schedule: classesData,
                 updated_at: new Date().toISOString()
@@ -403,7 +424,7 @@
                 document.getElementById('appContent').style.opacity = '0';
                 setTimeout(() => { 
                     alert("👑 تنظیمات شما با موفقیت در هسته مرکزی ثبت شد."); 
-                    window.location.href = 'schedule.html'; // رفتن به داشبورد
+                    window.location.href = 'schedule.html'; 
                 }, 500);
 
             } catch (error) {
