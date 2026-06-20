@@ -99,12 +99,15 @@
 
     <div class="app-container">
         <div class="nav-header">
-            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+            <a href="menu.html" class="action-btn">🔙</a>
             <div class="page-title">
                 قطب‌نمای راهینو
                 <span class="page-subtitle" id="todayDateLabel">...</span>
             </div>
-            <a href="vip-setup.html" class="action-btn">⚙️</a>
+            <div style="display: flex; gap: 10px;">
+                <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+                <a href="vip-setup.html" class="action-btn">⚙️</a>
+            </div>
         </div>
 
         <div class="tabs-container">
@@ -118,10 +121,6 @@
             <div class="daily-note-title">پیام مشاور شما:</div>
             <div class="daily-note-text" id="dailyNoteContent">...</div>
         </div>
-
-        <button class="missed-class-btn" onclick="document.getElementById('classModal').style.display='flex'">
-            <span>⚠️</span> ثبت غیبت در کلاس (درخواست تایم آفلاین)
-        </button>
 
         <div class="progress-box">
             <div class="progress-header"><span>پیشرفت مأموریت‌ها</span><span id="progressText" style="color:var(--gold);">0%</span></div>
