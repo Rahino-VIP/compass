@@ -181,15 +181,20 @@
                 document.getElementById('dailyNoteContent').innerText = motivations.daily_motivations[todayNameFa];
             }
 
-            const todaysBlocks = planArr.filter(p => p.day === todayNameFa && p.subject !== 'بانک جبرانی' && !p.subject.includes('ناهار') && !p.subject.includes('شام'));
-            const container = document.getElementById('questsContainer'); container.innerHTML = '';
+            // فیلتر: فقط کلاس‌های آنلاین نمایش داده بشن (کلاس‌های حضوری حذف میشن)
+            const todaysBlocks = planArr.filter(p => 
+                p.day === todayNameFa && 
+                p.subject !== 'بانک جبرانی' && 
+                !p.subject.includes('ناهار') && !p.subject.includes('شام') && 
+                p.type !== 'class' // کلاس‌های حضوری فیلتر شدند
+            );
 
+            const container = document.getElementById('questsContainer'); container.innerHTML = '';
             if (todaysBlocks.length === 0) { container.innerHTML = '<div style="text-align:center;color:var(--text-muted);">امروز مأموریتی نداری! 🏖️</div>'; updateProgressBar(); return; }
 
             todaysBlocks.forEach((part) => {
                 if(part.status === 'shifted') return; 
                 let cardClass = part.status === 'completed' ? 'completed' : '';
-                
                 container.innerHTML += `
                     <div class="quest-card type-${part.type || 'default'} ${cardClass}" id="card_${part.block_id}">
                         <div class="quest-info">
@@ -221,17 +226,58 @@
             let planArr = currentScheduleObj.raw_plan;
             let origIdx = planArr.findIndex(p => p.block_id === blockId);
             let origBlock = planArr[origIdx];
-            let isClass = (origBlock.type === 'class');
-            if(!confirm(isClass ? "غیبت در کلاس؟ (انتقال به جبرانی برای مشاهده آفلاین)" : "انتقال به اولین جبرانی خالی؟")) return;
-
-            let makeupIdx = planArr.findIndex((p, idx) => idx > origIdx && p.subject === "بانک جبرانی" && p.status === 'pending');
-            if(makeupIdx === -1) { alert("ظرفیت بانک جبرانی هفته پر شده است!"); return; }
-
-            if (isClass) { planArr[makeupIdx].subject = origBlock.subject + " (آفلاین)"; planArr[makeupIdx].topic = "تماشای ویدیو"; planArr[makeupIdx].type = 'online_debt'; } 
-            else { planArr[makeupIdx].subject = origBlock.subject + " (جبرانی)"; planArr[makeupIdx].topic = origBlock.topic; planArr[makeupIdx].type = origBlock.type; }
+            let isOnlineClass = (origBlock.type === 'class_online');
             
-            origBlock.status = 'shifted'; document.getElementById('card_' + blockId).style.display = 'none';
-            alert(`✅ منتقل شد به: ${planArr[makeupIdx].day} ساعت ${planArr[makeupIdx].start_time}`);
+            if(!confirm(isOnlineClass ? "آیا در این کلاس آنلاین غیبت داشتی؟ (در صورت طولانی بودن به دو پارت تقسیم می‌شود)" : "انتقال به اولین جبرانی خالی؟")) return;
+
+            let startMins = (parseInt(origBlock.start_time.split(':')[0])*60) + parseInt(origBlock.start_time.split(':')[1]);
+            let endMins = (parseInt(origBlock.end_time.split(':')[0])*60) + parseInt(origBlock.end_time.split(':')[1]);
+            let duration = endMins - startMins;
+
+            if (isOnlineClass && duration > 150) { 
+                // اگر کلاس بالای 2.5 ساعت بود، دنبال 2 تا جبرانی می‌گردیم
+                let makeups = [];
+                for(let i = origIdx + 1; i < planArr.length; i++) {
+                    if (planArr[i].subject === "بانک جبرانی" && planArr[i].status === 'pending') {
+                        makeups.push(i);
+                        if (makeups.length === 2) break;
+                    }
+                }
+
+                if (makeups.length === 2) {
+                    planArr[makeups[0]].subject = origBlock.subject + " (آفلاین - بخش ۱)";
+                    planArr[makeups[0]].topic = "نیمه اول کلاس";
+                    planArr[makeups[0]].type = 'online_debt';
+
+                    planArr[makeups[1]].subject = origBlock.subject + " (آفلاین - بخش ۲)";
+                    planArr[makeups[1]].topic = "نیمه دوم کلاس";
+                    planArr[makeups[1]].type = 'online_debt';
+                    
+                    origBlock.status = 'shifted';
+                    document.getElementById('card_' + blockId).style.display = 'none';
+                    alert(`✅ کلاس به دو پارت شکسته شد و به روزهای ${planArr[makeups[0]].day} و ${planArr[makeups[1]].day} منتقل شد.`);
+                } else {
+                    alert("⚠️ تایم جبرانی کافی (حداقل دو پارت خالی) در این هفته برای این کلاس طولانی وجود ندارد! در برنامه هفته بعد لحاظ خواهد شد.");
+                    origBlock.status = 'shifted'; document.getElementById('card_' + blockId).style.display = 'none';
+                }
+            } else {
+                // انتقال معمولی
+                let makeupIdx = planArr.findIndex((p, idx) => idx > origIdx && p.subject === "بانک جبرانی" && p.status === 'pending');
+                if(makeupIdx === -1) { alert("ظرفیت بانک جبرانی هفته پر شده است!"); return; }
+
+                if (isOnlineClass) {
+                    planArr[makeupIdx].subject = origBlock.subject + " (آفلاین)";
+                    planArr[makeupIdx].topic = "تماشای ویدیو";
+                    planArr[makeupIdx].type = 'online_debt';
+                } else {
+                    planArr[makeupIdx].subject = origBlock.subject + " (جبرانی)";
+                    planArr[makeupIdx].topic = origBlock.topic;
+                    planArr[makeupIdx].type = origBlock.type;
+                }
+                origBlock.status = 'shifted'; document.getElementById('card_' + blockId).style.display = 'none';
+                alert(`✅ منتقل شد به: ${planArr[makeupIdx].day} ساعت ${planArr[makeupIdx].start_time}`);
+            }
+
             updateProgressBar(); savePlanToDB();
         }
 
