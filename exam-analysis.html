@@ -228,34 +228,53 @@
         // ----------------------------------------------------
         // شبیه‌سازی ارتباط با جمینای و دریافت نتیجه
         // ----------------------------------------------------
-        function startAIAnalysis() {
+        async function startAIAnalysis() {
             const reflection = document.getElementById('studentReflection').value.trim();
-            if (isExamWeek && !selectedFileBase64) {
-                alert("لطفاً عکس یا فایل کارنامه را انتخاب کنید!"); return;
-            }
-            if (reflection.length < 10) {
-                alert("لطفاً در قسمت اعترافات، حداقل یک جمله در مورد عملکردت بنویس!"); return;
-            }
+            if (isExamWeek && !selectedFileBase64) { alert("لطفاً عکس یا فایل کارنامه را انتخاب کنید!"); return; }
+            if (reflection.length < 10) { alert("لطفاً حداقل یک جمله در مورد عملکردت بنویس!"); return; }
 
             document.getElementById('analysisFormCard').style.display = 'none';
             document.getElementById('aiLoader').style.display = 'block';
 
-            // شبیه‌سازی تاخیر ۳ ثانیه‌ای سرور
-            setTimeout(() => {
+            try {
+                // ارسال به گوگل اسکریپت
+                const response = await fetch('https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'upload_exam',
+                        student_id: userId,
+                        reflection: reflection,
+                        image_base64: selectedFileBase64
+                    })
+                });
+                
+                const result = await response.json();
+                
                 document.getElementById('aiLoader').style.display = 'none';
                 document.getElementById('analysisResultArea').style.display = 'block';
-                
-                // متن تولیدی هوش مصنوعی
-                document.getElementById('aiReportContent').innerHTML = `<b>🚨 تحلیل بی‌رحمانه پرو‌مکس:</b>\n\nهمانطور که خودت در اعترافاتت اشاره کردی، استرس سر جلسه یکی از دلایل افت تو بوده، اما داده‌های کارنامه چیز دیگری هم می‌گویند:\n\n۱. <b>تله‌ی فیزیک:</b> با وجود ۱۴ ساعت مطالعه در هفته گذشته، درصد فیزیک تو فقط ۱۵٪ بوده. این نشان می‌دهد روش تست‌زنی تو در منزل آموزشی است، نه زمان‌دار!\n۲. <b>نقطه قوت پنهان:</b> شیمی را عالی کنترل کردی (درصد ۶۵٪). این یعنی مفاهیم را خوب می‌فهمی.\n\n<b>📌 اکشن‌پلن هفته بعد:</b>\n- زمان مطالعه فیزیک را کاهش نده، اما در هر پارت ۹۰ دقیقه‌ای، حتماً ۳۰ دقیقه کوییز زمان‌دار از خودت بگیر.\n- برای کنترل استرس، پنجشنبه آینده قبل از آزمون، یک آزمون مشابه پارسال در شرایط کاملاً شبیه‌سازی شده برگزار می‌کنیم.`;
 
-                if (isExamWeek) {
-                    document.getElementById('currentChartsCard').style.display = 'block';
-                    renderCurrentExamCharts();
+                if(result.success) {
+                    // پیامِ انتظار برای تایید مشاور
+                    document.getElementById('analysisResultArea').innerHTML = `
+                        <div class="status-banner" style="background: rgba(59, 130, 246, 0.1); border-color: var(--accent);">
+                            <div class="status-icon">✅</div>
+                            <div class="status-text">
+                                <h3 style="color: var(--accent);">کارنامه با موفقیت به اتاق مشاور ارسال شد</h3>
+                                <p>لطفاً منتظر بمانید. پس از بررسی و تایید مشاور، نمودارها و تحلیل اختصاصی شما در همین صفحه فعال خواهد شد.</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(result.error);
                 }
 
-            }, 3000);
+            } catch (err) {
+                alert("خطا در ارسال کارنامه: " + err.message);
+                document.getElementById('aiLoader').style.display = 'none';
+                document.getElementById('analysisFormCard').style.display = 'block';
+            }
         }
-
         // ====================================================
         // 📊 بخش رسم نمودارها با Chart.js
         // ====================================================
