@@ -128,32 +128,57 @@
 
         </div>
 
+        <!-- ========================================== -->
+        <!-- تب دوم: رادار پیشرفت و عملکرد کلی پرو‌مکس -->
+        <!-- ========================================== -->
         <div id="tabOverall" style="display: none;">
             
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <div class="card" style="flex: 1; text-align: center; padding: 15px;">
-                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 5px;">میانگین تراز کل</div>
-                    <div style="font-size: 24px; font-weight: 900; color: var(--gold);">۶۲۴۰</div>
+            <!-- لودر هولوگرامی -->
+            <div id="overallLoader" style="text-align: center; padding: 40px; display: none;">
+                <div style="font-size: 50px; animation: pulse 1.5s infinite;">🪐</div>
+                <h4 style="color: var(--accent); margin-top: 10px;">در حال استخراج داده‌های کهکشانِ ذهن تو...</h4>
+            </div>
+
+            <div id="overallContent" style="display: none; animation: fadeIn 0.5s;">
+                <!-- کارت‌های وضعیت سریع (HUD Stats) -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px;">
+                    <div class="card" style="text-align: center; padding: 15px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), transparent); border-color: rgba(16, 185, 129, 0.3);">
+                        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 5px;">مجموع تست (دو هفته)</div>
+                        <div id="statTotalTests" style="font-size: 26px; font-weight: 900; color: var(--success); text-shadow: 0 0 10px rgba(16,185,129,0.4);">۰</div>
+                    </div>
+                    <div class="card" style="text-align: center; padding: 15px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), transparent); border-color: rgba(245, 158, 11, 0.3);">
+                        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 5px;">میانگین خواب</div>
+                        <div id="statAvgSleep" style="font-size: 26px; font-weight: 900; color: var(--gold); text-shadow: 0 0 10px rgba(245,158,11,0.4);">۰h</div>
+                    </div>
+                    <div class="card" style="text-align: center; padding: 15px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent); border-color: rgba(59, 130, 246, 0.3);">
+                        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 5px;">مطالعه مفید</div>
+                        <div id="statTotalStudy" style="font-size: 26px; font-weight: 900; color: #3b82f6; text-shadow: 0 0 10px rgba(59,130,246,0.4);">۰h</div>
+                    </div>
+                    <div class="card" style="text-align: center; padding: 15px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), transparent); border-color: rgba(239, 68, 68, 0.3);">
+                        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 5px;">تایم فضای مجازی</div>
+                        <div id="statAvgPhone" style="font-size: 26px; font-weight: 900; color: var(--danger); text-shadow: 0 0 10px rgba(239,68,68,0.4);">۰h</div>
+                    </div>
                 </div>
-                <div class="card" style="flex: 1; text-align: center; padding: 15px;">
-                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 5px;">ساعت مطالعه ماه</div>
-                    <div style="font-size: 24px; font-weight: 900; color: var(--success);">۱۸۴h</div>
+
+                <!-- نمودار اصلی مقایسه تلاش و نتیجه -->
+                <div class="card" style="position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: var(--accent); filter: blur(50px); opacity: 0.3; border-radius: 50%;"></div>
+                    <div class="card-title">⚖️ ترازوی عدالت (ROI دروس)</div>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">آیا زمانی که گذاشتی با درصدی که گرفتی هم‌خوانی داره؟ (ستون: ساعت مطالعه | خط: درصد آزمون)</p>
+                    <div class="chart-container"><canvas id="comboChartROI"></canvas></div>
+                </div>
+
+                <!-- نمودار روند تراز -->
+                <div class="card">
+                    <div class="card-title">📈 نبض پیشرفت تو (روند ترازها)</div>
+                    <div class="chart-container" style="height: 200px;"><canvas id="lineChartTrend"></canvas></div>
                 </div>
             </div>
-
-            <div class="card">
-                <div class="card-title">📈 روند پیشرفت تراز در طول زمان</div>
-                <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">آیا شیبِ پیشرفتت صعودیه یا درجا می‌زنی؟</p>
-                <div class="chart-container"><canvas id="lineChartTrend"></canvas></div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">⚖️ مقایسه تلاش و نتیجه (ROI)</div>
-                <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">ستون‌ها: ساعت مطالعه اختصاص داده شده | خط: درصد کسب شده در آزمون</p>
-                <div class="chart-container"><canvas id="comboChartROI"></canvas></div>
-            </div>
-
         </div>
+
+        <style>
+            @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
+        </style>
     </div>
 
     <script>
@@ -292,42 +317,166 @@
         Chart.defaults.color = '#94a3b8';
         Chart.defaults.font.family = 'Vazirmatn';
         
-        let currentChartsRendered = false;
-        function renderRealCharts(lessonsData) {
-            if(!lessonsData || lessonsData.length === 0 || currentChartsRendered) return;
-            currentChartsRendered = true;
+        // ==========================================
+        // 🚀 موتور رسم نمودارهای عملکرد کلی (AI ProMax)
+        // ==========================================
+        let overallChartsRendered = false;
+        let chartInstances = {}; // برای جلوگیری از باگ رسم مجدد نمودارها
 
-            const labels = lessonsData.map(l => l.name);
-            const tarazData = lessonsData.map(l => l.taraz);
-            const corrects = lessonsData.map(l => l.correct);
-            const incorrects = lessonsData.map(l => l.incorrect);
-            const unattempteds = lessonsData.map(l => l.unattempted);
+        async function renderOverallCharts() {
+            if (overallChartsRendered) return;
+            
+            document.getElementById('overallLoader').style.display = 'block';
+            document.getElementById('overallContent').style.display = 'none';
 
-            // ۱. نمودار راداری تراز
-            new Chart(document.getElementById('radarChartCurrent').getContext('2d'), {
-                type: 'radar',
-                data: {
-                    labels: labels,
-                    datasets: [{ label: 'تراز کسب شده', data: tarazData, backgroundColor: 'rgba(139, 92, 246, 0.2)', borderColor: '#8b5cf6', borderWidth: 2 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { r: { ticks: { display: false }, grid: { color: '#334155' } } } }
-            });
+            try {
+                // ۱. استخراج ۱۴ گزارش اخیر از دیتابیس
+                const { data: reports } = await supabaseClient
+                    .from('daily_reports')
+                    .select('*')
+                    .eq('chat_id', String(userId))
+                    .order('created_at', { ascending: false })
+                    .limit(14);
 
-            // ۲. نمودار میله‌ای (درست/غلط)
-            new Chart(document.getElementById('barChartCurrent').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'درست', data: corrects, backgroundColor: '#10b981' },
-                        { label: 'غلط', data: incorrects, backgroundColor: '#ef4444' },
-                        { label: 'نزده', data: unattempteds, backgroundColor: '#475569' }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: '#334155' } } } }
-            });
+                // ۲. استخراج ۵ کارنامه اخیر برای نمودار خطی
+                const { data: exams } = await supabaseClient
+                    .from('exam_results')
+                    .select('*')
+                    .eq('chat_id', String(userId))
+                    .eq('status', 'approved')
+                    .order('created_at', { ascending: true })
+                    .limit(5);
+
+                // --- پردازش داده‌های سبک زندگی ---
+                let totalTests = 0, totalStudy = 0, totalPhone = 0, totalSleep = 0;
+                let sleepDays = 0, phoneDays = 0;
+                let subjectEffort = {}; // ذخیره تلاش برای هر درس
+
+                if (reports && reports.length > 0) {
+                    reports.forEach(rep => {
+                        // محاسبه تست و مطالعه
+                        let courses = [];
+                        try { courses = typeof rep.courses === 'string' ? JSON.parse(rep.courses) : rep.courses; } catch(e){}
+                        
+                        if(courses && courses.length > 0) {
+                            courses.forEach(c => {
+                                totalStudy += Number(c.study || 0) + Number(c.edu || 0); // آموزش + مطالعه
+                                totalTests += Number(c.tests || 0);
+                                
+                                // جمع‌آوری دیتای هر درس برای نمودار ROI
+                                if(!subjectEffort[c.name]) subjectEffort[c.name] = 0;
+                                subjectEffort[c.name] += Number(c.study || 0) + Number(c.edu || 0);
+                            });
+                        }
+
+                        // محاسبه خواب و گوشی
+                        let lifestyle = {};
+                        try { lifestyle = typeof rep.lifestyle === 'string' ? JSON.parse(rep.lifestyle) : rep.lifestyle; } catch(e){}
+                        
+                        if(lifestyle.phone) { totalPhone += Number(lifestyle.phone); phoneDays++; }
+                        if(lifestyle.sleepLast && lifestyle.wakeToday) {
+                            // یه محاسبه ساده حدودی برای نمایش (دقیق‌ترش در بک‌اند انجام شده)
+                            let sH = parseInt(lifestyle.sleepLast.split(':')[0]);
+                            let wH = parseInt(lifestyle.wakeToday.split(':')[0]);
+                            let duration = (sH > wH) ? (24 - sH) + wH : wH - sH;
+                            if(lifestyle.nap) duration += Number(lifestyle.nap);
+                            totalSleep += duration;
+                            sleepDays++;
+                        }
+                    });
+                }
+
+                // آپدیت کردن کارت‌های گرافیکی (با انیمیشن اعداد)
+                document.getElementById('statTotalTests').innerText = totalTests + ' تست';
+                document.getElementById('statTotalStudy').innerText = totalStudy.toFixed(1) + 'h';
+                document.getElementById('statAvgSleep').innerText = sleepDays > 0 ? (totalSleep / sleepDays).toFixed(1) + 'h' : '-';
+                document.getElementById('statAvgPhone').innerText = phoneDays > 0 ? (totalPhone / phoneDays).toFixed(1) + 'h' : '-';
+
+                // --- آماده‌سازی داده‌های نمودار ROI (تلاش در برابر نتیجه) ---
+                let roiLabels = [];
+                let roiStudyData = [];
+                let roiExamData = [];
+
+                if (exams && exams.length > 0) {
+                    let lastExam = exams[exams.length - 1]; // آخرین آزمون تایید شده
+                    let examData = typeof lastExam.extracted_data === 'string' ? JSON.parse(lastExam.extracted_data) : lastExam.extracted_data;
+                    
+                    examData.forEach(lesson => {
+                        roiLabels.push(lesson.name);
+                        // اگر براش گزارش ثبت کرده بود ساعت رو میذاریم، وگرنه صفر
+                        roiStudyData.push(subjectEffort[lesson.name] ? subjectEffort[lesson.name].toFixed(1) : 0);
+                        roiExamData.push(lesson.taraz); // درصد یا تراز
+                    });
+                }
+
+                // --- آماده‌سازی داده‌های نمودار روند تراز ---
+                let trendLabels = [];
+                let trendData = [];
+                if (exams && exams.length > 0) {
+                    exams.forEach((ex, index) => {
+                        trendLabels.push(`آزمون ${index + 1}`);
+                        trendData.push(ex.total_taraz || 0); // فرض بر اینکه تراز کل ذخیره شده
+                    });
+                }
+
+                // مخفی کردن لودر و نمایش محتوا
+                document.getElementById('overallLoader').style.display = 'none';
+                document.getElementById('overallContent').style.display = 'block';
+
+                // نابود کردن نمودارهای قبلی اگر وجود دارن (جلوگیری از باگ Canvas)
+                if(chartInstances.roi) chartInstances.roi.destroy();
+                if(chartInstances.trend) chartInstances.trend.destroy();
+
+                // 📊 رسم نمودار ترکیبی ROI
+                const ctxCombo = document.getElementById('comboChartROI').getContext('2d');
+                chartInstances.roi = new Chart(ctxCombo, {
+                    type: 'bar',
+                    data: {
+                        labels: roiLabels,
+                        datasets: [
+                            { type: 'line', label: 'درصد/تراز آزمون', data: roiExamData, borderColor: '#10b981', backgroundColor: '#10b981', borderWidth: 3, pointRadius: 5, tension: 0.3, yAxisID: 'y1' },
+                            { type: 'bar', label: 'ساعت مطالعه (۱۴ روز)', data: roiStudyData, backgroundColor: 'rgba(59, 130, 246, 0.7)', borderRadius: 6, yAxisID: 'y' }
+                        ]
+                    },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        scales: { 
+                            y: { type: 'linear', position: 'right', grid: { display: false }, ticks: { color: '#3b82f6' } },
+                            y1: { type: 'linear', position: 'left', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#10b981' } },
+                            x: { grid: { display: false } }
+                        },
+                        plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'Vazirmatn' } } } }
+                    }
+                });
+
+                // 📈 رسم نمودار روند تراز
+                const ctxLine = document.getElementById('lineChartTrend').getContext('2d');
+                chartInstances.trend = new Chart(ctxLine, {
+                    type: 'line',
+                    data: {
+                        labels: trendLabels.length > 0 ? trendLabels : ['بدون داده'],
+                        datasets: [{
+                            label: 'تراز کل',
+                            data: trendData.length > 0 ? trendData : [0],
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            borderWidth: 3, tension: 0.4, fill: true, pointBackgroundColor: '#fff', pointRadius: 6
+                        }]
+                    },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+
+                overallChartsRendered = true;
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('overallLoader').innerHTML = `<h3 style="color:var(--danger)">خطا در دریافت اطلاعات ❌</h3>`;
+            }
         }
-
         // تب عملکرد کلی (هنوز دیتای موقت دارد تا بعداً واقعی‌اش کنیم)
         let overallChartsRendered = false;
         function renderOverallCharts() {
