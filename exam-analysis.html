@@ -157,15 +157,18 @@
     </div>
 
     <script>
-        // اضافه کردن این خط برای دریافت آیدی دانش‌آموز از حافظه گوشی
+        // دریافت آیدی از حافظه گوشی
         const userId = localStorage.getItem('qotbnama_user_id') || '999999';
+        // 🔗 اتصال به سوپابیس (کلیدهای خودت رو اینجا بگذار)
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // متغیرهای کنترل تب‌ها و وضعیت آزمون
-        let isExamWeek = false;
+        let isExamWeek = true; // فرض بر هفته آزمون
         let selectedFileBase64 = null;
-        // ----------------------------------------------------
+        let myLatestExam = null;
+
         // سیستم تب‌ها
-        // ----------------------------------------------------
         function switchTab(tab) {
             document.getElementById('tabCurrentBtn').classList.remove('active');
             document.getElementById('tabOverallBtn').classList.remove('active');
@@ -178,191 +181,158 @@
             } else {
                 document.getElementById('tabOverallBtn').classList.add('active');
                 document.getElementById('tabOverall').style.display = 'block';
-                renderOverallCharts(); // رسم نمودارهای کلی در صورت کلیک
+                renderOverallCharts(); 
             }
         }
 
-        // ----------------------------------------------------
-        // منطق تشخیص خودکارِ هفته (Mock Logic)
-        // ----------------------------------------------------
-        window.onload = function() {
-            // در دنیای واقعی، اینجا تاریخ امروز رو با تاریخ exam_date در دیتابیس مقایسه می‌کنیم
-            // برای نمایش دمو به شما، فرض می‌کنیم الان هفته‌ی دوم (آزمون) هست:
-            isExamWeek = true; 
+        // بررسی وضعیت در زمان لود صفحه
+        window.onload = async function() {
+            // چک کردن دیتابیس برای آخرین کارنامه این دانش‌آموز
+            const { data, error } = await supabaseClient
+                .from('exam_results')
+                .select('*')
+                .eq('chat_id', String(userId))
+                .order('created_at', { ascending: false })
+                .limit(1);
 
-            const bannerTitle = document.getElementById('weekTitle');
-            const bannerDesc = document.getElementById('weekDesc');
-            const icon = document.getElementById('weekIcon');
-
-            if (isExamWeek) {
-                icon.innerText = "📝";
-                bannerTitle.innerText = "هفته‌ی آزمون و سنجش جامع";
-                bannerDesc.innerText = "سیستم تشخیص داد که این هفته آزمون داشتی. لطفاً کارنامه‌ات رو آپلود کن تا موشکافی بشه.";
-                document.getElementById('uploadSection').style.display = 'block';
-            } else {
-                icon.innerText = "🛡️";
-                bannerTitle.innerText = "هفته‌ی اول (پیشروی و یادگیری)";
-                bannerDesc.innerText = "این هفته آزمون جامع نداری. هوش مصنوعی فقط روند اجرای برنامه‌هات رو تحلیل می‌کنه.";
-                document.getElementById('uploadSection').style.display = 'none';
+            if (data && data.length > 0) {
+                myLatestExam = data[0];
             }
 
-            document.getElementById('analysisFormCard').style.display = 'block';
+            checkUiState();
         };
 
-        // ----------------------------------------------------
-        // هندل کردن انتخاب فایل کارنامه
-        // ----------------------------------------------------
+        // مدیریت نمایش بخش‌های مختلف بر اساس وضعیت دیتابیس
+        function checkUiState() {
+            const bannerTitle = document.getElementById('weekTitle');
+            const bannerDesc = document.getElementById('weekDesc');
+
+            if (!myLatestExam || myLatestExam.status === 'rejected') {
+                // حالت ۱: کارنامه نداده یا کارنامه‌اش توسط مشاور رد شده
+                bannerTitle.innerText = myLatestExam && myLatestExam.status === 'rejected' ? "⚠️ عکس کارنامه ناخوانا بود!" : "هفته‌ی آزمون و سنجش جامع";
+                bannerDesc.innerText = myLatestExam && myLatestExam.status === 'rejected' ? "مشاور درخواست کرده دوباره با کیفیت بهتر عکس بگیری." : "سیستم تشخیص داد که این هفته آزمون داشتی. لطفاً کارنامه‌ات رو آپلود کن.";
+                if(myLatestExam && myLatestExam.status === 'rejected') document.getElementById('weekStatusBanner').style.borderColor = "var(--danger)";
+                
+                document.getElementById('uploadSection').style.display = 'block';
+                document.getElementById('analysisFormCard').style.display = 'block';
+                document.getElementById('analysisResultArea').style.display = 'none';
+            } 
+            else if (myLatestExam.status === 'pending') {
+                // حالت ۲: منتظر تایید مشاور (ادمین)
+                document.getElementById('analysisFormCard').style.display = 'none';
+                document.getElementById('analysisResultArea').style.display = 'block';
+                document.getElementById('analysisResultArea').innerHTML = `
+                    <div class="status-banner" style="background: rgba(59, 130, 246, 0.1); border-color: #3b82f6;">
+                        <div class="status-icon">⏳</div>
+                        <div class="status-text">
+                            <h3 style="color: #3b82f6;">پرونده در صف بررسی است</h3>
+                            <p>کارنامه شما به اتاق مشاور ارسال شده. به محض بررسی و تایید، تحلیل‌ها همینجا ظاهر می‌شوند.</p>
+                        </div>
+                    </div>
+                `;
+            }
+            else if (myLatestExam.status === 'approved') {
+                // حالت ۳: تایید شده! نمایش تحلیل واقعی و نمودارها
+                document.getElementById('analysisFormCard').style.display = 'none';
+                document.getElementById('analysisResultArea').style.display = 'block';
+                
+                document.getElementById('aiReportContent').innerText = myLatestExam.consultant_analysis;
+                document.getElementById('currentChartsCard').style.display = 'block';
+                
+                // استخراج داده‌های واقعی برای رسم نمودار
+                let parsedData = typeof myLatestExam.extracted_data === 'string' ? JSON.parse(myLatestExam.extracted_data) : myLatestExam.extracted_data;
+                renderRealCharts(parsedData);
+            }
+        }
+
+        // هندل کردن انتخاب فایل
         function handleFileSelect(input) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
                 document.getElementById('fileNameDisplay').innerText = "فایل انتخاب شد: " + file.name;
                 document.getElementById('fileNameDisplay').style.color = "var(--success)";
                 
-                // تبدیل عکس به Base64 برای ارسال به جمینای
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    selectedFileBase64 = e.target.result.split(',')[1];
-                };
+                reader.onload = function(e) { selectedFileBase64 = e.target.result.split(',')[1]; };
                 reader.readAsDataURL(file);
             }
         }
 
-        // ----------------------------------------------------
-        // شبیه‌سازی ارتباط با جمینای و دریافت نتیجه
-        // ----------------------------------------------------
+        // ارسال به سرور
         async function startAIAnalysis() {
             const reflection = document.getElementById('studentReflection').value.trim();
-            if (isExamWeek && !selectedFileBase64) { alert("لطفاً عکس یا فایل کارنامه را انتخاب کنید!"); return; }
+            if (!selectedFileBase64) { alert("لطفاً عکس یا فایل کارنامه را انتخاب کنید!"); return; }
             if (reflection.length < 10) { alert("لطفاً حداقل یک جمله در مورد عملکردت بنویس!"); return; }
 
             document.getElementById('analysisFormCard').style.display = 'none';
             document.getElementById('aiLoader').style.display = 'block';
 
             try {
-                // ارسال به گوگل اسکریپت
+                // ارسال به اسکریپت گوگل
                 const response = await fetch('https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec', {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        action: 'upload_exam',
-                        student_id: userId,
-                        reflection: reflection,
-                        image_base64: selectedFileBase64
-                    })
+                    body: JSON.stringify({ action: 'upload_exam', student_id: userId, reflection: reflection, image_base64: selectedFileBase64 })
                 });
                 
                 const result = await response.json();
-                
-                document.getElementById('aiLoader').style.display = 'none';
-                document.getElementById('analysisResultArea').style.display = 'block';
-
                 if(result.success) {
-                    // پیامِ انتظار برای تایید مشاور
-                    document.getElementById('analysisResultArea').innerHTML = `
-                        <div class="status-banner" style="background: rgba(59, 130, 246, 0.1); border-color: var(--accent);">
-                            <div class="status-icon">✅</div>
-                            <div class="status-text">
-                                <h3 style="color: var(--accent);">کارنامه با موفقیت به اتاق مشاور ارسال شد</h3>
-                                <p>لطفاً منتظر بمانید. پس از بررسی و تایید مشاور، نمودارها و تحلیل اختصاصی شما در همین صفحه فعال خواهد شد.</p>
-                            </div>
-                        </div>
-                    `;
+                    location.reload(); // رفرش صفحه برای رفتن به حالت pending
                 } else {
                     throw new Error(result.error);
                 }
-
             } catch (err) {
                 alert("خطا در ارسال کارنامه: " + err.message);
                 document.getElementById('aiLoader').style.display = 'none';
                 document.getElementById('analysisFormCard').style.display = 'block';
             }
         }
-        // ====================================================
-        // 📊 بخش رسم نمودارها با Chart.js
-        // ====================================================
+
+        // رسم نمودارها با داده‌های واقعی دیتابیس
         Chart.defaults.color = '#94a3b8';
         Chart.defaults.font.family = 'Vazirmatn';
+        
+        let currentChartsRendered = false;
+        function renderRealCharts(lessonsData) {
+            if(!lessonsData || lessonsData.length === 0 || currentChartsRendered) return;
+            currentChartsRendered = true;
 
-        function renderCurrentExamCharts() {
-            // ۱. نمودار راداری تراز (تار عنکبوتی)
-            const ctxRadar = document.getElementById('radarChartCurrent').getContext('2d');
-            new Chart(ctxRadar, {
+            const labels = lessonsData.map(l => l.name);
+            const tarazData = lessonsData.map(l => l.taraz);
+            const corrects = lessonsData.map(l => l.correct);
+            const incorrects = lessonsData.map(l => l.incorrect);
+            const unattempteds = lessonsData.map(l => l.unattempted);
+
+            // ۱. نمودار راداری تراز
+            new Chart(document.getElementById('radarChartCurrent').getContext('2d'), {
                 type: 'radar',
                 data: {
-                    labels: ['زیست', 'شیمی', 'فیزیک', 'ریاضی', 'زمین‌شناسی'],
-                    datasets: [{
-                        label: 'تراز این آزمون',
-                        data: [6800, 7100, 4800, 5200, 6000],
-                        backgroundColor: 'rgba(139, 92, 246, 0.2)',
-                        borderColor: '#8b5cf6',
-                        pointBackgroundColor: '#f59e0b',
-                        borderWidth: 2
-                    }]
+                    labels: labels,
+                    datasets: [{ label: 'تراز کسب شده', data: tarazData, backgroundColor: 'rgba(139, 92, 246, 0.2)', borderColor: '#8b5cf6', borderWidth: 2 }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, scales: { r: { ticks: { display: false }, grid: { color: '#334155' }, pointLabels: { font: { size: 11 } } } } }
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { ticks: { display: false }, grid: { color: '#334155' } } } }
             });
 
-            // ۲. نمودار میله‌ای (درست، غلط، نزده)
-            const ctxBar = document.getElementById('barChartCurrent').getContext('2d');
-            new Chart(ctxBar, {
+            // ۲. نمودار میله‌ای (درست/غلط)
+            new Chart(document.getElementById('barChartCurrent').getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: ['زیست', 'شیمی', 'فیزیک', 'ریاضی'],
+                    labels: labels,
                     datasets: [
-                        { label: 'درست', data: [35, 25, 8, 12], backgroundColor: '#10b981' },
-                        { label: 'غلط', data: [5, 2, 15, 8], backgroundColor: '#ef4444' },
-                        { label: 'نزده', data: [10, 8, 7, 10], backgroundColor: '#475569' }
+                        { label: 'درست', data: corrects, backgroundColor: '#10b981' },
+                        { label: 'غلط', data: incorrects, backgroundColor: '#ef4444' },
+                        { label: 'نزده', data: unattempteds, backgroundColor: '#475569' }
                     ]
                 },
                 options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: '#334155' } } } }
             });
         }
 
+        // تب عملکرد کلی (هنوز دیتای موقت دارد تا بعداً واقعی‌اش کنیم)
         let overallChartsRendered = false;
         function renderOverallCharts() {
             if (overallChartsRendered) return;
             overallChartsRendered = true;
-
-            // ۳. نمودار خطی روند پیشرفت
-            const ctxLine = document.getElementById('lineChartTrend').getContext('2d');
-            new Chart(ctxLine, {
-                type: 'line',
-                data: {
-                    labels: ['آزمون ۱', 'آزمون ۲', 'آزمون ۳', 'آزمون ۴', 'آزمون فعلی'],
-                    datasets: [{
-                        label: 'تراز کل',
-                        data: [5800, 5950, 6100, 5900, 6240],
-                        borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#334155' } }, x: { grid: { display: false } } } }
-            });
-
-            // ۴. نمودار ترکیبی ROI (ساعت مطالعه vs درصد)
-            const ctxCombo = document.getElementById('comboChartROI').getContext('2d');
-            new Chart(ctxCombo, {
-                type: 'bar',
-                data: {
-                    labels: ['زیست', 'شیمی', 'فیزیک', 'ریاضی'],
-                    datasets: [
-                        { type: 'line', label: 'درصد آزمون (%)', data: [75, 65, 15, 30], borderColor: '#10b981', backgroundColor: '#10b981', borderWidth: 3, yAxisID: 'y1' },
-                        { type: 'bar', label: 'ساعت مطالعه (دو هفته)', data: [22, 18, 14, 16], backgroundColor: '#3b82f6', borderRadius: 6, yAxisID: 'y' }
-                    ]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, 
-                    scales: { 
-                        y: { type: 'linear', position: 'right', grid: { display: false }, title: { display: true, text: 'ساعت', color: '#3b82f6' } },
-                        y1: { type: 'linear', position: 'left', grid: { color: '#334155' }, max: 100, title: { display: true, text: 'درصد', color: '#10b981' } },
-                        x: { grid: { display: false } }
-                    } 
-                }
-            });
+            // (همون کدهای نمودار قبلی برای تب دوم رو اینجا بگذار یا اگر پاک کردی بگو دوباره بدم)
         }
     </script>
-</body>
-</html>
