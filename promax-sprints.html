@@ -185,23 +185,55 @@
         }
 
         // ۲. باز و بسته کردن آکاردئون و بررسی دیسیپلین
+        // ۲. باز و بسته کردن آکاردئون و بررسی وضعیت‌های مختلف
         async function toggleSprint(id, startDate, endDate, isExamWeek) {
             const card = document.getElementById(`card_${id}`);
             const isOpen = card.classList.contains('open');
             
-            // بستن همه کارت‌های دیگه
             document.querySelectorAll('.sprint-card').forEach(c => c.classList.remove('open'));
 
             if (!isOpen) {
                 card.classList.add('open');
                 
-                // ریست کردن فرم‌ها
                 document.getElementById(`loader_${id}`).style.display = 'block';
                 document.getElementById(`lock_${id}`).style.display = 'none';
                 document.getElementById(`form_${id}`).style.display = 'none';
                 document.getElementById(`success_${id}`).style.display = 'none';
 
-                // 🔍 بررسی قانون 6 روز از دیتابیس
+                // 🌟 بررسی ۱: آیا قبلاً پرونده‌ای برای این هفته ثبت شده؟
+                const { data: existingExam } = await supabaseClient
+                    .from('exam_results')
+                    .select('status')
+                    .eq('chat_id', String(userId))
+                    .eq('period_start', startDate)
+                    .eq('period_end', endDate)
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+
+                if (existingExam && existingExam.length > 0) {
+                    const status = existingExam[0].status;
+                    document.getElementById(`loader_${id}`).style.display = 'none';
+                    
+                    if (status === 'pending') {
+                        document.getElementById(`success_${id}`).style.display = 'block';
+                        document.getElementById(`success_${id}`).innerHTML = `
+                            <h4 style="color:#3b82f6; margin-bottom:5px;">⏳ پرونده در اتاق مشاور است</h4>
+                            <p style="font-size:11px; color:var(--text-muted);">تحلیل شما در صف بررسی است. به محض تایید، در رادار ظاهر می‌شود.</p>`;
+                        return; // توقف اجرا (دیگه فرم رو نشون نده)
+                    } else if (status === 'approved') {
+                        document.getElementById(`success_${id}`).style.display = 'block';
+                        document.getElementById(`success_${id}`).innerHTML = `
+                            <h4 style="color:var(--success); margin-bottom:5px;">✅ جراحی با موفقیت انجام شد</h4>
+                            <p style="font-size:11px; color:var(--text-muted);">این اسپرینت بسته شده است. نتایج را در تب رادار ببینید.</p>`;
+                        return; // توقف اجرا
+                    } else if (status === 'rejected') {
+                        // اگر رد شده بود، یک پیام قرمز نشون میدیم و میذاریم فرم دوباره باز بشه
+                        document.getElementById(`lock_${id}`).style.display = 'block';
+                        document.getElementById(`lock_${id}`).innerHTML = `<h4 style="color:var(--danger);">⚠️ عکس/فایل قبلی ناخوانا بود. لطفاً مجدداً ارسال کنید.</h4>`;
+                    }
+                }
+
+                // 🌟 بررسی ۲: قانون 6 روز (در صورتی که پرونده‌ای نبود یا رد شده بود)
                 const { count, error } = await supabaseClient
                     .from('daily_reports')
                     .select('*', { count: 'exact', head: true })
@@ -212,16 +244,13 @@
                 document.getElementById(`loader_${id}`).style.display = 'none';
 
                 if (count >= 6) {
-                    // قفل باز شد!
                     document.getElementById(`form_${id}`).style.display = 'block';
                 } else {
-                    // مسدود شد
                     document.getElementById(`lock_${id}`).style.display = 'block';
-                    document.getElementById(`lock_msg_${id}`).innerText = `شما در این بازه زمانی تنها ${count || 0} گزارش ثبت کرده‌اید. برای آنالیز دقیق، نیاز به حداقل 6 روز دیتای رفتار تحصیلی است.`;
+                    document.getElementById(`lock_msg_${id}`).innerText = `شما در این بازه زمانی تنها ${count || 0} گزارش ثبت کرده‌اید. برای آنالیز دقیق، نیاز به حداقل 6 روز دیتا است.`;
                 }
             }
         }
-
         // ۳. هندل کردن انتخاب فایل (عکس یا PDF)
         function handleFileSelect(input, sprintId) {
             if (input.files && input.files[0]) {
