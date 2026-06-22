@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>آزمایشگاه اسپرینت | راهینو VIP</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root { 
+            --bg-dark: #0f172a; --surface-dark: #1e293b; --surface-light: #334155; --border-color: #475569;
+            --accent: #8b5cf6; --accent-glow: rgba(139, 92, 246, 0.2); --gold: #f59e0b;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-dark); color: var(--text-main); line-height: 1.6; padding-bottom: 90px; }
+        
+        .app-container { max-width: 800px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* هدر و تب‌ها */
+        .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-back { background: var(--surface-light); border: 1px solid var(--border-color); color: var(--text-main); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 20px; }
+        .page-title { font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
+        .pro-badge { background: linear-gradient(135deg, var(--accent), #6d28d9); color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
+
+        .tabs-container { display: flex; background: var(--surface-dark); border-radius: 16px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--border-color); }
+        .tab-btn { flex: 1; text-align: center; padding: 12px 5px; font-size: 13px; font-weight: bold; color: var(--text-muted); text-decoration: none; border-radius: 12px; transition: 0.3s; }
+        .tab-btn.active { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(139, 92, 246, 0.3); }
+
+        /* کارت‌های اسپرینت (هفته‌ها) */
+        .sprint-list { display: flex; flex-direction: column; gap: 15px; }
+        .sprint-card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; transition: 0.3s; }
+        .sprint-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: rgba(255,255,255,0.02); }
+        .sprint-header:hover { background: rgba(255,255,255,0.05); }
+        
+        .sprint-info h3 { font-size: 15px; color: var(--text-main); margin-bottom: 5px; }
+        .sprint-dates { font-size: 11px; color: var(--text-muted); }
+        .sprint-badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
+        .badge-exam { background: rgba(245, 158, 11, 0.1); color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-routine { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        /* بدنه آکاردئون (محتوای داخل هر هفته) */
+        .sprint-body { padding: 0 20px; max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, padding 0.4s ease-out; background: var(--bg-dark); border-top: 1px dashed transparent; }
+        .sprint-card.open .sprint-body { max-height: 800px; padding: 20px; border-top-color: var(--border-color); }
+
+        /* قفل دیسیپلین */
+        .lock-screen { text-align: center; padding: 30px 10px; display: none; }
+        .lock-icon { font-size: 40px; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(239,68,68,0.5)); }
+        
+        /* فرم جراحی */
+        .surgery-form { display: none; }
+        .file-upload-wrapper { position: relative; width: 100%; height: 100px; border: 2px dashed var(--accent); border-radius: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--accent-glow); margin-bottom: 15px; cursor: pointer; }
+        .file-upload-wrapper input[type="file"] { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        
+        textarea.modern-input { width: 100%; padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-main); font-size: 13px; resize: none; outline: none; margin-bottom: 15px; transition: 0.3s; }
+        textarea.modern-input:focus { border-color: var(--accent); }
+
+        .btn-submit { background: linear-gradient(135deg, var(--accent), #6d28d9); color: white; width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 15px var(--accent-glow); }
+
+        .loader { display: none; text-align: center; padding: 20px; }
+        .spinner { font-size: 30px; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="nav-header">
+            <a href="menu.html" class="btn-back">🔙</a>
+            <div class="page-title">آزمایشگاه <span class="pro-badge">PROMAX</span></div>
+            <div style="width: 45px;"></div>
+        </div>
+
+        <div class="tabs-container">
+            <a href="promax-sprints.html" class="tab-btn active">🎯 اسپرینت‌ها و جراحی</a>
+            <a href="promax-radar.html" class="tab-btn">📈 رادار عملکرد کلی</a>
+        </div>
+
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; text-align: center;">
+            برای انجام تحلیل توسط هوش مصنوعی، باید حداقل <span style="color:var(--gold); font-weight:bold;">۶ گزارش شبانه</span> در آن هفته ثبت کرده باشید.
+        </p>
+
+        <div class="sprint-list" id="sprintsContainer">
+            <div style="text-align:center; padding: 30px; color: var(--text-muted);">در حال دریافت تقویم آموزشی از سرور... ⏳</div>
+        </div>
+    </div>
+
+    <script>
+        // دریافت آیدی دانش‌آموز از حافظه
+        const userId = localStorage.getItem('qotbnama_user_id') || '999999';
+        
+        // 🔗 تنظیمات اتصال (حتماً پر شود)
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co';          
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ';          
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);         
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
+
+        let activeSprintId = null;
+        let selectedFileBase64 = null;
+        let selectedMimeType = null;
+
+        window.onload = async function() {
+            await loadSprints();
+        };
+
+        // ۱. لود کردن هفته‌ها از جدول study_sprints
+        async function loadSprints() {
+            const container = document.getElementById('sprintsContainer');
+            
+            // گرفتن 4 هفته اخیر از دیتابیس (بر اساس تاریخ)
+            const { data: sprints, error } = await supabaseClient
+                .from('study_sprints')
+                .select('*')
+                .order('start_date', { ascending: false })
+                .limit(4);
+
+            if (error || !sprints || sprints.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:30px;">هنوز تقویم آموزشی توسط مشاور تنظیم نشده است.</div>';
+                return;
+            }
+
+            container.innerHTML = ''; // پاک کردن لودینگ
+
+            sprints.forEach(sprint => {
+                const badge = sprint.is_exam_week 
+                    ? `<span class="sprint-badge badge-exam">👑 آزمون: ${sprint.exam_title || 'جامع'}</span>` 
+                    : `<span class="sprint-badge badge-routine">🏃 هفته پیشروی</span>`;
+
+                container.innerHTML += `
+                    <div class="sprint-card" id="card_${sprint.id}">
+                        <div class="sprint-header" onclick="toggleSprint('${sprint.id}', '${sprint.start_date}', '${sprint.end_date}', ${sprint.is_exam_week})">
+                            <div class="sprint-info">
+                                <h3>${sprint.title}</h3>
+                                <div class="sprint-dates">${sprint.start_date} الی ${sprint.end_date}</div>
+                            </div>
+                            <div>${badge}</div>
+                        </div>
+                        
+                        <div class="sprint-body">
+                            <div id="loader_${sprint.id}" class="loader">
+                                <div class="spinner">⏳</div>
+                                <div style="font-size:11px; margin-top:10px;">در حال بررسی انضباط شما در این هفته...</div>
+                            </div>
+
+                            <div id="lock_${sprint.id}" class="lock-screen">
+                                <div class="lock-icon">⛔</div>
+                                <h4 style="color:var(--danger); margin-bottom:5px;">دسترسی به هوش مصنوعی مسدود شد</h4>
+                                <p style="font-size:12px; color:var(--text-muted);" id="lock_msg_${sprint.id}"></p>
+                            </div>
+
+                            <div id="form_${sprint.id}" class="surgery-form">
+                                ${sprint.is_exam_week ? `
+                                    <div class="file-upload-wrapper">
+                                        <div style="font-size: 24px; margin-bottom: 5px;">📥</div>
+                                        <div style="font-size: 11px; font-weight: bold; color: var(--accent);" id="fileName_${sprint.id}">کارنامه (PDF یا عکس) را اینجا آپلود کنید</div>
+                                        <input type="file" accept="image/*, application/pdf" onchange="handleFileSelect(this, '${sprint.id}')">
+                                    </div>
+                                ` : `
+                                    <div style="background:var(--surface-light); padding:10px; border-radius:10px; font-size:12px; margin-bottom:15px; color:var(--success);">
+                                        ✅ در این هفته آزمونی ندارید. هوش مصنوعی فقط روند خواب، نظم و اجرای برنامه‌تان را تحلیل می‌کند.
+                                    </div>
+                                `}
+
+                                <textarea class="modern-input" id="reflection_${sprint.id}" rows="3" placeholder="اعترافات: در این هفته چه حسی داشتی؟ کجاها کم‌کاری کردی؟"></textarea>
+                                
+                                <button class="btn-submit" id="btn_${sprint.id}" onclick="submitAnalysis('${sprint.id}', '${sprint.start_date}', '${sprint.end_date}', ${sprint.is_exam_week})">
+                                    🚀 ارسال پرونده به اتاق مشاور
+                                </button>
+                            </div>
+                            
+                            <div id="success_${sprint.id}" style="display:none; text-align:center; padding:20px; background:rgba(16,185,129,0.1); border:1px solid var(--success); border-radius:12px; margin-top:10px;">
+                                <h4 style="color:var(--success); margin-bottom:5px;">پرونده با موفقیت ارسال شد ✅</h4>
+                                <p style="font-size:11px; color:var(--text-muted);">تحلیل شما پس از تایید مشاور در داشبورد فعال می‌شود.</p>
+                            </div>
+
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // ۲. باز و بسته کردن آکاردئون و بررسی دیسیپلین
+        async function toggleSprint(id, startDate, endDate, isExamWeek) {
+            const card = document.getElementById(`card_${id}`);
+            const isOpen = card.classList.contains('open');
+            
+            // بستن همه کارت‌های دیگه
+            document.querySelectorAll('.sprint-card').forEach(c => c.classList.remove('open'));
+
+            if (!isOpen) {
+                card.classList.add('open');
+                
+                // ریست کردن فرم‌ها
+                document.getElementById(`loader_${id}`).style.display = 'block';
+                document.getElementById(`lock_${id}`).style.display = 'none';
+                document.getElementById(`form_${id}`).style.display = 'none';
+                document.getElementById(`success_${id}`).style.display = 'none';
+
+                // 🔍 بررسی قانون 6 روز از دیتابیس
+                const { count, error } = await supabaseClient
+                    .from('daily_reports')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('chat_id', String(userId))
+                    .gte('report_date', startDate)
+                    .lte('report_date', endDate);
+
+                document.getElementById(`loader_${id}`).style.display = 'none';
+
+                if (count >= 6) {
+                    // قفل باز شد!
+                    document.getElementById(`form_${id}`).style.display = 'block';
+                } else {
+                    // مسدود شد
+                    document.getElementById(`lock_${id}`).style.display = 'block';
+                    document.getElementById(`lock_msg_${id}`).innerText = `شما در این بازه زمانی تنها ${count || 0} گزارش ثبت کرده‌اید. برای آنالیز دقیق، نیاز به حداقل 6 روز دیتای رفتار تحصیلی است.`;
+                }
+            }
+        }
+
+        // ۳. هندل کردن انتخاب فایل (عکس یا PDF)
+        function handleFileSelect(input, sprintId) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                document.getElementById(`fileName_${sprintId}`).innerText = "✅ " + file.name;
+                selectedMimeType = file.type; // مثلا application/pdf یا image/jpeg
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedFileBase64 = e.target.result.split(',')[1];
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // ۴. ارسال داده‌ها به موتور گوگل اسکریپت
+        async function submitAnalysis(id, startDate, endDate, isExamWeek) {
+            const reflection = document.getElementById(`reflection_${id}`).value.trim();
+            
+            if (isExamWeek && !selectedFileBase64) { alert("لطفاً کارنامه (عکس یا PDF) خود را آپلود کنید!"); return; }
+            if (reflection.length < 10) { alert("لطفاً حداقل یک خط در مورد عملکردت اعتراف کن!"); return; }
+
+            const btn = document.getElementById(`btn_${id}`);
+            btn.innerHTML = 'در حال ارسال به سرور... ⏳';
+            btn.disabled = true;
+
+            try {
+                const payload = {
+                    action: 'analyze_sprint',
+                    student_id: userId,
+                    start_date: startDate,
+                    end_date: endDate,
+                    is_exam_week: isExamWeek,
+                    reflection: reflection,
+                    mime_type: isExamWeek ? selectedMimeType : null,
+                    file_base64: isExamWeek ? selectedFileBase64 : null
+                };
+
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if(result.success) {
+                    document.getElementById(`form_${id}`).style.display = 'none';
+                    document.getElementById(`success_${id}`).style.display = 'block';
+                } else {
+                    throw new Error(result.error);
+                }
+
+            } catch (err) {
+                alert("خطا در ارتباط با هوش مصنوعی: " + err.message);
+                btn.innerHTML = '🚀 ارسال مجدد پرونده';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
