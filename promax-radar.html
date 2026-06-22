@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رادار عملکرد | راهینو VIP</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <style>
+        :root { 
+            --bg-dark: #0f172a; --surface-dark: #1e293b; --surface-light: #334155; --border-color: #475569;
+            --accent: #8b5cf6; --accent-glow: rgba(139, 92, 246, 0.2); --gold: #f59e0b;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-dark); color: var(--text-main); line-height: 1.6; padding-bottom: 90px; }
+        
+        .app-container { max-width: 800px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* هدر و تب‌ها (مشترک) */
+        .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-back { background: var(--surface-light); border: 1px solid var(--border-color); color: var(--text-main); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 20px; }
+        .page-title { font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
+        .pro-badge { background: linear-gradient(135deg, var(--accent), #6d28d9); color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
+
+        .tabs-container { display: flex; background: var(--surface-dark); border-radius: 16px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--border-color); }
+        .tab-btn { flex: 1; text-align: center; padding: 12px 5px; font-size: 13px; font-weight: bold; color: var(--text-muted); text-decoration: none; border-radius: 12px; transition: 0.3s; }
+        .tab-btn.active { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(139, 92, 246, 0.3); }
+
+        /* کارت‌های آماری (HUD Stats) */
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; }
+        .stat-card { background: var(--surface-dark); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); text-align: center; position: relative; overflow: hidden; }
+        .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 100%; height: 3px; background: var(--accent); opacity: 0.5; }
+        .stat-title { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
+        .stat-value { font-size: 22px; font-weight: 900; text-shadow: 0 0 10px rgba(255,255,255,0.1); }
+        
+        .val-gold { color: var(--gold); }
+        .val-success { color: var(--success); }
+        .val-danger { color: var(--danger); }
+        .val-accent { color: var(--accent); }
+
+        /* باکس نمودارها */
+        .chart-box { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 15px; margin-bottom: 20px; position: relative; overflow: hidden; }
+        .chart-title { font-size: 14px; font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+        .chart-desc { font-size: 11px; color: var(--text-muted); margin-bottom: 15px; }
+        .chart-container { position: relative; height: 220px; width: 100%; }
+
+        .loader { text-align: center; padding: 40px; }
+        .loader-icon { font-size: 40px; animation: pulse 1s infinite alternate; }
+        @keyframes pulse { from { transform: scale(0.9); opacity: 0.7; } to { transform: scale(1.1); opacity: 1; } }
+
+        .empty-state { text-align: center; padding: 40px 20px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--border-color); }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="nav-header">
+            <a href="menu.html" class="btn-back">🔙</a>
+            <div class="page-title">آزمایشگاه <span class="pro-badge">PROMAX</span></div>
+            <div style="width: 45px;"></div>
+        </div>
+
+        <div class="tabs-container">
+            <a href="promax-sprints.html" class="tab-btn">🎯 اسپرینت‌ها و جراحی</a>
+            <a href="promax-radar.html" class="tab-btn active">📈 رادار عملکرد کلی</a>
+        </div>
+
+        <div id="loadingArea" class="loader">
+            <div class="loader-icon">📡</div>
+            <div style="color: var(--accent); margin-top: 10px; font-weight: bold;">در حال پردازش کهکشان داده‌های تو...</div>
+        </div>
+
+        <div id="contentArea" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-title">بهترین تراز کسب‌شده</div>
+                    <div class="stat-value val-gold" id="statMaxTaraz">۰</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">میانگین تراز کل</div>
+                    <div class="stat-value val-accent" id="statAvgTaraz">۰</div>
+                </div>
+                <div class="stat-card" style="border-bottom: 2px solid var(--success);">
+                    <div class="stat-title">بهترین درس (نقطه قوت)</div>
+                    <div class="stat-value val-success" id="statBestSubject" style="font-size: 16px;">-</div>
+                </div>
+                <div class="stat-card" style="border-bottom: 2px solid var(--danger);">
+                    <div class="stat-title">پاشنه آشیل (نقطه ضعف)</div>
+                    <div class="stat-value val-danger" id="statWorstSubject" style="font-size: 16px;">-</div>
+                </div>
+            </div>
+
+            <div class="chart-box">
+                <div class="chart-title">📈 نبض پیشرفت تو</div>
+                <div class="chart-desc">روند تغییرات تراز در آزمون‌های اخیر (شیب صعودی است یا سینوسی؟)</div>
+                <div class="chart-container"><canvas id="trendChart"></canvas></div>
+            </div>
+
+            <div class="chart-box">
+                <div class="chart-title">⏳ تکامل مدیریت زمان در آزمون</div>
+                <div class="chart-desc">آیا یاد گرفته‌ای از سوالات سخت بگذری؟ (قرمز: غلط | خاکستری: نزده | سبز: درست)</div>
+                <div class="chart-container"><canvas id="timeMgmtChart"></canvas></div>
+            </div>
+
+            <div class="chart-box">
+                <div style="position: absolute; top: -30px; left: -30px; width: 100px; height: 100px; background: var(--accent); filter: blur(40px); opacity: 0.2; border-radius: 50%;"></div>
+                <div class="chart-title">⚖️ ترازوی عدالت (تست در برابر تراز)</div>
+                <div class="chart-desc">آیا هفته‌هایی که تست بیشتر زدی، ترازت هم بالاتر رفته؟ (ستون: مجموع تست | خط: تراز)</div>
+                <div class="chart-container"><canvas id="roiChart"></canvas></div>
+            </div>
+        </div>
+
+        <div id="emptyArea" class="empty-state" style="display: none;">
+            <div style="font-size: 40px; margin-bottom: 15px;">🗂️</div>
+            <h3 style="color: var(--text-main); margin-bottom: 10px;">هنوز دیتایی برای رسم رادار وجود ندارد!</h3>
+            <p style="font-size: 13px; color: var(--text-muted);">باید حداقل یک کارنامه توسط مشاور تایید شود تا نمودارها جون بگیرند.</p>
+        </div>
+
+    </div>
+
+    <script>
+        const userId = localStorage.getItem('qotbnama_user_id') || '999999';
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // تنظیمات گلوبال Chart.js برای دارک مود
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = 'Vazirmatn';
+        Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
+
+        window.onload = async function() {
+            await fetchAndRenderData();
+        };
+
+        async function fetchAndRenderData() {
+            try {
+                // دریافت تمام آزمون‌های تایید شده دانش‌آموز (به ترتیب زمان)
+                const { data: exams, error } = await supabaseClient
+                    .from('exam_results')
+                    .select('*')
+                    .eq('chat_id', String(userId))
+                    .eq('status', 'approved')
+                    .order('created_at', { ascending: true });
+
+                if (error || !exams || exams.length === 0) {
+                    document.getElementById('loadingArea').style.display = 'none';
+                    document.getElementById('emptyArea').style.display = 'block';
+                    return;
+                }
+
+                processDataAndDraw(exams);
+
+            } catch (err) {
+                console.error(err);
+                alert("خطا در دریافت اطلاعات رادار");
+            }
+        }
+
+        function processDataAndDraw(exams) {
+            let labels = [];
+            let tarazTrend = [];
+            
+            // برای مدیریت زمان
+            let correctData = [];
+            let incorrectData = [];
+            let unattemptedData = [];
+
+            // برای نمودار ROI (تست و تراز)
+            let totalTestsData = [];
+
+            // برای پیدا کردن بهترین/بدترین درس
+            let subjectAvgMap = {}; 
+            let subjectCountMap = {};
+
+            exams.forEach((ex, index) => {
+                let examLabel = `آزمون ${index + 1}`;
+                labels.push(examLabel);
+                
+                // تراز
+                let t = Number(ex.total_taraz || 0);
+                tarazTrend.push(t);
+
+                // مدیریت زمان (درست/غلط/نزده کل آزمون)
+                let parsedLessons = typeof ex.extracted_data === 'string' ? JSON.parse(ex.extracted_data || "[]") : (ex.extracted_data || []);
+                let sumC = 0, sumI = 0, sumU = 0;
+                
+                parsedLessons.forEach(lesson => {
+                    sumC += Number(lesson.correct || 0);
+                    sumI += Number(lesson.incorrect || 0);
+                    sumU += Number(lesson.unattempted || 0);
+
+                    // ثبت تراز درس برای محاسبه بهترین/بدترین
+                    let lName = lesson.name;
+                    let lTaraz = Number(lesson.taraz || 0);
+                    if(lTaraz > 0) {
+                        if(!subjectAvgMap[lName]) { subjectAvgMap[lName] = 0; subjectCountMap[lName] = 0; }
+                        subjectAvgMap[lName] += lTaraz;
+                        subjectCountMap[lName] += 1;
+                    }
+                });
+
+                correctData.push(sumC);
+                incorrectData.push(sumI);
+                unattemptedData.push(sumU);
+
+                // استخراج مجموع تست از اسنپ‌شات لایف‌استایل
+                let snap = typeof ex.lifestyle_snapshot === 'string' ? JSON.parse(ex.lifestyle_snapshot || "{}") : (ex.lifestyle_snapshot || {});
+                totalTestsData.push(Number(snap.total_tests || 0));
+            });
+
+            // --- آپدیت کارت‌های آماری بالای صفحه ---
+            let maxTaraz = Math.max(...tarazTrend);
+            let avgTaraz = tarazTrend.length > 0 ? Math.round(tarazTrend.reduce((a, b) => a + b, 0) / tarazTrend.length) : 0;
+            
+            document.getElementById('statMaxTaraz').innerText = maxTaraz > 0 ? maxTaraz : '-';
+            document.getElementById('statAvgTaraz').innerText = avgTaraz > 0 ? avgTaraz : '-';
+
+            // محاسبه بهترین و بدترین درس
+            let bestSubject = "-", worstSubject = "-";
+            let highestAvg = -1, lowestAvg = 999999;
+
+            for (const [subj, totalTaraz] of Object.entries(subjectAvgMap)) {
+                let avg = totalTaraz / subjectCountMap[subj];
+                if (avg > highestAvg) { highestAvg = avg; bestSubject = subj; }
+                if (avg < lowestAvg) { lowestAvg = avg; worstSubject = subj; }
+            }
+            
+            document.getElementById('statBestSubject').innerText = highestAvg !== -1 ? bestSubject : '-';
+            document.getElementById('statWorstSubject').innerText = lowestAvg !== 999999 ? worstSubject : '-';
+
+            // نمایش بدنه اصلی
+            document.getElementById('loadingArea').style.display = 'none';
+            document.getElementById('contentArea').style.display = 'block';
+
+            // --- رسم نمودار ۱: نبض پیشرفت (Line Chart) ---
+            new Chart(document.getElementById('trendChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'تراز کل',
+                        data: tarazTrend,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        borderWidth: 3, tension: 0.4, fill: true, pointBackgroundColor: '#fff', pointRadius: 5
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } }
+            });
+
+            // --- رسم نمودار ۲: تکامل مدیریت زمان (Stacked Bar) ---
+            new Chart(document.getElementById('timeMgmtChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'درست', data: correctData, backgroundColor: '#10b981' },
+                        { label: 'غلط', data: incorrectData, backgroundColor: '#ef4444' },
+                        { label: 'نزده', data: unattemptedData, backgroundColor: '#475569' }
+                    ]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true } },
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            // --- رسم نمودار ۳: ترازوی عدالت / تست در برابر تراز (Combo Chart) ---
+            new Chart(document.getElementById('roiChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { type: 'line', label: 'تراز آزمون', data: tarazTrend, borderColor: '#f59e0b', backgroundColor: '#f59e0b', borderWidth: 3, pointRadius: 5, tension: 0.3, yAxisID: 'y1' },
+                        { type: 'bar', label: 'مجموع تست دو هفته', data: totalTestsData, backgroundColor: 'rgba(59, 130, 246, 0.6)', borderRadius: 4, yAxisID: 'y' }
+                    ]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    scales: { 
+                        y: { type: 'linear', position: 'right', grid: { display: false }, ticks: { color: '#3b82f6' } },
+                        y1: { type: 'linear', position: 'left', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#f59e0b' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
