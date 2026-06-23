@@ -6,8 +6,7 @@
     <title>آزمایشگاه اسپرینت | راهینو VIP</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <style>
         :root { 
             --bg-dark: #0f172a; --surface-dark: #1e293b; --surface-light: #334155; --border-color: #475569;
             --accent: #8b5cf6; --accent-glow: rgba(139, 92, 246, 0.2); --gold: #f59e0b;
@@ -21,7 +20,6 @@
         .app-container { max-width: 800px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* هدر و تب‌ها */
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .btn-back { background: var(--surface-light); border: 1px solid var(--border-color); color: var(--text-main); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 20px; }
         .page-title { font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
@@ -31,7 +29,6 @@
         .tab-btn { flex: 1; text-align: center; padding: 12px 5px; font-size: 13px; font-weight: bold; color: var(--text-muted); text-decoration: none; border-radius: 12px; transition: 0.3s; }
         .tab-btn.active { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(139, 92, 246, 0.3); }
 
-        /* کارت‌های اسپرینت (هفته‌ها) */
         .sprint-list { display: flex; flex-direction: column; gap: 15px; }
         .sprint-card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; transition: 0.3s; }
         .sprint-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: rgba(255,255,255,0.02); }
@@ -43,15 +40,12 @@
         .badge-exam { background: rgba(245, 158, 11, 0.1); color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.3); }
         .badge-routine { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
 
-        /* بدنه آکاردئون (محتوای داخل هر هفته) */
         .sprint-body { padding: 0 20px; max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, padding 0.4s ease-out; background: var(--bg-dark); border-top: 1px dashed transparent; }
-        .sprint-card.open .sprint-body { max-height: 800px; padding: 20px; border-top-color: var(--border-color); }
+        .sprint-card.open .sprint-body { max-height: 2500px; padding: 20px; border-top-color: var(--border-color); } /* max-height بیشتر شد تا جا برای تحلیل باز باشه */
 
-        /* قفل دیسیپلین */
         .lock-screen { text-align: center; padding: 30px 10px; display: none; }
         .lock-icon { font-size: 40px; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(239,68,68,0.5)); }
         
-        /* فرم جراحی */
         .surgery-form { display: none; }
         .file-upload-wrapper { position: relative; width: 100%; height: 100px; border: 2px dashed var(--accent); border-radius: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--accent-glow); margin-bottom: 15px; cursor: pointer; }
         .file-upload-wrapper input[type="file"] { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
@@ -60,11 +54,14 @@
         textarea.modern-input:focus { border-color: var(--accent); }
 
         .btn-submit { background: linear-gradient(135deg, var(--accent), #6d28d9); color: white; width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 15px var(--accent-glow); }
-
+        
         .loader { display: none; text-align: center; padding: 20px; }
         .spinner { font-size: 30px; animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* استایل مخصوص نمایش تحلیل هوش مصنوعی */
+        .ai-analysis-box { background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 16px; padding: 20px; margin-top: 15px; line-height: 1.8; font-size: 14px; }
+        .chart-container { position: relative; height: 250px; width: 100%; margin-top: 20px; background: var(--surface-dark); padding: 10px; border-radius: 16px; border: 1px solid var(--border-color); }
     </style>
 </head>
 <body>
@@ -91,28 +88,27 @@
     </div>
 
     <script>
-        // دریافت آیدی دانش‌آموز از حافظه
         const userId = localStorage.getItem('qotbnama_user_id') || '999999';
         
-        // 🔗 تنظیمات اتصال (حتماً پر شود)
-        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co';          
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ';          
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);         
+        // 🔗 تنظیمات اتصال
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
 
-        let activeSprintId = null;
         let selectedFileBase64 = null;
         let selectedMimeType = null;
+        let chartInstances = {}; // ذخیره نمودارها برای جلوگیری از تداخل
 
-        window.onload = async function() {
-            await loadSprints();
-        };
+        // تنظیمات گلوبال Chart.js
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = 'Vazirmatn';
 
-        // ۱. لود کردن هفته‌ها از جدول study_sprints
+        window.onload = async function() { await loadSprints(); };
+
         async function loadSprints() {
             const container = document.getElementById('sprintsContainer');
             
-            // گرفتن 4 هفته اخیر از دیتابیس (بر اساس تاریخ)
             const { data: sprints, error } = await supabaseClient
                 .from('study_sprints')
                 .select('*')
@@ -120,11 +116,11 @@
                 .limit(4);
 
             if (error || !sprints || sprints.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:30px;">هنوز تقویم آموزشی توسط مشاور تنظیم نشده است.</div>';
+                container.innerHTML = '<div style="text-align:center; padding:30px;">هنوز تقویم آموزشی تنظیم نشده است.</div>';
                 return;
             }
 
-            container.innerHTML = ''; // پاک کردن لودینگ
+            container.innerHTML = ''; 
 
             sprints.forEach(sprint => {
                 const badge = sprint.is_exam_week 
@@ -144,12 +140,12 @@
                         <div class="sprint-body">
                             <div id="loader_${sprint.id}" class="loader">
                                 <div class="spinner">⏳</div>
-                                <div style="font-size:11px; margin-top:10px;">در حال بررسی انضباط شما در این هفته...</div>
+                                <div style="font-size:11px; margin-top:10px;">در حال بررسی پرونده شما...</div>
                             </div>
 
                             <div id="lock_${sprint.id}" class="lock-screen">
                                 <div class="lock-icon">⛔</div>
-                                <h4 style="color:var(--danger); margin-bottom:5px;">دسترسی به هوش مصنوعی مسدود شد</h4>
+                                <h4 style="color:var(--danger); margin-bottom:5px;">دسترسی مسدود شد</h4>
                                 <p style="font-size:12px; color:var(--text-muted);" id="lock_msg_${sprint.id}"></p>
                             </div>
 
@@ -162,20 +158,29 @@
                                     </div>
                                 ` : `
                                     <div style="background:var(--surface-light); padding:10px; border-radius:10px; font-size:12px; margin-bottom:15px; color:var(--success);">
-                                        ✅ در این هفته آزمونی ندارید. هوش مصنوعی فقط روند خواب، نظم و اجرای برنامه‌تان را تحلیل می‌کند.
+                                        ✅ در این هفته آزمونی ندارید. هوش مصنوعی فقط روند خواب و برنامه‌تان را تحلیل می‌کند.
                                     </div>
                                 `}
-
-                                <textarea class="modern-input" id="reflection_${sprint.id}" rows="3" placeholder="اعترافات: در این هفته چه حسی داشتی؟ کجاها کم‌کاری کردی؟"></textarea>
-                                
-                                <button class="btn-submit" id="btn_${sprint.id}" onclick="submitAnalysis('${sprint.id}', '${sprint.start_date}', '${sprint.end_date}', ${sprint.is_exam_week})">
-                                    🚀 ارسال پرونده به اتاق مشاور
-                                </button>
+                                <textarea class="modern-input" id="reflection_${sprint.id}" rows="3" placeholder="اعترافات: در این هفته چه حسی داشتی؟"></textarea>
+                                <button class="btn-submit" id="btn_${sprint.id}" onclick="submitAnalysis('${sprint.id}', '${sprint.start_date}', '${sprint.end_date}', ${sprint.is_exam_week})">🚀 ارسال پرونده</button>
                             </div>
                             
-                            <div id="success_${sprint.id}" style="display:none; text-align:center; padding:20px; background:rgba(16,185,129,0.1); border:1px solid var(--success); border-radius:12px; margin-top:10px;">
-                                <h4 style="color:var(--success); margin-bottom:5px;">پرونده با موفقیت ارسال شد ✅</h4>
-                                <p style="font-size:11px; color:var(--text-muted);">تحلیل شما پس از تایید مشاور در داشبورد فعال می‌شود.</p>
+                            <div id="pending_${sprint.id}" style="display:none; text-align:center; padding:20px; background:rgba(59,130,246,0.1); border:1px solid #3b82f6; border-radius:12px; margin-top:10px;">
+                                <h4 style="color:#3b82f6; margin-bottom:5px;">⏳ پرونده در اتاق مشاور است</h4>
+                                <p style="font-size:11px; color:var(--text-muted);">تحلیل شما در صف بررسی است و به زودی اینجا نمایان می‌شود.</p>
+                            </div>
+
+                            <div id="approved_result_${sprint.id}" style="display:none;">
+                                <div style="display:flex; align-items:center; gap:8px; margin-bottom: 10px; color:var(--success); font-weight:bold;">
+                                    <span>✅</span> نتیجه جراحی هوش مصنوعی:
+                                </div>
+                                <div class="ai-analysis-box" id="analysis_text_${sprint.id}"></div>
+                                
+                                ${sprint.is_exam_week ? `
+                                    <div class="chart-container">
+                                        <canvas id="chart_${sprint.id}"></canvas>
+                                    </div>
+                                ` : ''}
                             </div>
 
                         </div>
@@ -184,8 +189,6 @@
             });
         }
 
-        // ۲. باز و بسته کردن آکاردئون و بررسی دیسیپلین
-        // ۲. باز و بسته کردن آکاردئون و بررسی وضعیت‌های مختلف
         async function toggleSprint(id, startDate, endDate, isExamWeek) {
             const card = document.getElementById(`card_${id}`);
             const isOpen = card.classList.contains('open');
@@ -198,12 +201,13 @@
                 document.getElementById(`loader_${id}`).style.display = 'block';
                 document.getElementById(`lock_${id}`).style.display = 'none';
                 document.getElementById(`form_${id}`).style.display = 'none';
-                document.getElementById(`success_${id}`).style.display = 'none';
+                document.getElementById(`pending_${id}`).style.display = 'none';
+                document.getElementById(`approved_result_${id}`).style.display = 'none';
 
-                // 🌟 بررسی ۱: آیا قبلاً پرونده‌ای برای این هفته ثبت شده؟
+                // ۱. بررسی اینکه آیا قبلاً ثبت شده یا نه
                 const { data: existingExam } = await supabaseClient
                     .from('exam_results')
-                    .select('status')
+                    .select('status, consultant_analysis, extracted_data')
                     .eq('chat_id', String(userId))
                     .eq('period_start', startDate)
                     .eq('period_end', endDate)
@@ -215,25 +219,25 @@
                     document.getElementById(`loader_${id}`).style.display = 'none';
                     
                     if (status === 'pending') {
-                        document.getElementById(`success_${id}`).style.display = 'block';
-                        document.getElementById(`success_${id}`).innerHTML = `
-                            <h4 style="color:#3b82f6; margin-bottom:5px;">⏳ پرونده در اتاق مشاور است</h4>
-                            <p style="font-size:11px; color:var(--text-muted);">تحلیل شما در صف بررسی است. به محض تایید، در رادار ظاهر می‌شود.</p>`;
-                        return; // توقف اجرا (دیگه فرم رو نشون نده)
+                        document.getElementById(`pending_${id}`).style.display = 'block';
+                        return; 
                     } else if (status === 'approved') {
-                        document.getElementById(`success_${id}`).style.display = 'block';
-                        document.getElementById(`success_${id}`).innerHTML = `
-                            <h4 style="color:var(--success); margin-bottom:5px;">✅ جراحی با موفقیت انجام شد</h4>
-                            <p style="font-size:11px; color:var(--text-muted);">این اسپرینت بسته شده است. نتایج را در تب رادار ببینید.</p>`;
-                        return; // توقف اجرا
+                        // 🌟 جادوی نمایش تحلیل در داشبورد دانش‌آموز!
+                        document.getElementById(`approved_result_${id}`).style.display = 'block';
+                        document.getElementById(`analysis_text_${id}`).innerHTML = existingExam[0].consultant_analysis || 'متن تحلیل دریافت نشد.';
+                        
+                        // رسم نمودار وضعیت آزمون
+                        if (isExamWeek && existingExam[0].extracted_data) {
+                            renderSprintChart(id, existingExam[0].extracted_data);
+                        }
+                        return; 
                     } else if (status === 'rejected') {
-                        // اگر رد شده بود، یک پیام قرمز نشون میدیم و میذاریم فرم دوباره باز بشه
                         document.getElementById(`lock_${id}`).style.display = 'block';
-                        document.getElementById(`lock_${id}`).innerHTML = `<h4 style="color:var(--danger);">⚠️ عکس/فایل قبلی ناخوانا بود. لطفاً مجدداً ارسال کنید.</h4>`;
+                        document.getElementById(`lock_${id}`).innerHTML = `<h4 style="color:var(--danger);">⚠️ عکس قبلی ناخوانا بود. لطفاً مجدداً ارسال کنید.</h4>`;
                     }
                 }
 
-                // 🌟 بررسی ۲: قانون 6 روز (در صورتی که پرونده‌ای نبود یا رد شده بود)
+                // ۲. بررسی قانون 6 روز
                 const { count, error } = await supabaseClient
                     .from('daily_reports')
                     .select('*', { count: 'exact', head: true })
@@ -247,67 +251,81 @@
                     document.getElementById(`form_${id}`).style.display = 'block';
                 } else {
                     document.getElementById(`lock_${id}`).style.display = 'block';
-                    document.getElementById(`lock_msg_${id}`).innerText = `شما در این بازه زمانی تنها ${count || 0} گزارش ثبت کرده‌اید. برای آنالیز دقیق، نیاز به حداقل 6 روز دیتا است.`;
+                    document.getElementById(`lock_msg_${id}`).innerText = `شما در این بازه زمانی تنها ${count || 0} گزارش ثبت کرده‌اید. برای آنالیز دقیق، نیاز به حداقل 6 روز دیتای تحصیلی است.`;
                 }
             }
         }
-        // ۳. هندل کردن انتخاب فایل (عکس یا PDF)
+
+        // رسم نمودار (درست/غلط/نزده) برای همان اسپرینت
+        function renderSprintChart(id, extractedData) {
+            let parsedData = typeof extractedData === 'string' ? JSON.parse(extractedData) : extractedData;
+            if (!parsedData || parsedData.length === 0) return;
+
+            const labels = parsedData.map(l => l.name);
+            const corrects = parsedData.map(l => l.correct || 0);
+            const incorrects = parsedData.map(l => l.incorrect || 0);
+            const unattempteds = parsedData.map(l => l.unattempted || 0);
+
+            if (chartInstances[id]) chartInstances[id].destroy(); // نابودی نمودار قبلی برای جلوگیری از باگ
+
+            const ctx = document.getElementById(`chart_${id}`).getContext('2d');
+            chartInstances[id] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'درست', data: corrects, backgroundColor: '#10b981', borderRadius: 4 },
+                        { label: 'غلط', data: incorrects, backgroundColor: '#ef4444', borderRadius: 4 },
+                        { label: 'نزده', data: unattempteds, backgroundColor: '#475569', borderRadius: 4 }
+                    ]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    scales: { 
+                        x: { stacked: true, grid: { display: false } }, 
+                        y: { stacked: true, grid: { color: 'rgba(255,255,255,0.05)' } } 
+                    },
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
         function handleFileSelect(input, sprintId) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
                 document.getElementById(`fileName_${sprintId}`).innerText = "✅ " + file.name;
-                selectedMimeType = file.type; // مثلا application/pdf یا image/jpeg
+                selectedMimeType = file.type; 
                 
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    selectedFileBase64 = e.target.result.split(',')[1];
-                };
+                reader.onload = function(e) { selectedFileBase64 = e.target.result.split(',')[1]; };
                 reader.readAsDataURL(file);
             }
         }
 
-        // ۴. ارسال داده‌ها به موتور گوگل اسکریپت
         async function submitAnalysis(id, startDate, endDate, isExamWeek) {
             const reflection = document.getElementById(`reflection_${id}`).value.trim();
-            
             if (isExamWeek && !selectedFileBase64) { alert("لطفاً کارنامه (عکس یا PDF) خود را آپلود کنید!"); return; }
-            if (reflection.length < 10) { alert("لطفاً حداقل یک خط در مورد عملکردت اعتراف کن!"); return; }
+            if (reflection.length < 10) { alert("لطفاً حداقل یک خط اعتراف کن!"); return; }
 
             const btn = document.getElementById(`btn_${id}`);
-            btn.innerHTML = 'در حال ارسال به سرور... ⏳';
-            btn.disabled = true;
+            btn.innerHTML = 'در حال ارسال به سرور... ⏳'; btn.disabled = true;
 
             try {
-                const payload = {
-                    action: 'analyze_sprint',
-                    student_id: userId,
-                    start_date: startDate,
-                    end_date: endDate,
-                    is_exam_week: isExamWeek,
-                    reflection: reflection,
-                    mime_type: isExamWeek ? selectedMimeType : null,
-                    file_base64: isExamWeek ? selectedFileBase64 : null
-                };
-
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ action: 'analyze_sprint', student_id: userId, start_date: startDate, end_date: endDate, is_exam_week: isExamWeek, reflection: reflection, mime_type: isExamWeek ? selectedMimeType : null, file_base64: isExamWeek ? selectedFileBase64 : null })
                 });
                 
                 const result = await response.json();
                 
                 if(result.success) {
                     document.getElementById(`form_${id}`).style.display = 'none';
-                    document.getElementById(`success_${id}`).style.display = 'block';
-                } else {
-                    throw new Error(result.error);
-                }
-
+                    document.getElementById(`pending_${id}`).style.display = 'block';
+                } else { throw new Error(result.error); }
             } catch (err) {
-                alert("خطا در ارتباط با هوش مصنوعی: " + err.message);
-                btn.innerHTML = '🚀 ارسال مجدد پرونده';
-                btn.disabled = false;
+                alert("خطا: " + err.message);
+                btn.innerHTML = '🚀 ارسال مجدد'; btn.disabled = false;
             }
         }
     </script>
