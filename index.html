@@ -65,7 +65,7 @@
         .security-box { background: var(--bg-color); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 20px; font-weight: bold; color: var(--accent); }
     </style>
 </head>
-<body data-theme="dark">
+<body>
 
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️</button>
 
@@ -139,28 +139,32 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // ==========================================
-        // 🌓 سیستم دارک مود
+        // 🌓 سیستم دارک مود هوشمند
         // ==========================================
         const themeBtn = document.getElementById('themeBtn');
         const currentTheme = localStorage.getItem('theme') || 'dark';
-        if (currentTheme === 'light') {
-            document.documentElement.setAttribute('data-theme', 'light');
+        
+        // تنظیم تم اولیه موقع لود شدن صفحه
+        if (currentTheme === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+            themeBtn.innerText = '☀️';
+        } else {
+            document.body.removeAttribute('data-theme');
             themeBtn.innerText = '🌙';
         }
 
         function toggleTheme() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
             if (isDark) {
-                document.documentElement.setAttribute('data-theme', 'light');
+                document.body.removeAttribute('data-theme');
                 localStorage.setItem('theme', 'light');
                 themeBtn.innerText = '🌙';
             } else {
-                document.documentElement.setAttribute('data-theme', 'dark');
+                document.body.setAttribute('data-theme', 'dark');
                 localStorage.setItem('theme', 'dark');
                 themeBtn.innerText = '☀️';
             }
         }
-
         // ==========================================
         // 🚪 موتور ورود هوشمند (Login Routing)
         // ==========================================
