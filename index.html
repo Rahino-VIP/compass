@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ورود و ثبت‌نام | قطب‌نمای راهینو</title>
+    <title>ورود | قطب‌نمای راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
-        /* 🎨 پالت رنگی حرفه‌ای */
+        /* 🎨 پالت رنگی حرفه‌ای (دارک و لایت) */
         :root { 
             --primary: #1e3a8a; --primary-hover: #1e40af; --accent: #d97706;  
             --bg-color: #f1f5f9; --surface: #ffffff; --text-main: #1e293b; 
             --text-muted: #64748b; --border: #e2e8f0; --shadow: 0 20px 40px rgba(30, 58, 138, 0.15);
-            --success: #10b981; --danger: #ef4444;
+            --danger: #ef4444; --success: #10b981;
         }
 
         [data-theme="dark"] {
@@ -24,203 +24,108 @@
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
         
-        body { background: var(--bg-color); color: var(--text-main); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        body { background: var(--bg-color); color: var(--text-main); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; position: relative; }
 
-        .auth-box { 
-            background: var(--surface); border-radius: 32px; padding: 40px; 
-            width: 100%; max-width: 450px; box-shadow: var(--shadow); 
-            border: 1px solid var(--border); text-align: center; position: relative; overflow: hidden;
-            transition: max-width 0.4s ease;
-        }
-        
-        /* وقتی فرم ثبت‌نام بازه، باکس پهن‌تر میشه تا دو ستونه بشه */
-        .auth-box.wide-mode { max-width: 800px; }
+        .theme-toggle { position: absolute; top: 20px; left: 20px; background: var(--surface); border: 2px solid var(--border); color: var(--text-main); width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); z-index: 100; }
 
-        .logo-container { width: 100px; height: 100px; margin: 0 auto 20px auto; border-radius: 50%; background: var(--surface); box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; display: flex; justify-content: center; align-items: center; border: 3px solid var(--surface); }
+        .auth-box { background: var(--surface); border-radius: 32px; padding: 50px 40px; width: 100%; max-width: 420px; box-shadow: var(--shadow); border: 1px solid var(--border); text-align: center; animation: slideUp 0.5s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .logo-container { width: 120px; height: 120px; margin: 0 auto 25px auto; border-radius: 50%; background: var(--surface); box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; display: flex; justify-content: center; align-items: center; border: 4px solid var(--surface); }
         .logo-img { width: 100%; height: 100%; object-fit: cover; }
-        h1 { font-size: 24px; font-weight: 900; color: var(--primary); margin-bottom: 5px; }
+        
+        h1 { font-size: 24px; font-weight: 900; color: var(--primary); margin-bottom: 8px; }
         .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; }
 
-        /* فرم‌ها و ورودی‌ها */
-        .input-group { margin-bottom: 15px; text-align: right; }
-        .input-group.full-width { grid-column: 1 / -1; }
+        .input-group { margin-bottom: 20px; text-align: right; }
         label { display: block; font-size: 13px; margin-bottom: 8px; font-weight: bold; color: var(--text-muted); }
-        input, select { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 14px; outline: none; transition: 0.2s; }
-        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); }
-        
-        .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        @media (min-width: 600px) { .form-grid { grid-template-columns: 1fr 1fr; } }
+        input { width: 100%; padding: 16px; border-radius: 16px; border: 2px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 15px; font-weight: bold; outline: none; transition: 0.2s; direction: ltr; text-align: left; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); }
 
-        /* دکمه‌ها */
-        .btn { width: 100%; padding: 16px; border-radius: 14px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        .btn { width: 100%; padding: 18px; border-radius: 16px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
         .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; box-shadow: 0 10px 20px rgba(30, 58, 138, 0.2); }
         .btn-primary:hover { transform: translateY(-2px); filter: brightness(1.1); }
         .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
-        .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text-main); margin-top: 15px; }
+        .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text-main); padding: 14px; margin-top: 10px; }
         .btn-outline:hover { background: var(--bg-color); }
 
-        .link-text { display: inline-block; margin-top: 20px; color: var(--text-muted); font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: none; }
+        .footer-links { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; font-size: 13px; font-weight: bold; }
+        .link-text { color: var(--text-muted); cursor: pointer; text-decoration: none; transition: 0.2s; }
         .link-text:hover { color: var(--accent); }
 
-        /* پیام‌ها و لودینگ */
-        .loader { display: none; font-size: 14px; color: var(--primary); font-weight: bold; margin-top: 15px; }
-        .alert-box { color: var(--danger); font-size: 13px; font-weight: bold; margin-top: 15px; display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 12px; border-radius: 10px; text-align: center; }
-        .alert-success { color: var(--success); background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); }
+        .alert-box { font-size: 13px; font-weight: bold; margin-top: 15px; display: none; padding: 12px; border-radius: 12px; text-align: center; }
+        .alert-error { color: var(--danger); background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .alert-success { color: var(--success); background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); }
 
-        /* بخش‌های مختلف اپلیکیشن (ویوها) */
-        .view-section { display: none; animation: fadeIn 0.4s ease-out; }
-        .view-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* کارت‌های انتخاب طرح */
-        .plan-cards { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
-        @media (min-width: 600px) { .plan-cards { grid-template-columns: 1fr 1fr; } }
-        .plan-card { background: var(--bg-color); border: 2px solid var(--border); padding: 15px; border-radius: 16px; cursor: pointer; text-align: right; transition: 0.2s; position: relative; }
-        .plan-card:hover { border-color: var(--primary); }
-        .plan-card.selected { border-color: var(--accent); background: rgba(217, 119, 6, 0.05); }
-        .plan-card.selected::after { content: '✅'; position: absolute; left: 15px; top: 15px; font-size: 20px; }
-        .plan-title { font-weight: bold; font-size: 16px; color: var(--primary); margin-bottom: 5px; }
-        .plan-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
-
-        .file-upload { border: 2px dashed var(--accent); padding: 20px; border-radius: 16px; text-align: center; background: rgba(217, 119, 6, 0.05); cursor: pointer; position: relative; margin-bottom: 15px;}
-        .file-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        /* 🪟 مدال‌ها (فراموشی رمز) */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
+        .modal { background: var(--surface); padding: 30px; border-radius: 24px; width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease-out; }
+        .modal h3 { margin-bottom: 15px; font-size: 18px; color: var(--primary); font-weight: 800;}
+        .modal p { color: var(--text-muted); font-size: 13px; margin-bottom: 25px; line-height: 1.6; }
+        .security-box { background: var(--bg-color); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 20px; font-weight: bold; color: var(--accent); }
     </style>
 </head>
 <body data-theme="dark">
 
-    <div class="auth-box" id="mainBox">
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️</button>
+
+    <div class="auth-box">
         <div class="logo-container">
-            <img src="https://s6.uupload.ir/files/gemini_generated_image_9ff8pw9ff8pw9ff8_5dhj.png" alt="لوگو" class="logo-img">
+            <img src="https://s6.uupload.ir/files/gemini_generated_image_9ff8pw9ff8pw9ff8_5dhj.png" alt="لوگو راهینو" class="logo-img">
         </div>
+        
         <h1>قطب‌نمای راهینو</h1>
         <p class="subtitle">سیستم مدیریت و برنامه‌ریزی هوشمند</p>
 
-        <div id="alertBox" class="alert-box"></div>
+        <div id="mainAlert" class="alert-box"></div>
 
-        <div id="viewLogin" class="view-section active">
+        <div class="input-group">
+            <label>کد ملی (نام کاربری)</label>
+            <input type="text" id="loginNid" placeholder="مثال: 0012345678" autocomplete="off">
+        </div>
+        
+        <div class="input-group">
+            <label>رمز عبور</label>
+            <input type="password" id="loginPass" placeholder="••••••••">
+        </div>
+
+        <button class="btn btn-primary" id="loginBtn" onclick="handleLogin()">ورود به حساب</button>
+
+        <div class="footer-links">
+            <span class="link-text" onclick="openModal('forgotModal1')">رمز عبور را فراموش کردم</span>
+            <a href="register-step1.html" class="link-text" style="color: var(--primary);">ثبت‌نام دانش‌آموز جدید</a>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="forgotModal1">
+        <div class="modal">
+            <h3>بازیابی رمز عبور</h3>
+            <p>کد ملی خود را وارد کنید تا سوال امنیتی شما نمایش داده شود.</p>
             <div class="input-group">
-                <label>کد ملی (نام کاربری)</label>
-                <input type="text" id="loginNid" placeholder="کد ملی ۱۰ رقمی" autocomplete="off" style="direction: ltr; text-align: left;">
+                <input type="text" id="forgotNidInput" placeholder="کد ملی ۱۰ رقمی">
             </div>
-            <div class="input-group">
-                <label>رمز عبور</label>
-                <input type="password" id="loginPass" placeholder="••••••••" style="direction: ltr; text-align: left;">
-            </div>
-            
-            <button class="btn btn-primary" id="btnLogin" onclick="handleLogin()">ورود به حساب</button>
-            <div class="loader" id="loaderLogin">در حال بررسی اطلاعات... ⏳</div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
-                <span class="link-text" onclick="switchView('viewForgot1')">فراموشی رمز؟</span>
-                <span class="link-text" style="color: var(--primary);" onclick="switchView('viewRegister1', true)">ثبت‌نام دانش‌آموز جدید</span>
-            </div>
+            <button class="btn btn-primary" id="btnForgotGetQ" onclick="getSecurityQuestion()">دریافت سوال امنیتی</button>
+            <button class="btn btn-outline" onclick="closeModals()">انصراف</button>
+            <div id="forgotAlert1" class="alert-box" style="margin-top: 10px;"></div>
         </div>
+    </div>
 
-        <div id="viewRegister1" class="view-section">
-            <h3 style="margin-bottom: 20px; color: var(--primary);">تشکیل پرونده (مرحله ۱ از ۲)</h3>
-            
-            <div class="form-grid">
-                <div class="input-group"><label>نام و نام خانوادگی</label><input type="text" id="regName" placeholder="مثال: علی رضایی"></div>
-                <div class="input-group"><label>کد ملی (آیدی ورود)</label><input type="text" id="regNid" placeholder="۱۰ رقم"></div>
-                <div class="input-group"><label>تاریخ تولد</label><input type="date" id="regBirth"></div>
-                <div class="input-group"><label>موبایل دانش‌آموز</label><input type="text" id="regPhone" placeholder="09..."></div>
-                <div class="input-group"><label>موبایل پدر</label><input type="text" id="regFather" placeholder="09..."></div>
-                <div class="input-group"><label>موبایل مادر</label><input type="text" id="regMother" placeholder="09..."></div>
-                
-                <div class="input-group">
-                    <label>پایه تحصیلی</label>
-                    <select id="regGrade">
-                        <option value="دهم">دهم</option><option value="یازدهم">یازدهم</option>
-                        <option value="دوازدهم">دوازدهم</option><option value="پشت کنکوری">پشت کنکوری</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>رشته تحصیلی</label>
-                    <select id="regMajor">
-                        <option value="تجربی">تجربی</option><option value="ریاضی">ریاضی</option>
-                        <option value="انسانی">انسانی</option><option value="سایر">سایر</option>
-                    </select>
-                </div>
-                <div class="input-group"><label>رمز عبور دلخواه</label><input type="password" id="regPass" placeholder="حداقل ۴ کاراکتر"></div>
-                
-                <div class="input-group full-width">
-                    <label style="color: var(--accent);">🔐 تنظیم سوال امنیتی (برای بازیابی رمز در آینده)</label>
-                    <select id="regQuestion" style="margin-bottom: 10px;">
-                        <option value="نام بهترین دوست دوران کودکی شما؟">نام بهترین دوست دوران کودکی شما؟</option>
-                        <option value="نام معلم کلاس اول ابتدایی شما؟">نام معلم کلاس اول ابتدایی شما؟</option>
-                        <option value="نام شهر محل تولد پدربزرگ شما؟">نام شهر محل تولد پدربزرگ شما؟</option>
-                    </select>
-                    <input type="text" id="regAnswer" placeholder="پاسخ شما (این پاسخ را به یاد داشته باشید)">
-                </div>
-            </div>
-
-            <button class="btn btn-primary" id="btnReg1" onclick="submitRegisterStep1()">ثبت اطلاعات و انتخاب طرح</button>
-            <button class="btn btn-outline" onclick="switchView('viewLogin')">بازگشت به ورود</button>
-        </div>
-
-        <div id="viewRegister2" class="view-section">
-            <h3 style="margin-bottom: 20px; color: var(--accent);">انتخاب طرح و پرداخت (مرحله نهایی)</h3>
-            <p style="font-size:12px; color:var(--text-muted); margin-bottom: 15px;">کد ملی: <span id="lblCurrentNid" style="font-weight:bold; color:var(--text-main);"></span></p>
-
-            <div class="plan-cards" id="plansContainer">
-                <div style="grid-column: 1/-1; text-align:center; color:var(--text-muted);">در حال دریافت طرح‌های فعال... ⏳</div>
-            </div>
-
-            <div class="input-group" style="text-align: right;">
-                <label>تاریخ شروع طرح</label>
-                <input type="date" id="regStartDate">
-            </div>
-
-            <div class="file-upload">
-                <div style="font-size: 24px; margin-bottom: 5px;">📥</div>
-                <div id="lblFileName" style="font-size:13px; font-weight:bold; color:var(--accent);">تصویر فیش واریزی را آپلود کنید</div>
-                <input type="file" id="regReceipt" accept="image/*" onchange="handleReceiptSelect(this)">
-            </div>
-
-            <div style="text-align: right; margin-bottom: 15px;">
-                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                    <input type="checkbox" id="regRules" style="width: 20px; height: 20px;">
-                    <span style="font-size: 12px; color: var(--text-main);">قوانین و تعهدنامه این طرح را خواندم و می‌پذیرم.</span>
-                </label>
-            </div>
-
-            <button class="btn btn-primary" id="btnReg2" onclick="submitRegisterStep2()">ارسال به صندوق‌دار و تکمیل ثبت‌نام</button>
-            <button class="btn btn-outline" onclick="logoutFromDraft()">خروج از حساب</button>
-        </div>
-
-        <div id="viewForgot1" class="view-section">
-            <h3 style="margin-bottom: 15px; color: var(--primary);">بازیابی رمز عبور</h3>
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">کد ملی خود را وارد کنید تا سوال امنیتی شما نمایش داده شود.</p>
+    <div class="modal-overlay" id="forgotModal2">
+        <div class="modal">
+            <h3>تایید هویت و تغییر رمز</h3>
+            <div class="security-box" id="lblSecurityQuestion">سوال امنیتی در اینجا نمایش داده می‌شود</div>
             
             <div class="input-group">
-                <label>کد ملی</label>
-                <input type="text" id="forgotNid" placeholder="کد ملی ۱۰ رقمی">
+                <input type="text" id="forgotAnswerInput" placeholder="پاسخ شما به سوال بالا..." style="text-align: right; direction: rtl;">
             </div>
-            
-            <button class="btn btn-primary" id="btnForgot1" onclick="fetchSecurityQuestion()">دریافت سوال امنیتی</button>
-            <button class="btn btn-outline" onclick="switchView('viewLogin')">بازگشت</button>
-        </div>
-
-        <div id="viewForgot2" class="view-section">
-            <h3 style="margin-bottom: 15px; color: var(--accent);">تایید هویت</h3>
-            
             <div class="input-group">
-                <label style="color: var(--primary);">❓ سوال شما:</label>
-                <div id="lblSecurityQuestion" style="padding: 15px; background: var(--bg-color); border-radius: 12px; font-size: 14px; font-weight: bold; margin-bottom: 15px;">...</div>
-                
-                <label>پاسخ شما:</label>
-                <input type="text" id="forgotAnswer" placeholder="پاسخ را بنویسید">
-            </div>
-
-            <div class="input-group" style="margin-top: 15px;">
-                <label>رمز عبور جدید</label>
-                <input type="password" id="forgotNewPass" placeholder="حداقل ۴ کاراکتر">
+                <input type="password" id="forgotNewPassInput" placeholder="رمز عبور جدید (حداقل ۴ حرف)">
             </div>
             
-            <button class="btn btn-primary" id="btnForgot2" onclick="resetPassword()">تغییر رمز عبور</button>
-            <button class="btn btn-outline" onclick="switchView('viewLogin')">انصراف</button>
+            <button class="btn btn-primary" id="btnForgotSubmit" onclick="resetPassword()">ثبت رمز عبور جدید</button>
+            <button class="btn btn-outline" onclick="closeModals()">انصراف</button>
+            <div id="forgotAlert2" class="alert-box" style="margin-top: 10px;"></div>
         </div>
-
     </div>
 
     <script>
@@ -233,264 +138,166 @@
 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // متغیرهای سراسری
-        let draftNationalId = null; 
-        let selectedPlanId = null;
-        let receiptBase64 = null;
-        let receiptMimeType = null;
-
         // ==========================================
-        // 🔄 مدیریت ویوها و رابط کاربری
+        // 🌓 سیستم دارک مود
         // ==========================================
-        function switchView(viewId, isWide = false) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-            
-            const mainBox = document.getElementById('mainBox');
-            if(isWide) mainBox.classList.add('wide-mode');
-            else mainBox.classList.remove('wide-mode');
-
-            showAlert(''); // پاک کردن ارورها
+        const themeBtn = document.getElementById('themeBtn');
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        if (currentTheme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+            themeBtn.innerText = '🌙';
         }
 
-        function showAlert(msg, isSuccess = false) {
-            const box = document.getElementById('alertBox');
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                themeBtn.innerText = '🌙';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeBtn.innerText = '☀️';
+            }
+        }
+
+        // ==========================================
+        // 🚪 موتور ورود هوشمند (Login Routing)
+        // ==========================================
+        function showMainAlert(msg, type = 'error') {
+            const box = document.getElementById('mainAlert');
             if(!msg) { box.style.display = 'none'; return; }
+            box.className = type === 'error' ? 'alert-box alert-error' : 'alert-box alert-success';
             box.innerText = msg;
             box.style.display = 'block';
-            box.className = isSuccess ? 'alert-box alert-success' : 'alert-box';
         }
 
-        function setBtnLoading(btnId, isLoading, defaultText) {
-            const btn = document.getElementById(btnId);
-            btn.disabled = isLoading;
-            btn.innerHTML = isLoading ? 'در حال پردازش... ⏳' : defaultText;
-        }
-
-        // ==========================================
-        // 🚪 ورود هوشمند (Login)
-        // ==========================================
         async function handleLogin() {
             const nid = document.getElementById("loginNid").value.trim();
             const pass = document.getElementById("loginPass").value.trim();
-            if (!nid || !pass) return showAlert("لطفاً کد ملی و رمز عبور را وارد کنید.");
+            if (!nid || !pass) return showMainAlert("لطفاً کد ملی و رمز عبور را وارد کنید.");
 
-            setBtnLoading('btnLogin', true, 'ورود به حساب');
-            
+            const btn = document.getElementById("loginBtn");
+            btn.disabled = true; btn.innerText = "در حال ارتباط با سرور... ⏳";
+            showMainAlert('');
+
             try {
-                // جستجو مستقیم و سریع در سوپابیس
+                // جستجوی مستقیم و رعدآسا در دیتابیس سوپابیس
                 const { data: users, error } = await supabaseClient
                     .from('students')
                     .select('*')
                     .eq('national_id', nid);
 
-                if (error || !users || users.length === 0) throw new Error("کاربری با این کد ملی یافت نشد.");
+                if (error) throw new Error("خطا در ارتباط با پایگاه داده.");
+                if (!users || users.length === 0) throw new Error("کد ملی وارد شده در سیستم ثبت نشده است.");
 
                 const user = users[0];
-                
                 if (user.password !== pass) throw new Error("رمز عبور اشتباه است!");
 
-                // 🌟 سیستم مسیریابی هوشمند بر اساس Status
+                // 🧭 مسیریاب هوشمند بر اساس وضعیت اکانت
                 if (user.status === 'draft' || user.status === 'rejected') {
-                    draftNationalId = user.national_id;
-                    document.getElementById('lblCurrentNid').innerText = draftNationalId;
-                    if(user.status === 'rejected') showAlert('رسید قبلی شما رد شد. لطفاً مجدداً طرح را انتخاب و فیش را آپلود کنید.', false);
-                    await loadActivePlans();
-                    switchView('viewRegister2'); // پرش به مرحله پرداخت
+                    // دانش‌آموز هنوز فیش نداده! ذخیره کدملی و هدایت به مرحله دوم ثبت‌نام
+                    localStorage.setItem('temp_reg_nid', user.national_id);
+                    window.location.href = 'register-step2.html';
                 } 
                 else if (user.status === 'pending') {
-                    showAlert('⏳ حساب شما در صف تایید مدیریت قرار دارد. لطفاً صبور باشید.', true);
+                    showMainAlert('⏳ حساب شما در صف تایید مدیریت قرار دارد. لطفاً تا بررسی فیش صبور باشید.', 'success');
                 } 
                 else if (user.status === 'active') {
-                    // ورود موفق به داشبورد
-                    localStorage.setItem('qotbnama_user_id', user.national_id); // از این به بعد nid همون chat_id سابق تو فرانت میشه
+                    // ورود موفقیت‌آمیز به داشبورد
+                    localStorage.setItem('qotbnama_user_id', user.national_id); // کلید اصلی جدید
                     localStorage.setItem('qotbnama_full_name', user.full_name);
                     localStorage.setItem('qotbnama_plan', user.plan_type); 
                     window.location.href = 'menu.html';
                 }
 
             } catch (err) {
-                showAlert(err.message);
+                showMainAlert(err.message, 'error');
             }
-            setBtnLoading('btnLogin', false, 'ورود به حساب');
-        }
-
-        // ==========================================
-        // 📝 ثبت‌نام: مرحله ۱ (اطلاعات پایه)
-        // ==========================================
-        async function submitRegisterStep1() {
-            const data = {
-                full_name: document.getElementById('regName').value.trim(),
-                national_id: document.getElementById('regNid').value.trim(),
-                birthdate: document.getElementById('regBirth').value,
-                phone_number: document.getElementById('regPhone').value.trim(),
-                father_phone: document.getElementById('regFather').value.trim(),
-                mother_phone: document.getElementById('regMother').value.trim(),
-                grade: document.getElementById('regGrade').value,
-                major: document.getElementById('regMajor').value,
-                password: document.getElementById('regPass').value.trim(),
-                security_question: document.getElementById('regQuestion').value,
-                security_answer: document.getElementById('regAnswer').value.trim()
-            };
-
-            // اعتبارسنجی ساده
-            if(!data.full_name || !data.national_id || !data.password || !data.security_answer) {
-                return showAlert('لطفاً تمام فیلدهای ضروری را پر کنید.');
-            }
-
-            setBtnLoading('btnReg1', true, 'ثبت اطلاعات...');
-
-            try {
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'web_auth', sub_action: 'register_step1', student_data: data })
-                });
-                const result = await response.json();
-                
-                if(!result.success) throw new Error(result.error);
-
-                // موفقیت آمیز! رفتن به مرحله ۲
-                draftNationalId = data.national_id;
-                document.getElementById('lblCurrentNid').innerText = draftNationalId;
-                await loadActivePlans();
-                switchView('viewRegister2', false); // خروج از حالت واید
-
-            } catch(err) {
-                showAlert(err.message);
-            }
-            setBtnLoading('btnReg1', false, 'ثبت اطلاعات و انتخاب طرح');
-        }
-
-        // ==========================================
-        // 💳 ثبت‌نام: مرحله ۲ (طرح و فیش)
-        // ==========================================
-        async function loadActivePlans() {
-            const container = document.getElementById('plansContainer');
-            try {
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST', body: JSON.stringify({ action: 'web_auth', sub_action: 'get_active_plans' })
-                });
-                const result = await response.json();
-                
-                if(result.success && result.plans.length > 0) {
-                    container.innerHTML = '';
-                    result.plans.forEach(p => {
-                        container.innerHTML += `
-                            <div class="plan-card" id="plan_${p.id}" onclick="selectPlan('${p.id}')">
-                                <div class="plan-title">${p.title}</div>
-                                <div class="plan-desc">${p.description}</div>
-                            </div>
-                        `;
-                    });
-                } else {
-                    container.innerHTML = '<div style="grid-column:1/-1; color:var(--danger);">هیچ طرح فعالی برای ثبت‌نام وجود ندارد!</div>';
-                }
-            } catch(e) { container.innerHTML = 'خطا در لود طرح‌ها'; }
-        }
-
-        function selectPlan(planId) {
-            selectedPlanId = planId;
-            document.querySelectorAll('.plan-card').forEach(el => el.classList.remove('selected'));
-            document.getElementById(`plan_${planId}`).classList.add('selected');
-        }
-
-        function handleReceiptSelect(input) {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                document.getElementById('lblFileName').innerText = "✅ " + file.name;
-                receiptMimeType = file.type;
-                const reader = new FileReader();
-                reader.onload = function(e) { receiptBase64 = e.target.result.split(',')[1]; };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        async function submitRegisterStep2() {
-            if(!selectedPlanId) return showAlert("لطفاً یک طرح را انتخاب کنید.");
-            const startDate = document.getElementById('regStartDate').value;
-            if(!startDate) return showAlert("تاریخ شروع را مشخص کنید.");
-            if(!receiptBase64) return showAlert("آپلود عکس فیش واریزی الزامی است.");
-            if(!document.getElementById('regRules').checked) return showAlert("پذیرش قوانین الزامی است.");
-
-            setBtnLoading('btnReg2', true, 'در حال ارسال...');
-
-            const planData = {
-                plan_type: selectedPlanId,
-                start_date: startDate,
-                duration_months: 1, // یا داینامیک از فرم بگیریم
-                receipt_base64: receiptBase64,
-                mime_type: receiptMimeType
-            };
-
-            try {
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'web_auth', sub_action: 'register_step2', national_id: draftNationalId, plan_data: planData })
-                });
-                const result = await response.json();
-                
-                if(!result.success) throw new Error(result.error);
-
-                // پایان کار!
-                showAlert("✅ فیش شما با موفقیت برای مدیریت ارسال شد. لطفاً منتظر تایید بمانید.", true);
-                setTimeout(() => { logoutFromDraft(); }, 4000);
-
-            } catch(err) {
-                showAlert(err.message);
-            }
-            setBtnLoading('btnReg2', false, 'ارسال به صندوق‌دار و تکمیل ثبت‌نام');
-        }
-
-        function logoutFromDraft() {
-            draftNationalId = null;
-            switchView('viewLogin');
-        }
-
-        // ==========================================
-        // 🔑 فراموشی رمز عبور
-        // ==========================================
-        let forgotNidGlobal = null;
-
-        async function fetchSecurityQuestion() {
-            const nid = document.getElementById('forgotNid').value.trim();
-            if(!nid) return showAlert("کد ملی را وارد کنید.");
             
-            setBtnLoading('btnForgot1', true, 'دریافت سوال...');
+            btn.disabled = false; btn.innerText = "ورود به حساب";
+        }
+
+        // ==========================================
+        // 🔑 سیستم فراموشی رمز عبور (ارتباط با بک‌اند)
+        // ==========================================
+        let forgotNidGlobal = "";
+
+        function openModal(id) { 
+            closeModals(); 
+            document.getElementById(id).style.display = 'flex'; 
+        }
+        function closeModals() { 
+            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); 
+        }
+        function showForgotAlert(modalNum, msg, type = 'error') {
+            const box = document.getElementById(`forgotAlert${modalNum}`);
+            if(!msg) { box.style.display = 'none'; return; }
+            box.className = type === 'error' ? 'alert-box alert-error' : 'alert-box alert-success';
+            box.innerText = msg; box.style.display = 'block';
+        }
+
+        // مرحله ۱: دریافت سوال امنیتی
+        async function getSecurityQuestion() {
+            const nid = document.getElementById('forgotNidInput').value.trim();
+            if(!nid) return showForgotAlert(1, "کد ملی الزامی است.");
+            
+            const btn = document.getElementById('btnForgotGetQ');
+            btn.disabled = true; btn.innerText = "در حال جستجو... ⏳";
+            showForgotAlert(1, '');
+
             try {
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST', body: JSON.stringify({ action: 'web_auth', sub_action: 'get_security_question', national_id: nid })
                 });
                 const result = await response.json();
+                
                 if(!result.success) throw new Error(result.error);
 
                 forgotNidGlobal = nid;
                 document.getElementById('lblSecurityQuestion').innerText = result.question;
-                switchView('viewForgot2');
+                openModal('forgotModal2'); // رفتن به مدال بعدی
 
-            } catch(err) { showAlert(err.message); }
-            setBtnLoading('btnForgot1', false, 'دریافت سوال امنیتی');
+            } catch(err) {
+                showForgotAlert(1, err.message, 'error');
+            }
+            btn.disabled = false; btn.innerText = "دریافت سوال امنیتی";
         }
 
+        // مرحله ۲: ثبت پاسخ و تغییر رمز
         async function resetPassword() {
-            const answer = document.getElementById('forgotAnswer').value.trim();
-            const newPass = document.getElementById('forgotNewPass').value.trim();
+            const answer = document.getElementById('forgotAnswerInput').value.trim();
+            const newPass = document.getElementById('forgotNewPassInput').value.trim();
             
-            if(!answer || !newPass) return showAlert("پاسخ و رمز جدید را وارد کنید.");
+            if(!answer || !newPass) return showForgotAlert(2, "پاسخ و رمز جدید را وارد کنید.");
             
-            setBtnLoading('btnForgot2', true, 'بررسی پاسخ...');
+            const btn = document.getElementById('btnForgotSubmit');
+            btn.disabled = true; btn.innerText = "در حال بررسی... ⏳";
+            showForgotAlert(2, '');
+
             try {
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST', 
-                    body: JSON.stringify({ action: 'web_auth', sub_action: 'reset_password', national_id: forgotNidGlobal, security_answer: answer, new_password: newPass })
+                    body: JSON.stringify({ 
+                        action: 'web_auth', sub_action: 'reset_password', 
+                        national_id: forgotNidGlobal, security_answer: answer, new_password: newPass 
+                    })
                 });
                 const result = await response.json();
+                
                 if(!result.success) throw new Error(result.error);
 
-                showAlert("✅ رمز عبور با موفقیت تغییر کرد. اکنون وارد شوید.", true);
-                setTimeout(() => { switchView('viewLogin'); }, 3000);
+                showForgotAlert(2, "✅ رمز عبور با موفقیت تغییر کرد. در حال انتقال...", 'success');
+                setTimeout(() => { 
+                    closeModals(); 
+                    document.getElementById('loginNid').value = forgotNidGlobal;
+                    document.getElementById('loginPass').value = '';
+                }, 2000);
 
-            } catch(err) { showAlert(err.message); }
-            setBtnLoading('btnForgot2', false, 'تغییر رمز عبور');
+            } catch(err) {
+                showForgotAlert(2, err.message, 'error');
+            }
+            btn.disabled = false; btn.innerText = "ثبت رمز عبور جدید";
         }
     </script>
 </body>
