@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ثبت‌نام (مرحله ۱) | قطب‌نمای راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    
+    <style>
+        /* 🎨 پالت رنگی هماهنگ با کل سیستم */
+        :root { 
+            --primary: #1e3a8a; --primary-hover: #1e40af; --accent: #d97706;  
+            --bg-color: #f1f5f9; --surface: #ffffff; --text-main: #1e293b; 
+            --text-muted: #64748b; --border: #e2e8f0; --shadow: 0 20px 40px rgba(30, 58, 138, 0.15);
+            --danger: #ef4444; --success: #10b981;
+        }
+
+        [data-theme="dark"] {
+            --primary: #3b82f6; --primary-hover: #60a5fa; --accent: #f59e0b;
+            --bg-color: #0f172a; --surface: #1e293b; --text-main: #f8fafc;
+            --text-muted: #94a3b8; --border: #334155; --shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        
+        body { background: var(--bg-color); color: var(--text-main); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 30px 15px; transition: background-color 0.4s ease, color 0.4s ease; }
+
+        .theme-toggle { position: absolute; top: 20px; left: 20px; background: var(--surface); border: 2px solid var(--border); color: var(--text-main); width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); z-index: 100; transition: 0.3s; }
+        .theme-toggle:hover { transform: scale(1.1); border-color: var(--primary); }
+
+        .auth-box { background: var(--surface); border-radius: 32px; padding: 40px; width: 100%; max-width: 850px; box-shadow: var(--shadow); border: 1px solid var(--border); animation: slideUp 0.5s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 📍 نوار پیشرفت (Progress Bar) */
+        .progress-container { display: flex; justify-content: center; align-items: center; margin-bottom: 30px; gap: 15px; }
+        .step { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 14px; color: var(--text-muted); }
+        .step.active { color: var(--primary); }
+        .step-circle { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-color); border: 2px solid var(--border); display: flex; justify-content: center; align-items: center; transition: 0.3s; }
+        .step.active .step-circle { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+        .step-line { width: 50px; height: 3px; background: var(--border); border-radius: 2px; }
+
+        .header-title { text-align: center; margin-bottom: 30px; }
+        .header-title h1 { font-size: 22px; font-weight: 900; color: var(--primary); margin-bottom: 5px; }
+        .header-title p { font-size: 13px; color: var(--text-muted); }
+
+        /* 📝 گرید فرم‌ها */
+        .form-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 768px) { .form-grid { grid-template-columns: 1fr 1fr; } }
+        
+        .form-section-title { grid-column: 1 / -1; font-size: 15px; font-weight: bold; color: var(--accent); margin-top: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+        .input-group.full-width { grid-column: 1 / -1; }
+
+        .input-group label { display: block; font-size: 13px; margin-bottom: 8px; font-weight: bold; color: var(--text-muted); }
+        input, select { width: 100%; padding: 14px; border-radius: 14px; border: 2px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 14px; outline: none; transition: 0.3s; }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); }
+        
+        /* تقویم تولد ایرانی */
+        .persian-date-group { display: flex; gap: 10px; }
+        .persian-date-group select { flex: 1; text-align: center; }
+
+        .security-box { background: rgba(217, 119, 6, 0.05); border: 1px dashed var(--accent); padding: 20px; border-radius: 16px; grid-column: 1 / -1; margin-top: 10px; }
+        .security-box label { color: var(--accent); }
+
+        .action-bar { display: flex; gap: 15px; margin-top: 35px; grid-column: 1 / -1; }
+        .btn { flex: 1; padding: 16px; border-radius: 16px; border: none; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.3s; text-align: center; text-decoration: none; display: flex; justify-content: center; align-items: center;}
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; box-shadow: 0 10px 20px rgba(30, 58, 138, 0.2); }
+        .btn-primary:hover { transform: translateY(-3px); filter: brightness(1.1); box-shadow: 0 15px 25px rgba(30, 58, 138, 0.3); }
+        .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background: var(--bg-color); }
+
+        .alert-box { grid-column: 1 / -1; font-size: 13px; font-weight: bold; display: none; padding: 15px; border-radius: 12px; text-align: center; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .alert-error { color: var(--danger); background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); }
+    </style>
+</head>
+<body data-theme="dark">
+
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️</button>
+
+    <div class="auth-box">
+        
+        <div class="progress-container">
+            <div class="step active">
+                <div class="step-circle">۱</div>
+                <span>تشکیل پرونده</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step">
+                <div class="step-circle">۲</div>
+                <span>انتخاب طرح و پرداخت</span>
+            </div>
+        </div>
+
+        <div class="header-title">
+            <h1>تشکیل پرونده راهینو</h1>
+            <p>لطفاً اطلاعات زیر را با دقت تکمیل کنید. این اطلاعات برای برنامه‌ریزی هوشمند شما استفاده خواهد شد.</p>
+        </div>
+
+        <div id="mainAlert" class="alert-box"></div>
+
+        <div class="form-grid">
+            
+            <div class="form-section-title">👤 اطلاعات فردی و سکونت</div>
+            
+            <div class="input-group">
+                <label>نام و نام خانوادگی</label>
+                <input type="text" id="regName" placeholder="مثال: علی رضایی">
+            </div>
+            <div class="input-group">
+                <label>کد ملی (نام کاربری شما در آینده)</label>
+                <input type="text" id="regNid" placeholder="کد ملی ۱۰ رقمی" maxlength="10" style="direction: ltr; text-align: left;">
+            </div>
+            
+            <div class="input-group full-width">
+                <label>تاریخ تولد</label>
+                <div class="persian-date-group">
+                    <select id="regBirthDay"><option value="">روز</option></select>
+                    <select id="regBirthMonth">
+                        <option value="">ماه</option>
+                        <option value="01">فروردین</option><option value="02">اردیبهشت</option><option value="03">خرداد</option>
+                        <option value="04">تیر</option><option value="05">مرداد</option><option value="06">شهریور</option>
+                        <option value="07">مهر</option><option value="08">آبان</option><option value="09">آذر</option>
+                        <option value="10">دی</option><option value="11">بهمن</option><option value="12">اسفند</option>
+                    </select>
+                    <select id="regBirthYear"><option value="">سال</option></select>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>استان محل سکونت</label>
+                <input type="text" id="regProvince" placeholder="مثال: تهران">
+            </div>
+            <div class="input-group">
+                <label>شهر محل سکونت</label>
+                <input type="text" id="regCity" placeholder="مثال: تجریش">
+            </div>
+
+            <div class="form-section-title">📞 اطلاعات ارتباطی و تحصیلی</div>
+
+            <div class="input-group">
+                <label>موبایل دانش‌آموز</label>
+                <input type="text" id="regPhone" placeholder="09..." maxlength="11" style="direction: ltr; text-align: left;">
+            </div>
+            <div class="input-group">
+                <label>موبایل پدر</label>
+                <input type="text" id="regFather" placeholder="09..." maxlength="11" style="direction: ltr; text-align: left;">
+            </div>
+            <div class="input-group">
+                <label>موبایل مادر</label>
+                <input type="text" id="regMother" placeholder="09..." maxlength="11" style="direction: ltr; text-align: left;">
+            </div>
+
+            <div class="input-group">
+                <label>نام مدرسه یا آموزشگاه</label>
+                <input type="text" id="regSchool" placeholder="مثال: فرزانگان / تیزهوشان">
+            </div>
+
+            <div class="input-group">
+                <label>پایه تحصیلی</label>
+                <select id="regGrade">
+                    <option value="" disabled selected>انتخاب کنید...</option>
+                    <option value="دهم">دهم</option><option value="یازدهم">یازدهم</option>
+                    <option value="دوازدهم">دوازدهم</option><option value="پشت کنکوری">فارغ التحصیل (پشت کنکوری)</option>
+                    <option value="متوسطه اول">متوسطه اول</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>رشته تحصیلی</label>
+                <select id="regMajor">
+                    <option value="" disabled selected>انتخاب کنید...</option>
+                    <option value="تجربی">علوم تجربی</option><option value="ریاضی">ریاضی فیزیک</option>
+                    <option value="انسانی">علوم انسانی</option><option value="سایر">سایر رشته‌ها (هنر، زبان و...)</option>
+                </select>
+            </div>
+            
+            <div class="input-group full-width">
+                <label>چگونه با قطب‌نمای راهینو آشنا شدید؟</label>
+                <select id="regReferral">
+                    <option value="معرفی دوستان">معرفی دوستان و رتبه‌های برتر</option>
+                    <option value="اینستاگرام">صفحه اینستاگرام راهینو</option>
+                    <option value="تلگرام">کانال تلگرام</option>
+                    <option value="تراکت و تبلیغات">تراکت و تبلیغات محیطی</option>
+                    <option value="سایر">سایر موارد</option>
+                </select>
+            </div>
+
+            <div class="security-box form-grid">
+                <div class="input-group full-width" style="margin-bottom: 5px;">
+                    <label style="font-size: 14px;">🛡️ تنظیمات امنیتی حساب (مهم)</label>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px;">در صورتی که رمز خود را فراموش کنید، با استفاده از سوال امنیتی می‌توانید آن را بازیابی کنید.</p>
+                </div>
+                
+                <div class="input-group">
+                    <label>رمز عبور دلخواه شما</label>
+                    <input type="password" id="regPass" placeholder="حداقل ۴ کاراکتر" style="direction: ltr; text-align: left;">
+                </div>
+                
+                <div class="input-group full-width">
+                    <label>یک سوال امنیتی انتخاب کنید</label>
+                    <select id="regQuestion" style="margin-bottom: 10px;">
+                        <option value="نام بهترین دوست دوران کودکی شما چیست؟">نام بهترین دوست دوران کودکی شما چیست؟</option>
+                        <option value="نام معلم کلاس اول ابتدایی شما چه بود؟">نام معلم کلاس اول ابتدایی شما چه بود؟</option>
+                        <option value="نام شهر محل تولد پدربزرگ شما چیست؟">نام شهر محل تولد پدربزرگ شما چیست؟</option>
+                        <option value="رنگ یا غذای مورد علاقه شما در کودکی؟">رنگ یا غذای مورد علاقه شما در کودکی؟</option>
+                    </select>
+                    <input type="text" id="regAnswer" placeholder="پاسخ شما (حتماً این پاسخ را به یاد داشته باشید)">
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <button class="btn btn-primary" id="btnSubmit" onclick="submitForm()">تایید و رفتن به مرحله بعد ⬅️</button>
+                <a href="login.html" class="btn btn-outline">انصراف و بازگشت</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 🔗 تنظیمات اتصال
+        // ==========================================
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec'; 
+
+        // ==========================================
+        // 🌓 سیستم دارک مود (هماهنگ با لاگین)
+        // ==========================================
+        const themeBtn = document.getElementById('themeBtn');
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        
+        if (currentTheme === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+            themeBtn.innerText = '☀️';
+        } else {
+            document.body.removeAttribute('data-theme');
+            themeBtn.innerText = '🌙';
+        }
+
+        function toggleTheme() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.body.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                themeBtn.innerText = '🌙';
+            } else {
+                document.body.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeBtn.innerText = '☀️';
+            }
+        }
+
+        // ==========================================
+        // 📅 تولید خودکار تقویم تولد
+        // ==========================================
+        window.onload = function() {
+            // تولید روزها (۱ تا ۳۱)
+            const daySelect = document.getElementById('regBirthDay');
+            for(let i=1; i<=31; i++) {
+                let val = i < 10 ? '0'+i : i;
+                daySelect.innerHTML += `<option value="${val}">${i}</option>`;
+            }
+            
+            // تولید سال‌ها (از ۱۳۷۰ تا ۱۳۸۹) - مناسب برای کنکوری‌ها
+            const yearSelect = document.getElementById('regBirthYear');
+            for(let i=1370; i<=1392; i++) {
+                yearSelect.innerHTML += `<option value="${i}">${i}</option>`;
+            }
+        };
+
+        // ==========================================
+        // 🚀 ارسال اطلاعات به موتور گوگل اسکریپت
+        // ==========================================
+        function showAlert(msg) {
+            const box = document.getElementById('mainAlert');
+            if(!msg) { box.style.display = 'none'; return; }
+            box.className = 'alert-box alert-error';
+            box.innerText = "⚠️ " + msg;
+            box.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // اسکرول به بالا برای دیدن ارور
+        }
+
+        async function submitForm() {
+            // ترکیب تاریخ تولد به فرمت استاندارد (سال/ماه/روز)
+            const bYear = document.getElementById('regBirthYear').value;
+            const bMonth = document.getElementById('regBirthMonth').value;
+            const bDay = document.getElementById('regBirthDay').value;
+            const finalBirthdate = (bYear && bMonth && bDay) ? `${bYear}/${bMonth}/${bDay}` : "";
+
+            const data = {
+                full_name: document.getElementById('regName').value.trim(),
+                national_id: document.getElementById('regNid').value.trim(),
+                birthdate: finalBirthdate,
+                province: document.getElementById('regProvince').value.trim(),
+                city: document.getElementById('regCity').value.trim(),
+                phone_number: document.getElementById('regPhone').value.trim(),
+                father_phone: document.getElementById('regFather').value.trim(),
+                mother_phone: document.getElementById('regMother').value.trim(),
+                school_name: document.getElementById('regSchool').value.trim(),
+                grade: document.getElementById('regGrade').value,
+                major: document.getElementById('regMajor').value,
+                referral_source: document.getElementById('regReferral').value,
+                password: document.getElementById('regPass').value.trim(),
+                security_question: document.getElementById('regQuestion').value,
+                security_answer: document.getElementById('regAnswer').value.trim()
+            };
+
+            // 🛡️ اعتبارسنجی دقیق
+            if (!data.full_name || !data.national_id || !data.phone_number) return showAlert("نام، کدملی و شماره موبایل الزامی است.");
+            if (data.national_id.length !== 10) return showAlert("کد ملی باید دقیقاً ۱۰ رقم باشد.");
+            if (!finalBirthdate) return showAlert("لطفاً تاریخ تولد خود را کامل وارد کنید.");
+            if (!data.grade || !data.major) return showAlert("انتخاب پایه و رشته تحصیلی الزامی است.");
+            if (data.password.length < 4) return showAlert("رمز عبور باید حداقل ۴ حرف یا عدد باشد.");
+            if (!data.security_answer) return showAlert("لطفاً پاسخ سوال امنیتی را وارد کنید تا در صورت فراموشی رمز به مشکل نخورید.");
+
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true; btn.innerText = "در حال ایجاد پرونده... ⏳";
+            showAlert('');
+
+            try {
+                // ارسال به اسکریپتی که در فاز قبل نوشتیم
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        action: 'web_auth', 
+                        sub_action: 'register_step1', 
+                        student_data: data 
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (!result.success) throw new Error(result.error);
+
+                // 🎉 موفقیت‌آمیز بود! کدملی رو تو مرورگر ذخیره می‌کنیم تا تو صفحه بعد بشناسیمش
+                localStorage.setItem('temp_reg_nid', data.national_id);
+                
+                // پرتاب به صفحه مرحله دوم
+                window.location.href = 'register-step2.html';
+
+            } catch (err) {
+                showAlert(err.message);
+                btn.disabled = false; btn.innerText = "تایید و رفتن به مرحله بعد ⬅️";
+            }
+        }
+    </script>
+</body>
+</html>
