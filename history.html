@@ -93,9 +93,8 @@
         <div class="nav-header">
             <a href="menu.html" class="back-btn">🔙</a>
             <div class="page-title">دفترچه گزارش‌ها (۱۴ روز اخیر)</div>
-            <div style="width: 40px;"></div> 
+            <button class="back-btn" onclick="toggleTheme()" id="themeBtn" style="cursor:pointer; border:1px solid var(--border); font-size:18px;">☀️</button>
         </div>
-
         <div id="historyContainer">
             </div>
         
@@ -298,6 +297,31 @@
                     });
                     canvas.classList.add('rendered'); 
                 }
+            }
+        }
+        // ==========================================
+        // 🌓 سیستم دارک مود هوشمند
+        // ==========================================
+        const themeBtn = document.getElementById('themeBtn');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            if(themeBtn) themeBtn.innerText = '☀️';
+        } else {
+            if(themeBtn) themeBtn.innerText = '🌙';
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                document.getElementById('themeBtn').innerText = '🌙';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                document.getElementById('themeBtn').innerText = '☀️';
             }
         }
     </script>
