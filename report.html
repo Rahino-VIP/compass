@@ -65,7 +65,7 @@
         <div class="nav-header">
             <a href="menu.html" class="back-btn">🔙</a>
             <div class="page-title">ثبت گزارش عملکرد</div>
-            <div style="width: 40px;"></div> 
+            <button class="back-btn" onclick="toggleTheme()" id="themeBtn" style="cursor:pointer; border:1px solid var(--border); font-size:18px;">☀️</button>
         </div>
 
         <div class="section-title" style="margin-top: 0;">انتخاب روز</div>
@@ -137,17 +137,44 @@
         async function fetchUserDetails() {
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
-                const response = await fetch(`${cleanUrl}/rest/v1/students?chat_id=eq.${userId}&select=grade,major`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+                
+                // 🌟 اصلاح بزرگ: جستجو بر اساس national_id یا chat_id (تا هم بچه‌های سایت و هم ربات رو بشناسه)
+                const fetchUrl = `${cleanUrl}/rest/v1/students?select=grade,major&or=(national_id.eq.${userId},chat_id.eq.${userId})`;
+                
+                const response = await fetch(fetchUrl, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
                 const data = await response.json();
-                if(data.length > 0) {
-                    let g = data[0].grade || ""; let m = data[0].major || "";
-                    let targetGrade = g.includes("یازدهم") ? "یازدهم" : (g.includes("دوازدهم") || g.includes("پشت کنکوری")) ? "دوازدهم" : "دهم";
-                    let targetField = m.includes("ریاضی") ? "ریاضی" : m.includes("انسانی") ? "انسانی" : "تجربی";
-                    globalSubjects = subjectsDict[targetGrade][targetField] || ["درس عمومی", "تخصصی پایه"];
+                
+                if(data && data.length > 0) {
+                    let g = data[0].grade || ""; 
+                    let m = data[0].major || "";
+                    
+                    // 🌟 تشخیص هوشمند پایه (پشتیبانی از پشت‌کنکوری‌ها)
+                    let targetGrade = "دهم"; // پیش‌فرض
+                    if (g.includes("یازدهم")) {
+                        targetGrade = "یازدهم";
+                    } else if (g.includes("دوازدهم") || g.includes("پشت کنکور") || g.includes("فارغ")) {
+                        targetGrade = "دوازدهم"; // پشت‌کنکوری‌ها لیست دوازدهم رو می‌بینن
+                    }
+                    
+                    // تشخیص هوشمند رشته
+                    let targetField = "تجربی"; // پیش‌فرض
+                    if (m.includes("ریاضی")) targetField = "ریاضی";
+                    else if (m.includes("انسانی")) targetField = "انسانی";
+                    
+                    globalSubjects = subjectsDict[targetGrade][targetField];
+                    
+                    // اگر لیست به دلیلی خالی بود، یک چیز پیش‌فرض نشون بده
+                    if(!globalSubjects || globalSubjects.length === 0) {
+                        globalSubjects = ["دروس عمومی", "دروس تخصصی"];
+                    }
+                } else {
+                    globalSubjects = ["درس تخصصی", "درس عمومی"];
                 }
-            } catch (e) { globalSubjects = ["درس عمومی", "درس تخصصی"]; }
+            } catch (e) { 
+                console.log("خطا در دریافت لیست دروس:", e);
+                globalSubjects = ["درس تخصصی", "درس عمومی"]; 
+            }
         }
-
         async function fetchCompletedDates() {
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
@@ -289,6 +316,31 @@
                 setTimeout(() => { alert(feedbackMsg); window.location.href = 'menu.html'; }, 400);
             } catch (error) {
                 alert("⚠️ اتصال قطع شد."); btn.innerText = "🚀 ثبت نهایی گزارش"; btn.disabled = false;
+            }
+        }
+        // ==========================================
+        // 🌓 سیستم دارک مود هوشمند
+        // ==========================================
+        const themeBtn = document.getElementById('themeBtn');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            if(themeBtn) themeBtn.innerText = '☀️';
+        } else {
+            if(themeBtn) themeBtn.innerText = '🌙';
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                document.getElementById('themeBtn').innerText = '🌙';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                document.getElementById('themeBtn').innerText = '☀️';
             }
         }
     </script>
