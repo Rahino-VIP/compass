@@ -265,8 +265,8 @@
                 let dateParts = r.report_date.split('/');
                 let jdn = jalaliToJdn(parseInt(dateParts[0]), parseInt(dateParts[1]), parseInt(dateParts[2]));
                 
-                // پیدا کردن دقیق تاریخ شنبه و جمعه‌ی همین هفته
-                let dayOfWeek = (jdn + 2) % 7; // 0 = شنبه، 6 = جمعه
+                // 🌟 اصلاح دقیق مبدأ هفته: شنبه = 0 و جمعه = 6
+                let dayOfWeek = (jdn + 1) % 7; 
                 let saturdayJdn = jdn - dayOfWeek;
                 let fridayJdn = saturdayJdn + 6;
                 
@@ -275,7 +275,7 @@
                 let weekIndex = saturdayJdn; // کد یکتای این هفته
                 
                 if(!weeklyData[weekIndex]) {
-                    // حتی اگه کاربر وسط هفته شروع کرده باشه، لیبل از شنبه تا جمعه ثبت میشه
+                    // حتی اگه کاربر وسط هفته گزارش بده، لیبل کل هفته از شنبه تا جمعه ثبت میشه
                     weeklyData[weekIndex] = { study: 0, tests: 0, startStr: startStr, endStr: endStr };
                 }
                 weeklyData[weekIndex].study += dayTime;
