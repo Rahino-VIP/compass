@@ -52,12 +52,12 @@
         .section-title { font-size: 15px; font-weight: bold; color: var(--text-muted); margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; }
         .section-title::before { content: ''; display: block; width: 5px; height: 15px; background: var(--accent); border-radius: 10px; }
 
-        .chart-container { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 15px; margin-bottom: 25px; box-shadow: var(--shadow); }
+        .chart-container { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 15px; margin-bottom: 25px; box-shadow: var(--shadow); width: 100%; overflow: hidden; }
         
-        /* 🔥 حل باگ ریسپانسیو نمودارها در گوشی */
-        .combo-box { position: relative; width: 100%; height: 300px !important; display: block; }
-        .pie-box { position: relative; width: 100%; max-width: 250px; height: 250px !important; margin: 0 auto; display: block; }
-        
+        /* 🔥 حل قطعی باگ ریسپانسیو نمودارها در گوشی */
+        .combo-box { position: relative; width: 100%; height: 40vh; min-height: 250px; max-height: 350px; display: block; }
+        .pie-box { position: relative; width: 100%; max-width: 250px; height: 250px; margin: 0 auto; display: block; }
+        canvas { width: 100% !important; height: 100% !important; }
         .life-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
         .life-card { background: var(--surface); border: 1px solid var(--border); padding: 15px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow); }
         .life-info h4 { font-size: 14px; color: var(--primary); margin-bottom: 3px; }
@@ -84,7 +84,7 @@
         <div class="nav-header">
             <a href="menu.html" class="back-btn">🔙</a>
             <div class="page-title">داشبورد عملکرد کلی</div>
-            <div style="width: 40px;"></div> 
+            <button class="back-btn" onclick="toggleTheme()" id="themeBtn" style="cursor:pointer; border:1px solid var(--border); font-size:18px;">☀️</button>
         </div>
 
         <div class="rank-banner">
@@ -180,13 +180,27 @@
 
         window.onload = async function() { await fetchAllData(); };
 
-        // 🔥 الگوریتم دقیق ریاضی برای پیدا کردن روزهای هفته (شنبه تا جمعه)
+       // 🔥 الگوریتم دقیق ریاضی برای پیدا کردن روزهای هفته (شنبه تا جمعه)
         function jalaliToJdn(y, m, d) {
             let epBase = y - ((y >= 0) ? 474 : 473);
             let epYear = 474 + (epBase % 2820);
             let md = (m <= 7) ? ((m - 1) * 31) : (((m - 1) * 30) + 6);
             let days = d + md + Math.floor(((epYear * 682) - 110) / 2816) + (epYear - 1) * 365 + Math.floor(epBase / 2820) * 1029983 + (1948320 - 1);
             return days;
+        }
+
+        // 🌟 تابع جدید: برگرداندن روز جولیان به تاریخ شمسی
+        function jdnToJalali(jdn) {
+            let a = jdn - 2121446;
+            let epBase = Math.floor(a / 1029983);
+            let epRemain = a % 1029983;
+            let epYear = Math.floor((epRemain * 2816 + 1031337) / 1028522);
+            let epDay = epRemain - Math.floor(((epYear * 682) - 110) / 2816) - (epYear - 1) * 365;
+            let y = epYear + epBase * 2820 + 474;
+            let m, d;
+            if (epDay <= 186) { m = Math.ceil(epDay / 31); d = epDay - (m - 1) * 31; } 
+            else { m = Math.ceil((epDay - 6) / 30); d = epDay - 186 - (m - 7) * 30; }
+            return y + '/' + String(m).padStart(2, '0') + '/' + String(d).padStart(2, '0');
         }
 
         // تبدیل 1403/03/25 به 25 خرداد
@@ -250,15 +264,22 @@
                 // =====================================
                 let dateParts = r.report_date.split('/');
                 let jdn = jalaliToJdn(parseInt(dateParts[0]), parseInt(dateParts[1]), parseInt(dateParts[2]));
-                // فرمول جادویی: شنبه = 0، جمعه = 6
-                let weekIndex = Math.floor((jdn + 2) / 7); 
+                
+                // پیدا کردن دقیق تاریخ شنبه و جمعه‌ی همین هفته
+                let dayOfWeek = (jdn + 2) % 7; // 0 = شنبه، 6 = جمعه
+                let saturdayJdn = jdn - dayOfWeek;
+                let fridayJdn = saturdayJdn + 6;
+                
+                let startStr = jdnToJalali(saturdayJdn);
+                let endStr = jdnToJalali(fridayJdn);
+                let weekIndex = saturdayJdn; // کد یکتای این هفته
                 
                 if(!weeklyData[weekIndex]) {
-                    weeklyData[weekIndex] = { study: 0, tests: 0, startStr: r.report_date, endStr: r.report_date };
+                    // حتی اگه کاربر وسط هفته شروع کرده باشه، لیبل از شنبه تا جمعه ثبت میشه
+                    weeklyData[weekIndex] = { study: 0, tests: 0, startStr: startStr, endStr: endStr };
                 }
                 weeklyData[weekIndex].study += dayTime;
                 weeklyData[weekIndex].tests += dayTests;
-                weeklyData[weekIndex].endStr = r.report_date;
 
                 // لایف استایل
                 if(r.lifestyle) {
@@ -391,6 +412,31 @@
             if(neutralPct > 0) moodHtml += `<div class="mood-segment" style="width: ${neutralPct}%; background: var(--warning);">${Math.round(neutralPct)}%</div>`;
             if(badPct > 0) moodHtml += `<div class="mood-segment" style="width: ${badPct}%; background: var(--danger);">${Math.round(badPct)}%</div>`;
             document.getElementById('moodBar').innerHTML = moodHtml;
+        }
+        // ==========================================
+        // 🌓 سیستم دارک مود هوشمند
+        // ==========================================
+        const themeBtn = document.getElementById('themeBtn');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            if(themeBtn) themeBtn.innerText = '☀️';
+        } else {
+            if(themeBtn) themeBtn.innerText = '🌙';
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                document.getElementById('themeBtn').innerText = '🌙';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                document.getElementById('themeBtn').innerText = '☀️';
+            }
         }
     </script>
 </body>
