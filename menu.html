@@ -226,7 +226,7 @@
     </div>
 
     <script>
-        // ==========================================
+       // ==========================================
         // 🛡️ نگهبان امنیتی (Security Check)
         // ==========================================
         const userId = localStorage.getItem('qotbnama_user_id');
@@ -239,32 +239,40 @@
         // 📥 بارگذاری اطلاعات کاربر
         // ==========================================
         const fullName = localStorage.getItem('qotbnama_full_name') || 'دانش‌آموز';
-        const userPlan = localStorage.getItem('qotbnama_plan') || '';
         
-        // استخراج نام کوچک برای صمیمیت بیشتر (مثلاً "علی" از "علی رضایی")
+        // استخراج نام کوچک برای صمیمیت بیشتر
         const firstName = fullName.split(' ')[0];
         document.getElementById('greetingText').innerText = `سلام ${firstName} عزیز!`;
 
-        // تنظیم متن بنر و متغیر وضعیت VIP
+        // ==========================================
+        // 🧠 سیستم هوشمند تشخیص طرح (تطبیق با دیتابیس جدید)
+        // ==========================================
+        const userPlan = localStorage.getItem('qotbnama_plan') || '';
         const planTextEl = document.getElementById('planText');
-        let isVip = false;
+        
+        let isConsultant = false; // آیا این شخص مشاور داره؟
+        let isPansion = false; // آیا این شخص پانسیون داره؟
 
-        if (userPlan === 'VIP_consult') {
-            planTextEl.innerText = "VIP (پانسیون + مشاوره)";
-            isVip = true;
-        } else if (userPlan === 'CIP_only') {
-            planTextEl.innerText = "CIP (فقط پانسیون)";
-        } else if (userPlan === 'Consult_only') {
-            planTextEl.innerText = "قطب‌نما (مشاوره)";
-            isVip = true; // بچه‌های مشاوره هم به این بخش‌ها دسترسی دارن
+        // تحلیل هوشمند متنِ ذخیره شده در دیتابیس (بدون نیاز به نام‌گذاری دقیق)
+        if (userPlan.includes('مشاوره')) { isConsultant = true; }
+        if (userPlan.includes('پانسیون')) { isPansion = true; }
+
+        // تعیین متن بنر بر اساس تحلیل بالا
+        if (isConsultant && isPansion) {
+            planTextEl.innerText = "طرح جامع (پانسیون + مشاوره)";
+        } else if (isPansion && !isConsultant) {
+            planTextEl.innerText = "طرح اختصاصی (فقط پانسیون)";
+        } else if (isConsultant && !isPansion) {
+            planTextEl.innerText = "طرح راهیار (فقط مشاوره)";
         } else {
-            planTextEl.innerText = "طرح پایه";
+            planTextEl.innerText = userPlan ? userPlan.substring(0, 20) + "..." : "نامشخص";
         }
 
         // ==========================================
-        // 🔒 اعمال قفل روی کارت‌های VIP برای کاربران CIP
+        // 🔒 اعمال قفل روی کارت‌های VIP (فقط برای پانسیونی‌های بدون مشاوره)
         // ==========================================
-        if (!isVip) {
+        // قانون: اگر شخص فقط پانسیون داره (!isConsultant)، بخش‌های مشاوره و برنامه براش قفله.
+        if (!isConsultant) {
             const protectedCards = ['btn-schedule', 'btn-ai-promax'];
             protectedCards.forEach(id => {
                 const card = document.getElementById(id);
@@ -297,10 +305,11 @@
         }
 
         function handleProtectedNavigation(page) {
-            if (isVip) {
-                navigate(page); // اگر VIP بود بره تو صفحه
+            // فقط اگر شخص مشاور داشت بتونه وارد این بخش‌ها بشه
+            if (isConsultant) {
+                navigate(page); 
             } else {
-                openModal(); // اگر نبود مدال باز بشه
+                openModal(); // در غیر این صورت مدالِ تبلیغ برای خرید مشاوره باز بشه
             }
         }
 
