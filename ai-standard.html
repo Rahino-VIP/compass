@@ -49,12 +49,12 @@
         .btn-primary:disabled { opacity: 0.7; }
         .btn-outline { background: transparent; color: var(--text-muted); border: 2px solid var(--border); width: 100%; padding: 15px; border-radius: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
 
-        /* 📊 داشبورد نتیجه */
+       /* 📊 داشبورد نتیجه */
         .result-dashboard { display: none; }
         .result-dashboard.active { display: block; animation: fadeIn 0.5s; }
-        .chart-container { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 15px; margin-bottom: 25px; box-shadow: var(--shadow); }
-        .combo-box { position: relative; width: 100%; height: 300px !important; display: block; }
-        
+        .chart-container { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 15px; margin-bottom: 25px; box-shadow: var(--shadow); width: 100%; overflow: hidden; }
+        .combo-box { position: relative; width: 100%; height: 40vh; min-height: 250px; max-height: 350px; display: block; }
+        canvas { width: 100% !important; height: 100% !important; }
         .ai-chat-box { background: rgba(30, 58, 138, 0.03); border: 1px solid rgba(30, 58, 138, 0.1); border-radius: 24px; padding: 25px; text-align: right; position: relative; margin-bottom: 30px; }
         .ai-avatar { position: absolute; top: -20px; right: 20px; background: var(--surface); border: 2px solid var(--border); width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 25px; }
         .ai-text { font-size: 15px; line-height: 2; color: var(--text-main); margin-top: 15px; white-space: pre-wrap; }
@@ -81,8 +81,11 @@
         
         <div class="nav-header">
             <a href="menu.html" class="back-btn">🔙</a>
-            <div class="page-title">دستیار هوشمند سیستم</div>
-            <div style="width: 40px;"></div> 
+            <div style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div style="font-size: 35px; margin-bottom: 5px;">🧠</div>
+                <div class="page-title">تحلیل هوشمند (هفتگی)</div>
+            </div>
+            <button class="back-btn" onclick="toggleTheme()" id="themeBtn" style="cursor:pointer; font-size:18px;">☀️</button>
         </div>
 
         <div id="weeksView">
@@ -164,6 +167,20 @@
             return d + md + Math.floor(((epYear * 682) - 110) / 2816) + (epYear - 1) * 365 + Math.floor(epBase / 2820) * 1029983 + 1948319;
         }
 
+        // 🌟 تابع تبدیل روز به تاریخ شمسی
+        function jdnToJalali(jdn) {
+            let a = jdn - 2121446;
+            let epBase = Math.floor(a / 1029983);
+            let epRemain = a % 1029983;
+            let epYear = Math.floor((epRemain * 2816 + 1031337) / 1028522);
+            let epDay = epRemain - Math.floor(((epYear * 682) - 110) / 2816) - (epYear - 1) * 365;
+            let y = epYear + epBase * 2820 + 474;
+            let m, d;
+            if (epDay <= 186) { m = Math.ceil(epDay / 31); d = epDay - (m - 1) * 31; } 
+            else { m = Math.ceil((epDay - 6) / 30); d = epDay - 186 - (m - 7) * 30; }
+            return y + '/' + String(m).padStart(2, '0') + '/' + String(d).padStart(2, '0');
+        }
+
         function getShortPersianDate(dateStr) {
             let parts = dateStr.split('/');
             return parts.length < 3 ? dateStr : parseInt(parts[2]) + ' ' + monthNames[parseInt(parts[1])];
@@ -181,17 +198,23 @@
                 const aiRes = await fetch(`${cleanUrl}/rest/v1/ai_analyses?chat_id=eq.${userId}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
                 allAnalyses = await aiRes.json();
 
-                // گروه‌بندی شنبه تا جمعه
+                // گروه‌بندی دقیق شنبه تا جمعه
                 reports.forEach(r => {
                     let parts = r.report_date.split('/');
                     let jdn = jalaliToJdn(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]));
-                    let weekIndex = Math.floor((jdn + 2) / 7); 
+                    
+                    let dayOfWeek = (jdn + 1) % 7; // شنبه = 0
+                    let saturdayJdn = jdn - dayOfWeek;
+                    let fridayJdn = saturdayJdn + 6;
+                    
+                    let startStr = jdnToJalali(saturdayJdn);
+                    let endStr = jdnToJalali(fridayJdn);
+                    let weekIndex = saturdayJdn;
                     
                     if(!allWeeklyData[weekIndex]) {
-                        allWeeklyData[weekIndex] = { reports: [], startStr: r.report_date, endStr: r.report_date };
+                        allWeeklyData[weekIndex] = { reports: [], startStr: startStr, endStr: endStr };
                     }
                     allWeeklyData[weekIndex].reports.push(r);
-                    allWeeklyData[weekIndex].endStr = r.report_date;
                 });
 
                 renderWeeksList();
@@ -316,7 +339,11 @@
             let analysis = allAnalyses.find(a => a.id == analysisId);
             let reportsData = analysis.reports_data;
             
+            // 🌟 تبدیل هشتگ‌های هوش مصنوعی به تیترهای تمیز و حذف مارک‌داون‌های خام
             let formattedText = analysis.ai_response
+                .replace(/###\s*(.*?)\n/g, '<h3 style="color:var(--primary); margin-top:20px; margin-bottom:10px; font-weight:900;">$1</h3>')
+                .replace(/##\s*(.*?)\n/g, '<h3 style="color:var(--primary); margin-top:20px; margin-bottom:10px; font-weight:900;">$1</h3>')
+                .replace(/#\s*(.*?)\n/g, '<h3 style="color:var(--primary); margin-top:20px; margin-bottom:10px; font-weight:900;">$1</h3>')
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
                 .replace(/\n/g, '<br>');
@@ -352,6 +379,31 @@
                 },
                 options: { maintainAspectRatio: false, responsive: true, scales: { y: { type: 'linear', position: 'right', title: {display:true, text:'ساعت'} }, y1: { type: 'linear', position: 'left', grid: {drawOnChartArea: false} } }, plugins: { legend: { labels: { font: { family: 'Vazirmatn' } } } } }
             });
+        }
+        // ==========================================
+        // 🌓 سیستم دارک مود هوشمند
+        // ==========================================
+        const themeBtn = document.getElementById('themeBtn');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            if(themeBtn) themeBtn.innerText = '☀️';
+        } else {
+            if(themeBtn) themeBtn.innerText = '🌙';
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                document.getElementById('themeBtn').innerText = '🌙';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                document.getElementById('themeBtn').innerText = '☀️';
+            }
         }
     </script>
 </body>
