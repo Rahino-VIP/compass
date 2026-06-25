@@ -145,24 +145,39 @@
                     <label>مدت زمان تمدید قرارداد:</label>
                     <select class="form-select" id="rnwDuration" onchange="calculateRenew()">
                         <option value="1">۱ ماهه</option>
-                        <option value="3">۳ ماهه (۵٪ تخفیف)</option>
-                        <option value="10">تا کنکور - ۱۰ ماهه (۱۵٪ تخفیف)</option>
+                        <option value="3">۳ ماهه</option>
+                        <option value="10">تا کنکور (۱۰ ماهه)</option>
                     </select>
                 </div>
-                <div class="invoice-box">
+
+                <div class="invoice-box" id="rnwInvoiceArea">
+                    <div class="promo-group">
+                        <input type="text" id="rnwPromoCode" placeholder="کد تخفیف (اختیاری)">
+                        <button class="promo-btn" onclick="applyRnwPromo()">ثبت کد</button>
+                    </div>
+                    <div class="promo-msg" id="rnwPromoMsg"></div>
+
+                    <div class="pay-method-switch" id="rnwPaySwitchContainer">
+                        <div class="pay-method-btn active" id="btnRnwPayCash" onclick="setRnwPayMethod('cash')">💳 پرداخت نقدی</div>
+                        <div class="pay-method-btn" id="btnRnwPayInst" onclick="setRnwPayMethod('installments')">📑 پرداخت اقساطی</div>
+                    </div>
+
                     <div class="invoice-row"><span>مبلغ پایه تمدید:</span><span id="rnwBasePrice">0 تومان</span></div>
-                    <div class="invoice-row highlight" id="rowRnwDisc" style="display:none;"><span>⏳ تخفیف زمانی:</span><span id="rnwTimeDisc">- 0 تومان</span></div>
+                    <div class="invoice-row highlight" id="rowRnwPromo" style="display:none;"><span>🎟️ تخفیف کد:</span><span id="rnwPromoDisc">- 0 تومان</span></div>
+                    <div class="invoice-row highlight" id="rowRnwDisc" style="display:none;"><span id="lblRnwTimeDisc">⏳ تخفیف زمانی:</span><span id="rnwTimeDisc">- 0 تومان</span></div>
                     <div class="invoice-total"><span>مبلغ قابل پرداخت:</span><span id="rnwFinalPrice">0 تومان</span></div>
+                    
+                    <ul class="installment-details" id="rnwInstallmentDetails"></ul>
                 </div>
+
                 <div class="file-upload" id="boxRnwFile" onclick="document.getElementById('rnwReceipt').click()">
                     <div style="font-size: 30px; margin-bottom: 5px;">📥</div>
-                    <div id="lblRnwFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی</div>
+                    <div id="lblRnwFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی پیش‌پرداخت</div>
                     <input type="file" id="rnwReceipt" accept="image/*" onchange="handleFile(this, 'lblRnwFileName', 'boxRnwFile', 'rnw')">
                 </div>
                 <button class="btn-submit" id="btnSubmitRnw" onclick="submitRequest('renew')">ارسال فیش و تمدید 🚀</button>
             </div>
         </div>
-
         <!-- ==============================================
              ۲. تغییر طرح (فاکتور شیشه‌ای)
              ============================================== -->
@@ -282,11 +297,14 @@
         let pricingTiers = [];
         let promoCodes = [];
         let filesData = { rnw: null, upg: null }; 
-        
+
+        let rnwPayMethod = 'cash';
+        let rnwPromoRate = 0;
         let oldMonthlyValue = 0;
         let remainingCreditValue = 0; 
         let finalRenewPrice = 0;
         let finalUpgPrice = 0;
+        let newWalletBalance = 0;
         let constructedUpgPlan = "";
         
         let state = {
@@ -363,22 +381,92 @@
         // ==========================================
         // 🧮 تمدید سریع
         // ==========================================
+        function setRnwPayMethod(method) {
+            rnwPayMethod = method;
+            document.getElementById('btnRnwPayCash').classList.toggle('active', method === 'cash');
+            document.getElementById('btnRnwPayInst').classList.toggle('active', method === 'installments');
+            calculateRenew();
+        }
+
+        function applyRnwPromo() {
+            const code = document.getElementById('rnwPromoCode').value.trim().toUpperCase();
+            const msg = document.getElementById('rnwPromoMsg');
+            const promoObj = promoCodes.find(p => p.code.toUpperCase() === code);
+            if (promoObj) {
+                rnwPromoRate = promoObj.discount_percent / 100;
+                msg.innerText = `✅ کد تایید شد: ${promoObj.discount_percent}٪ تخفیف اعمال شد.`;
+                msg.style.color = "var(--success)";
+            } else {
+                rnwPromoRate = 0;
+                msg.innerText = "❌ کد تخفیف نامعتبر است.";
+                msg.style.color = "var(--danger)";
+            }
+            calculateRenew();
+        }
+
         function calculateRenew() {
             let dur = parseInt(document.getElementById('rnwDuration').value);
             let totalBase = oldMonthlyValue * dur;
-            let timeDisc = 0;
-            if (dur === 3) timeDisc = totalBase * 0.05;
-            if (dur === 10) timeDisc = totalBase * 0.15;
-
-            finalRenewPrice = totalBase - timeDisc;
             document.getElementById('rnwBasePrice').innerText = formatMoney(totalBase) + ' تومان';
+            
+            let subTotal = totalBase;
+
+            // کسر کد تخفیف
+            let promoDisc = subTotal * rnwPromoRate;
+            subTotal -= promoDisc;
+            if(promoDisc > 0) {
+                document.getElementById('rowRnwPromo').style.display = 'flex';
+                document.getElementById('rnwPromoDisc').innerText = '- ' + formatMoney(promoDisc) + ' تومان';
+            } else { document.getElementById('rowRnwPromo').style.display = 'none'; }
+
+            // کنترل دکمه اقساط
+            const switchCont = document.getElementById('rnwPaySwitchContainer');
+            if (dur === 1 || subTotal < 3000000) {
+                switchCont.style.display = 'none'; rnwPayMethod = 'cash';
+            } else { switchCont.style.display = 'flex'; }
+
+            // تخفیف زمانی
+            let timeDiscRate = 0;
+            if (dur === 3) timeDiscRate = rnwPayMethod === 'cash' ? 0.05 : 0.02;
+            if (dur === 10) timeDiscRate = rnwPayMethod === 'cash' ? 0.15 : 0.08;
+            
+            let timeDisc = subTotal * timeDiscRate;
+            subTotal -= timeDisc;
             
             if(timeDisc > 0) {
                 document.getElementById('rowRnwDisc').style.display = 'flex';
+                document.getElementById('lblRnwTimeDisc').innerText = rnwPayMethod === 'cash' ? `⏳ تخفیف نقدی (${timeDiscRate*100}٪):` : `⏳ تخفیف اقساطی (${timeDiscRate*100}٪):`;
                 document.getElementById('rnwTimeDisc').innerText = '- ' + formatMoney(timeDisc) + ' تومان';
             } else { document.getElementById('rowRnwDisc').style.display = 'none'; }
             
+            finalRenewPrice = subTotal;
             document.getElementById('rnwFinalPrice').innerText = formatMoney(finalRenewPrice) + ' تومان';
+
+            // نمایش اقساط
+            const instBox = document.getElementById('rnwInstallmentDetails');
+            instBox.innerHTML = '';
+            if (rnwPayMethod === 'installments') {
+                instBox.style.display = 'block';
+                let upfront = dur === 3 ? finalRenewPrice * 0.50 : finalRenewPrice * 0.40;
+                if (upfront > 15000000) upfront = 15000000;
+                let upfrontRounded = roundDown100k(upfront); 
+                let remaining = finalRenewPrice - upfrontRounded;
+                
+                const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
+                let today = new Date();
+
+                if (dur === 3) {
+                    let d1 = new Date(); d1.setDate(today.getDate() + 45); 
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت (نقد):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>تاریخ چک صیادی (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
+                } else if (dur === 10) {
+                    let checkAmt = roundDown100k(remaining / 3);
+                    let lastCheckAmt = remaining - (checkAmt * 2);
+                    let d1 = new Date(); d1.setMonth(today.getMonth() + 2);
+                    let d2 = new Date(); d2.setMonth(today.getMonth() + 4);
+                    let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>چک اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>چک دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>چک سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
+                }
+            } else { instBox.style.display = 'none'; }
         }
 
         // ==========================================
@@ -431,8 +519,7 @@
                 upgBox.style.display = 'none'; btnUpg.style.display = 'none'; fileBox.style.display = 'none'; return;
             }
 
-            constructedUpgPlan = (pan !== 'none' && con !== 'none') ? `طرح جامع (${pan.toUpperCase()} + مشاوره ${con})` : (pan !== 'none' ? `پانسیون ${pan.toUpperCase()}` : `مشاوره ${con}`);
-
+            constructedUpgPlan = `پانسیون: ${pan} | مشاوره: ${con}`;
             // ۱. مبالغ پایه
             let basePan = getPriceForTier('pansion', pan);
             let baseCon = getPriceForTier('consult', con);
@@ -500,18 +587,24 @@
                 document.getElementById('invRemCredit').innerText = '- ' + formatMoney(remDisc) + ' تومان';
             } else { document.getElementById('rowRemCredit').style.display = 'none'; }
 
-            // ۶. کسر کیف پول
-            let walletUsed = 0;
-            let walletBal = currentUser.wallet_balance || 0;
-            if (walletBal > 0 && subTotal > 0) {
-                walletUsed = Math.min(walletBal, subTotal);
+            // ۶. کسر کیف پول و محاسبه شارژ مجدد
+            newWalletBalance = currentUser.wallet_balance || 0;
+            if (subTotal < 0) {
+                // اگر طرح ارزان‌تری انتخاب کرده، مابه‌التفاوت به کیف پولش اضافه می‌شود
+                newWalletBalance += Math.abs(subTotal);
+                document.getElementById('rowWalletUsed').style.display = 'none';
+            } else if (newWalletBalance > 0 && subTotal > 0) {
+                // اگر باید پول بده، اول از کیف پولش کم می‌کنیم
+                let walletUsed = Math.min(newWalletBalance, subTotal);
                 subTotal -= walletUsed;
+                newWalletBalance -= walletUsed;
                 document.getElementById('rowWalletUsed').style.display = 'flex';
                 document.getElementById('invWalletUsed').innerText = '- ' + formatMoney(walletUsed) + ' تومان';
-            } else { document.getElementById('rowWalletUsed').style.display = 'none'; }
+            } else { 
+                document.getElementById('rowWalletUsed').style.display = 'none'; 
+            }
 
             finalUpgPrice = subTotal;
-
             // نمایش مبلغ و اقساط
             const instBox = document.getElementById('installmentDetails');
             instBox.innerHTML = '';
@@ -609,7 +702,7 @@
             }
 
             if (filesData[fileKey]) { updateData.receipt_base64 = filesData[fileKey].base64; updateData.file_type = filesData[fileKey].mime; }
-
+            updateData.wallet_balance = newWalletBalance;
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
                 const response = await fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${currentUser.national_id}`, {
