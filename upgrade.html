@@ -128,6 +128,13 @@
             </div>
         </div>
 
+        <!-- نمایش موجودی کیف پول -->
+        <div style="background: rgba(217, 119, 6, 0.1); border: 1px dashed var(--accent); padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: bold;">موجودی کیف پول شما:</span>
+            <span id="topWalletDisplay" style="font-size: 16px; font-weight: 900; color: var(--accent); margin-right: 5px;">0</span>
+            <span style="font-size: 11px; color: var(--accent);">تومان</span>
+        </div>
+
         <!-- 📑 تب‌ها -->
         <div class="tabs">
             <div class="tab-btn active" onclick="switchTab('tab-renew', this)">🔄 تمدید سریع</div>
@@ -170,9 +177,10 @@
                     <ul class="installment-details" id="rnwInstallmentDetails"></ul>
                 </div>
 
-                <div class="file-upload" id="boxRnwFile" onclick="document.getElementById('rnwReceipt').click()">
+                <!-- جایگزین کن -->
+                <div class="file-upload" id="boxRnwFile">
                     <div style="font-size: 30px; margin-bottom: 5px;">📥</div>
-                    <div id="lblRnwFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی پیش‌پرداخت</div>
+                    <div id="lblRnwFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی</div>
                     <input type="file" id="rnwReceipt" accept="image/*" onchange="handleFile(this, 'lblRnwFileName', 'boxRnwFile', 'rnw')">
                 </div>
                 <button class="btn-submit" id="btnSubmitRnw" onclick="submitRequest('renew')">ارسال فیش و تمدید 🚀</button>
@@ -250,9 +258,10 @@
                     </div>
                 </div>
 
-                <div class="file-upload" id="boxUpgFile" onclick="document.getElementById('upgReceipt').click()" style="display: none;">
+                <!-- جایگزین کن -->
+                <div class="file-upload" id="boxUpgFile" style="display: none;">
                     <div style="font-size: 30px; margin-bottom: 5px;">📥</div>
-                    <div id="lblUpgFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی پیش‌پرداخت</div>
+                    <div id="lblUpgFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی</div>
                     <input type="file" id="upgReceipt" accept="image/*" onchange="handleFile(this, 'lblUpgFileName', 'boxUpgFile', 'upg')">
                 </div>
 
@@ -351,6 +360,7 @@
             
             document.getElementById('upgPansion').value = pansionStr;
             document.getElementById('upgConsult').value = consultStr;
+            document.getElementById('topWalletDisplay').innerText = formatMoney(currentUser.wallet_balance || 0);
 
             let oldPan = getPriceForTier('pansion', pansionStr);
             let oldCon = getPriceForTier('consult', consultStr);
@@ -519,7 +529,11 @@
                 upgBox.style.display = 'none'; btnUpg.style.display = 'none'; fileBox.style.display = 'none'; return;
             }
 
-            constructedUpgPlan = `پانسیون: ${pan} | مشاوره: ${con}`;
+            // این ۳ خط باعث می‌شه اگر چیزی رو نخواست، اصلاً اسمش تو طرح نیاد!
+            let planParts = [];
+            if (pan !== 'none') planParts.push(`پانسیون: ${pan}`);
+            if (con !== 'none') planParts.push(`مشاوره: ${con}`);
+            constructedUpgPlan = planParts.join(' | ');
             // ۱. مبالغ پایه
             let basePan = getPriceForTier('pansion', pan);
             let baseCon = getPriceForTier('consult', con);
@@ -690,15 +704,25 @@
                 updateData.invoice_details = `درخواست تمدید سریع\nمبلغ واریزی: ${formatMoney(finalPrice)} تومان\nمدت: ${dur} ماه`;
                 updateData.duration_months = parseInt(dur);
             } else {
+                // بخش ارتقا و تغییر طرح
                 let dur = document.getElementById('upgDuration').value;
                 let invText = `درخواست تغییر طرح به: ${constructedUpgPlan} (${dur} ماهه)\n`;
-                invText += `مبلغ نهایی فاکتور: ${formatMoney(finalPrice)} تومان\n`;
+                invText += `توضیح زمان: روزهای قرارداد قبلی تسویه مالی شد. قرارداد جدید از "امروز" به مدت ${dur} ماه کامل ثبت شود.\n`;
+                invText += `مبلغ نهایی پرداختی: ${formatMoney(finalPrice)} تومان\n`;
                 invText += `روش پرداخت: ${state.paymentMethod === 'cash' ? 'نقدی' : 'اقساط'}\n`;
+                
                 if (state.paymentMethod === 'installments') invText += `جزئیات تعهدات:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
-                if(remainingCreditValue > 0) invText += `(ارزش باقیمانده کسر شده از طرح قبل: ${formatMoney(remainingCreditValue)})\n`;
-                if(finalPrice <= 0) invText += `(مبلغ باقیمانده بستانکاری باید به کیف پول منتقل شود)`;
+                if (remainingCreditValue > 0) invText += `(ارزش کسر شده از قرارداد قبل: ${formatMoney(remainingCreditValue)} تومان)\n`;
+                if (currentUser.wallet_balance > 0 && finalPrice >= 0) invText += `(کسر از کیف پول: انجام شد)\n`;
 
-                updateData.invoice_details = invText; updateData.plan_type = constructedUpgPlan; updateData.duration_months = parseInt(dur);
+                updateData.invoice_details = invText; 
+                updateData.plan_type = constructedUpgPlan; 
+                updateData.duration_months = parseInt(dur);
+                
+                // آپدیت کیف پول در دیتابیس!
+                if (typeof newWalletBalance !== 'undefined') {
+                    updateData.wallet_balance = newWalletBalance;
+                }
             }
 
             if (filesData[fileKey]) { updateData.receipt_base64 = filesData[fileKey].base64; updateData.file_type = filesData[fileKey].mime; }
