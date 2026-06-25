@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پروفایل و اشتراک من | راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root { 
+            --primary: #1e3a8a; --primary-light: #3b82f6; --primary-fade: rgba(30, 58, 138, 0.05);
+            --accent: #d97706; --accent-light: #f59e0b;
+            --bg-color: #f8fafc; --surface: #ffffff;
+            --text-main: #0f172a; --text-muted: #64748b;
+            --border: #e2e8f0; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+            --shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        [data-theme="dark"] {
+            --primary: #3b82f6; --primary-fade: rgba(59, 130, 246, 0.1);
+            --accent: #f59e0b; --bg-color: #0f172a; --surface: #1e293b;
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+            --border: #334155; --shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 50px; transition: 0.3s; }
+        
+        .app-container { max-width: 600px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 🎩 هدر */
+        .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .back-btn { background: var(--surface); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; box-shadow: var(--shadow); cursor: pointer; }
+        .page-title { font-size: 18px; font-weight: 900; color: var(--primary); }
+
+        /* 💳 کارت اشتراک من */
+        .sub-card { background: linear-gradient(135deg, var(--primary), #312e81); border-radius: 20px; padding: 25px; color: white; margin-bottom: 25px; box-shadow: 0 15px 30px rgba(30, 58, 138, 0.2); position: relative; overflow: hidden; }
+        .sub-card::after { content: '✨'; position: absolute; left: -10px; top: -10px; font-size: 100px; opacity: 0.05; transform: rotate(-15deg); }
+        .sub-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .sub-badge { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; backdrop-filter: blur(5px); }
+        .plan-name { font-size: 20px; font-weight: 900; color: var(--accent-light); margin-bottom: 5px; }
+        .timer-box { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        .timer-text { font-size: 14px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .progress-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.2); border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--success); width: 100%; transition: 1s ease-out; }
+        
+        .btn-upgrade { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; width: 100%; padding: 12px; border-radius: 12px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 5px 15px rgba(217, 119, 6, 0.3); }
+
+        /* 🎁 کیف پول و سیستم معرفی */
+        .wallet-box { background: var(--surface); border: 1px solid var(--accent); border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(217, 119, 6, 0.05); text-align: center; }
+        .wallet-balance { font-size: 30px; font-weight: 900; color: var(--accent); margin: 10px 0; }
+        .share-container { background: var(--bg-color); border: 1px dashed var(--border); padding: 15px; border-radius: 16px; margin-top: 15px; text-align: right; }
+        .share-text { font-size: 12px; color: var(--text-muted); line-height: 1.8; margin-bottom: 15px; }
+        .ref-code-box { background: var(--surface); border: 1px solid var(--border); padding: 10px; border-radius: 10px; text-align: center; font-size: 18px; font-weight: 900; color: var(--primary); letter-spacing: 2px; margin-bottom: 15px; }
+        .btn-copy { background: var(--primary-light); color: white; width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-copy:active { transform: scale(0.98); }
+
+        /* ⚙️ تنظیمات حساب */
+        .settings-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: bold; color: var(--text-muted); margin-bottom: 5px; }
+        .form-input { width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 14px; outline: none; font-family: 'Vazirmatn'; transition: 0.3s; }
+        .form-input:focus { border-color: var(--primary); }
+        .form-input:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .alert-box { background: rgba(245, 158, 11, 0.1); color: var(--warning); padding: 10px; border-radius: 10px; font-size: 11px; margin-bottom: 15px; border: 1px solid rgba(245, 158, 11, 0.2); }
+        
+        .btn-save { background: var(--primary); color: white; width: 100%; padding: 15px; border-radius: 14px; border: none; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-save:disabled { background: var(--text-muted); cursor: not-allowed; }
+
+        .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
+        .spinner { font-size: 50px; animation: spin 1.5s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="loader-overlay" id="mainLoader">
+        <div class="spinner">⚙️</div>
+        <h3 style="color: var(--primary);">در حال بارگذاری اطلاعات حساب...</h3>
+    </div>
+
+    <div class="app-container" id="appContent" style="display: none;">
+        
+        <!-- هدر -->
+        <div class="nav-header">
+            <a href="menu.html" class="back-btn">🔙</a>
+            <div class="page-title">پروفایل و اشتراک من</div>
+            <button class="back-btn" onclick="toggleTheme()" id="themeBtn">☀️</button>
+        </div>
+
+        <!-- 💳 بخش اول: کارت اشتراک -->
+        <div class="sub-card">
+            <div class="sub-header">
+                <div>
+                    <div style="font-size: 12px; opacity: 0.8;">طرح فعال فعلی:</div>
+                    <div class="plan-name" id="uiPlanName">در حال بررسی...</div>
+                </div>
+                <div class="sub-badge" id="uiStatusBadge">فعال ✅</div>
+            </div>
+
+            <div class="timer-box">
+                <div class="timer-text">
+                    <span id="uiDaysLeftText">محاسبه زمان باقی‌مانده...</span>
+                    <span id="uiEndDateText" style="opacity: 0.7; font-size: 11px;">-</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="uiProgressBar"></div>
+                </div>
+            </div>
+
+            <button class="btn-upgrade" onclick="requestUpgrade()" id="btnUpgrade">
+                <span>🔄 ارتقا / تمدید اشتراک</span>
+            </button>
+            <div style="font-size: 10px; opacity: 0.7; text-align: center; margin-top: 10px;">
+                محاسبه قیمت و تخفیف‌ها به صورت هوشمند انجام می‌شود.
+            </div>
+        </div>
+
+        <!-- 🎁 بخش دوم: کیف پول و بازاریابی -->
+        <div class="wallet-box">
+            <div style="font-size: 40px; margin-bottom: -10px;">💰</div>
+            <h3 style="font-size: 16px; color: var(--text-main);">کیف پول راهینو</h3>
+            <div class="wallet-balance"><span id="uiWalletBalance">0</span> <span style="font-size: 14px; color: var(--text-muted);">تومان</span></div>
+            <p style="font-size: 12px; color: var(--text-muted);">این مبلغ به صورت خودکار در تمدید یا ارتقای بعدی شما به عنوان تخفیف لحاظ می‌گردد.</p>
+
+            <div class="share-container">
+                <div style="font-size: 14px; font-weight: bold; color: var(--primary); text-align: center; margin-bottom: 10px;">کد دعوت اختصاصی شما</div>
+                <div class="ref-code-box" id="uiRefCode">RHN-0000</div>
+                
+                <div class="share-text" id="shareTextPreview">
+                    سلام! ✋ من تو قطب‌نمای راهینو ثبت‌نام کردم؛ جایی که هم پانسیون مطالعاتی داره و هم مشاوره‌های خفن با هوش مصنوعی. 🚀
+                    <br><br>
+                    اگر از کد معرف من استفاده کنی، همون اول <b style="color:var(--danger)">۱۰۰ هزار تومن تخفیف</b> می‌گیری! 🎁
+                    <br><br>
+                    کد معرف من: <b id="previewCode">...</b><br>
+                    لینک ثبت‌نام: <a href="#" style="color:var(--primary)">rahino-edu.ir</a>
+                </div>
+
+                <button class="btn-copy" onclick="copyReferralText()">📋 کپی متن و ارسال برای دوستان</button>
+                <div style="font-size: 10px; color: var(--warning); text-align: center; margin-top: 10px;">
+                    * پاداش ۲۰۰ هزار تومانیِ شما، پس از واریز وجه توسط دوستتان و تایید مدیریت، به کیف پولتان اضافه و پیامک آن برایتان ارسال خواهد شد.
+                </div>
+            </div>
+        </div>
+
+        <!-- ⚙️ بخش سوم: تنظیمات حساب -->
+        <h3 style="font-size: 15px; color: var(--text-muted); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+            <span style="display:block; width:5px; height:15px; background:var(--accent); border-radius:5px;"></span>
+            تنظیمات پایه‌ای
+        </h3>
+        
+        <div class="settings-box">
+            
+            <div class="form-group">
+                <label>نام و نام خانوادگی (غیرقابل تغییر)</label>
+                <input type="text" class="form-input" id="inpName" disabled>
+            </div>
+
+            <div class="form-group">
+                <label>شماره موبایل (اکانت بله)</label>
+                <input type="tel" class="form-input" id="inpPhone" placeholder="0912...">
+            </div>
+
+            <div class="form-group">
+                <label>رمز عبور ورود به برنامه</label>
+                <input type="text" class="form-input" id="inpPass" placeholder="رمز عبور جدید...">
+            </div>
+
+            <div class="alert-box">
+                ⚠️ توجه: پایه تحصیلی و رشته، مبنای دریافت برنامه‌های درسی شماست و برای جلوگیری از تقلب، <b>فقط یک‌بار</b> قابل ویرایش است!
+            </div>
+
+            <div class="form-group">
+                <label>پایه تحصیلی</label>
+                <select class="form-input" id="inpGrade">
+                    <option value="دهم">دهم</option>
+                    <option value="یازدهم">یازدهم</option>
+                    <option value="دوازدهم">دوازدهم</option>
+                    <option value="پشت کنکوری">فارغ التحصیل (پشت کنکوری)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>رشته تحصیلی</label>
+                <select class="form-input" id="inpMajor">
+                    <option value="تجربی">علوم تجربی</option>
+                    <option value="ریاضی">ریاضی و فیزیک</option>
+                    <option value="انسانی">علوم انسانی</option>
+                </select>
+            </div>
+
+            <button class="btn-save" id="btnSave" onclick="saveSettings()">💾 ذخیره تغییرات</button>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // 🔗 تنظیمات سوپابیس
+        // ==========================================
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const userId = localStorage.getItem('qotbnama_user_id');
+        if (!userId) window.location.href = 'index.html';
+
+        let currentUserData = null;
+
+        window.onload = async function() {
+            await fetchProfileData();
+        };
+
+        // ==========================================
+        // 📥 بارگذاری اطلاعات پروفایل
+        // ==========================================
+        async function fetchProfileData() {
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                // جستجو بر اساس کد ملی یا چت آیدی
+                const fetchUrl = `${cleanUrl}/rest/v1/students?or=(national_id.eq.${userId},chat_id.eq.${userId})`;
+                
+                const response = await fetch(fetchUrl, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+                const data = await response.json();
+                
+                if (data && data.length > 0) {
+                    currentUserData = data[0];
+                    renderUI();
+                } else {
+                    alert("خطا در یافتن حساب کاربری!");
+                    window.location.href = 'index.html';
+                }
+            } catch (e) {
+                alert("خطا در اتصال به سرور.");
+            }
+        }
+
+        // ==========================================
+        // 🎨 رندر کردن رابط کاربری
+        // ==========================================
+        function renderUI() {
+            const st = currentUserData;
+            
+            // ۱. کارت اشتراک
+            document.getElementById('uiPlanName').innerText = st.plan_type || "ثبت نشده";
+            
+            if (st.end_date) {
+                let today = new Date();
+                let end = new Date(st.end_date);
+                let diffTime = end - today;
+                let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                document.getElementById('uiEndDateText').innerText = `تا ${st.end_date.replace(/-/g, '/')}`;
+
+                let progress = document.getElementById('uiProgressBar');
+                
+                if (diffDays <= 0) {
+                    document.getElementById('uiDaysLeftText').innerHTML = `<span style="color:var(--danger); font-weight:bold;">قرارداد شما به پایان رسیده است!</span>`;
+                    progress.style.width = '0%';
+                    progress.style.background = 'var(--danger)';
+                    document.getElementById('uiStatusBadge').innerText = "منقضی ❌";
+                    document.getElementById('uiStatusBadge').style.background = "rgba(239, 68, 68, 0.4)";
+                } else {
+                    document.getElementById('uiDaysLeftText').innerHTML = `<b>${diffDays} روز</b> تا پایان قرارداد`;
+                    // فرض میکنیم یک ماهه بوده برای محاسبه درصد (۳۰ روز)
+                    let pct = Math.min((diffDays / 30) * 100, 100);
+                    progress.style.width = pct + '%';
+                    
+                    if(diffDays <= 5) progress.style.background = 'var(--danger)';
+                    else if(diffDays <= 10) progress.style.background = 'var(--warning)';
+                }
+            } else {
+                document.getElementById('uiDaysLeftText').innerText = "تاریخ پایان ثبت نشده است.";
+                document.getElementById('uiProgressBar').style.width = '100%';
+            }
+
+            // تعیین وضعیت دکمه ارتقا بر اساس طرح
+            let planStr = (st.plan_type || "").toLowerCase();
+            if(planStr.includes("مشاوره") && planStr.includes("پانسیون")) {
+                document.getElementById('btnUpgrade').innerHTML = "🔄 تمدید اشتراک";
+            } else if (planStr.includes("پانسیون")) {
+                document.getElementById('btnUpgrade').innerHTML = "🌟 اضافه کردن مشاوره و برنامه (ارتقا)";
+            } else {
+                document.getElementById('btnUpgrade').innerHTML = "🪑 رزرو میز پانسیون (ارتقا)";
+            }
+
+            // ۲. کیف پول و کد معرف
+            let balance = st.wallet_balance || 0;
+            document.getElementById('uiWalletBalance').innerText = balance.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            
+            // تولید کد معرف (RHN + 4 رقم آخر کد ملی)
+            let nid = st.national_id || "0000";
+            let refCode = `RHN-${nid.slice(-4)}`;
+            document.getElementById('uiRefCode').innerText = refCode;
+            document.getElementById('previewCode').innerText = refCode;
+
+            // ۳. فرم تنظیمات
+            document.getElementById('inpName').value = st.full_name || '';
+            document.getElementById('inpPhone').value = st.phone_number || '';
+            document.getElementById('inpPass').value = st.password || '';
+            
+            if (st.grade) document.getElementById('inpGrade').value = st.grade;
+            if (st.major) document.getElementById('inpMajor').value = st.major;
+
+            // قفل کردن فیلدهای پایه و رشته اگر قبلاً ادیت شده باشن
+            if (st.has_edited_profile === true) {
+                document.getElementById('inpGrade').disabled = true;
+                document.getElementById('inpMajor').disabled = true;
+            }
+
+            document.getElementById('mainLoader').style.display = 'none';
+            document.getElementById('appContent').style.display = 'block';
+        }
+
+        // ==========================================
+        // 📋 کپی متن دعوت‌نامه
+        // ==========================================
+        function copyReferralText() {
+            let refCode = document.getElementById('uiRefCode').innerText;
+            let textToCopy = `سلام! ✋ من تو قطب‌نمای راهینو ثبت‌نام کردم؛ جایی که هم پانسیون مطالعاتی داره و هم مشاوره‌های خفن با هوش مصنوعی. 🚀\n\nاگر از کد معرف من استفاده کنی، همون اول ۱۰۰ هزار تومن تخفیف می‌گیری! 🎁\n\nکد معرف من: ${refCode}\nلینک ثبت‌نام: https://rahino-edu.ir`;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert("✅ متن به همراه کد معرف شما کپی شد. حالا می‌تونی برای دوستات بفرستیش!");
+            }).catch(err => {
+                alert("خطا در کپی کردن متن.");
+            });
+        }
+
+        // ==========================================
+        // 💾 ذخیره تنظیمات حساب
+        // ==========================================
+        async function saveSettings() {
+            const btn = document.getElementById('btnSave');
+            btn.innerText = "در حال ذخیره... ⏳";
+            btn.disabled = true;
+
+            const updateData = {
+                phone_number: document.getElementById('inpPhone').value,
+                password: document.getElementById('inpPass').value,
+            };
+
+            // اگر فیلدها باز بودن، مقدار جدید رو بگیر و قفل رو فعال کن
+            if (currentUserData.has_edited_profile !== true) {
+                updateData.grade = document.getElementById('inpGrade').value;
+                updateData.major = document.getElementById('inpMajor').value;
+                updateData.has_edited_profile = true; 
+            }
+
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                const response = await fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${currentUserData.national_id}`, {
+                    method: 'PATCH',
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (response.ok) {
+                    alert("✅ اطلاعات حساب با موفقیت بروزرسانی شد.");
+                    // آپدیت لوکال برای جلوگیری از رفرش
+                    currentUserData = { ...currentUserData, ...updateData };
+                    renderUI(); // رندر مجدد تا فیلدها قفل بشن
+                } else {
+                    throw new Error("Server Error");
+                }
+            } catch (e) {
+                alert("⚠️ خطا در ذخیره اطلاعات.");
+            }
+            
+            btn.innerText = "💾 ذخیره تغییرات";
+            btn.disabled = false;
+        }
+
+        // ==========================================
+        // 🔄 دکمه ارتقا و تمدید (اتصال به منشی)
+        // ==========================================
+        function requestUpgrade() {
+            // در فاز بعدی می‌تونیم اینجا یک فرم آپلود فیش باز کنیم
+            // فعلاً برای کاهش اصطکاک، مستقیم به بله یا واتس‌اپ ادمین لینک می‌دیم با پیام آماده
+            let planName = document.getElementById('uiPlanName').innerText;
+            let msg = encodeURIComponent(`سلام! وقت بخیر.\nمن ${currentUserData.full_name} هستم.\nمی‌خوام طرحم رو از (${planName}) ارتقا/تمدید بدم. لطفاً راهنمایی کنید.`);
+            
+            // لینک بله ادمین (ایدی خودت رو جایگزین کن)
+            window.location.href = `https://ble.ir/YOUR_ADMIN_ID?text=${msg}`; 
+        }
+
+        // ==========================================
+        // 🌓 سیستم دارک مود
+        // ==========================================
+        const themeBtn = document.getElementById('themeBtn');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            if(themeBtn) themeBtn.innerText = '☀️';
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                document.getElementById('themeBtn').innerText = '🌙';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                document.getElementById('themeBtn').innerText = '☀️';
+            }
+        }
+    </script>
+</body>
+</html>
