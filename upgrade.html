@@ -3,16 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ارتقا و تمدید اشتراک | راهینو</title>
+    <title>تغییر و تمدید اشتراک | قطب‌نمای راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* ==========================================
-           🎨 پالت رنگی و استایل‌های پایه
-           ========================================== */
         :root { 
-            --primary: #1e3a8a; --primary-light: #3b82f6; --primary-fade: rgba(30, 58, 138, 0.05);
+            --primary: #1e3a8a; --primary-light: #3b82f6;
             --accent: #d97706; --accent-light: #f59e0b;
             --bg-color: #f8fafc; --surface: #ffffff;
             --text-main: #0f172a; --text-muted: #64748b;
@@ -21,7 +18,7 @@
         }
 
         [data-theme="dark"] {
-            --primary: #3b82f6; --primary-fade: rgba(59, 130, 246, 0.1);
+            --primary: #3b82f6;
             --accent: #f59e0b; --bg-color: #0f172a; --surface: #1e293b;
             --text-main: #f8fafc; --text-muted: #94a3b8;
             --border: #334155; --shadow: 0 10px 25px rgba(0,0,0,0.4);
@@ -29,17 +26,15 @@
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 50px; transition: 0.3s; }
-        
         .app-container { max-width: 600px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 🎩 هدر */
+        /* هدر */
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .back-btn { background: var(--surface); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; box-shadow: var(--shadow); cursor: pointer; transition: 0.2s; }
-        .back-btn:hover { background: var(--border); }
+        .back-btn { background: var(--surface); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; box-shadow: var(--shadow); cursor: pointer; }
         .page-title { font-size: 18px; font-weight: 900; color: var(--primary); }
 
-        /* 🛒 وضعیت فعلی کاربر */
+        /* باکس وضعیت کاربر */
         .status-box { background: linear-gradient(135deg, rgba(30, 58, 138, 0.1), rgba(59, 130, 246, 0.05)); border: 1px solid rgba(30, 58, 138, 0.2); border-radius: 20px; padding: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
         .status-info { font-size: 13px; color: var(--text-muted); }
         .status-info strong { font-size: 16px; color: var(--primary); display: block; margin-top: 5px; }
@@ -47,31 +42,30 @@
         .wallet-badge span { display: block; font-size: 11px; color: var(--text-muted); font-weight: bold; }
         .wallet-badge strong { font-size: 16px; color: var(--accent); font-weight: 900; }
 
-        /* 📝 فرم انتخاب */
+        /* فرم انتخاب طرح */
         .form-section { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: var(--shadow); }
         .section-title { font-size: 16px; font-weight: 900; color: var(--text-main); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
         .section-title::before { content: ''; display: block; width: 5px; height: 16px; background: var(--primary); border-radius: 10px; }
         
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; font-size: 13px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; }
-        .form-select { width: 100%; padding: 14px 15px; border-radius: 14px; border: 2px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 14px; font-weight: bold; outline: none; transition: 0.3s; cursor: pointer; }
+        .form-select { width: 100%; padding: 14px 15px; border-radius: 14px; border: 2px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 14px; font-weight: bold; outline: none; }
         .form-select:focus { border-color: var(--primary); }
+        .form-select option:disabled { color: var(--border); font-style: italic; }
 
-        /* 🧾 فاکتور زنده */
+        /* فاکتور */
         .invoice-box { background: rgba(0,0,0,0.02); border: 1px dashed var(--border); border-radius: 16px; padding: 20px; margin-top: 10px; }
         .invoice-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px; color: var(--text-muted); }
         .invoice-row.discount { color: var(--success); font-weight: bold; }
         .invoice-row.discount-wallet { color: var(--accent); font-weight: bold; }
         .invoice-total { display: flex; justify-content: space-between; border-top: 2px dashed var(--border); padding-top: 15px; margin-top: 15px; font-size: 18px; font-weight: 900; color: var(--primary); }
 
-        /* 📥 آپلود فیش */
-        .file-upload { border: 2px dashed var(--accent); padding: 30px 20px; border-radius: 16px; text-align: center; cursor: pointer; position: relative; background: rgba(217, 119, 6, 0.05); transition: 0.2s; margin-bottom: 20px; }
-        .file-upload:hover { border-color: var(--primary); background: rgba(30, 58, 138, 0.05); }
+        /* آپلود فیش */
+        .file-upload { border: 2px dashed var(--accent); padding: 30px 20px; border-radius: 16px; text-align: center; cursor: pointer; position: relative; background: rgba(217, 119, 6, 0.05); margin-bottom: 20px; }
         .file-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 
-        .btn-submit { background: linear-gradient(135deg, var(--primary), #312e81); color: white; width: 100%; padding: 18px; border-radius: 16px; border: none; font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 25px rgba(30, 58, 138, 0.3); }
-        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 15px 35px rgba(30, 58, 138, 0.4); }
-        .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+        .btn-submit { background: linear-gradient(135deg, var(--primary), #312e81); color: white; width: 100%; padding: 18px; border-radius: 16px; border: none; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 10px 25px rgba(30, 58, 138, 0.3); }
+        .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
 
         .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
         .spinner { font-size: 50px; animation: spin 1.5s linear infinite; margin-bottom: 15px; }
@@ -82,7 +76,7 @@
 
     <div class="loader-overlay" id="mainLoader">
         <div class="spinner">🛒</div>
-        <h3 style="color: var(--primary);">در حال آماده‌سازی فاکتور شما...</h3>
+        <h3 style="color: var(--primary);">در حال بررسی پرونده مالی شما...</h3>
     </div>
 
     <div class="app-container" id="appContent" style="display: none;">
@@ -109,12 +103,20 @@
             <div class="section-title">انتخاب طرح جدید</div>
             
             <div class="form-group">
-                <label>طرح مورد نظر شما:</label>
-                <select class="form-select" id="inpPlan" onchange="calculateInvoice()">
-                    <option value="none">-- یک طرح انتخاب کنید --</option>
-                    <option value="طرح جامع (پانسیون + مشاوره)">💎 طرح جامع (پانسیون + مشاوره)</option>
-                    <option value="فقط پانسیون">🪑 فقط میز پانسیون</option>
-                    <option value="فقط مشاوره">🧠 فقط مشاوره و برنامه‌ریزی</option>
+                <label>بخش پانسیون مطالعاتی:</label>
+                <select class="form-select" id="inpPansion" onchange="calculateInvoice()">
+                    <option value="none">بدون پانسیون</option>
+                    <option value="vip">پانسیون استاندارد (VIP)</option>
+                    <option value="cip">پانسیون اختصاصی (CIP)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>بخش مشاوره و برنامه‌ریزی:</label>
+                <select class="form-select" id="inpConsult" onchange="calculateInvoice()">
+                    <option value="none">بدون مشاوره</option>
+                    <option value="plus">هوشمند پلاس (نقره‌ای)</option>
+                    <option value="vip">منتورینگ VIP (طلایی)</option>
                 </select>
             </div>
 
@@ -122,19 +124,25 @@
                 <label>مدت زمان قرارداد:</label>
                 <select class="form-select" id="inpDuration" onchange="calculateInvoice()">
                     <option value="1">۱ ماهه</option>
-                    <option value="3">۳ ماهه (تخفیف ویژه)</option>
-                    <option value="10">تا کنکور - ۱۰ ماهه (بیشترین تخفیف)</option>
+                    <option value="3">۳ ماهه (۵٪ تخفیف کل)</option>
+                    <option value="10">تا کنکور - ۱۰ ماهه (۱۵٪ تخفیف کل)</option>
                 </select>
             </div>
 
-            <div class="invoice-box" id="invoiceArea" style="display: none;">
+            <!-- فاکتور زنده -->
+            <div class="invoice-box" id="invoiceArea">
                 <div class="invoice-row">
-                    <span>مبلغ پایه طرح جدید:</span>
-                    <span id="invBasePrice">0 تومان</span>
+                    <span>مبلغ پایه طرح جدید (ماهانه):</span>
+                    <span id="invBaseMonthly">0 تومان</span>
                 </div>
                 
+                <div class="invoice-row discount" id="rowComboDiscount" style="display: none;">
+                    <span>💎 تخفیف طرح جامع (پانسیون + مشاوره):</span>
+                    <span id="invComboDiscount">- 0 تومان</span>
+                </div>
+
                 <div class="invoice-row discount" id="rowTimeDiscount" style="display: none;">
-                    <span id="lblTimeDiscount">⏳ تخفیف بلندمدت:</span>
+                    <span id="lblTimeDiscount">⏳ تخفیف خرید بلندمدت:</span>
                     <span id="invTimeDiscount">- 0 تومان</span>
                 </div>
 
@@ -149,12 +157,8 @@
                 </div>
 
                 <div class="invoice-total">
-                    <span>مبلغ قابل پرداخت:</span>
+                    <span>مبلغ نهایی قابل پرداخت:</span>
                     <span id="invFinalPrice">0 تومان</span>
-                </div>
-                
-                <div style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 15px; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 8px;">
-                    این مبلغ باید نقداً واریز گردد. جهت تقسیط بلندمدت با مدیریت هماهنگ کنید.
                 </div>
             </div>
         </div>
@@ -165,7 +169,7 @@
             <div class="file-upload" onclick="document.getElementById('rnwReceipt').click()">
                 <div style="font-size: 35px; margin-bottom: 10px;">📥</div>
                 <div id="lblFileName" style="font-size: 14px; font-weight: bold; color: var(--primary);">برای آپلود تصویر فیش کلیک کنید</div>
-                <div style="font-size: 11px; color: var(--text-muted); margin-top: 5px;">فرمت‌های مجاز: JPG, PNG (حداکثر ۵ مگابایت)</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 5px;">فرمت‌های مجاز: JPG, PNG</div>
                 <input type="file" id="rnwReceipt" accept="image/*" onchange="handleReceiptSelect(this)">
             </div>
 
@@ -175,9 +179,6 @@
     </div>
 
     <script>
-        // ==========================================
-        // 🔗 تنظیمات و متغیرهای سراسری
-        // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -189,12 +190,16 @@
         let pricingTiers = [];
         let receiptBase64 = null;
         let receiptMimeType = null;
+        
+        let currentPansionTier = 'none'; // 'none', 'vip', 'cip'
+        let currentConsultTier = 'none'; // 'none', 'plus', 'vip'
+        let currentRemainingDays = 0;
+        let currentRemainingValue = 0; 
+        
         let finalCalculatedPrice = 0;
-        let currentRemainingValue = 0; // ارزش ریالی روزهای باقیمانده
+        let constructedPlanName = "";
 
-        window.onload = async function() {
-            await fetchData();
-        };
+        window.onload = async function() { await fetchData(); };
 
         // ==========================================
         // 📥 دریافت دیتای کاربر و قیمت‌ها
@@ -202,8 +207,6 @@
         async function fetchData() {
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
-                
-                // دریافت همزمان اطلاعات دانش‌آموز و قیمت‌ها
                 const [userRes, pricingRes] = await Promise.all([
                     fetch(`${cleanUrl}/rest/v1/students?or=(national_id.eq.${userId},chat_id.eq.${userId})`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
                     fetch(`${cleanUrl}/rest/v1/pricing_tiers`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
@@ -214,40 +217,95 @@
                 
                 if (userData && userData.length > 0) {
                     currentUser = userData[0];
-                    renderStatusBox();
+                    parseUserPlan();
+                    setupFormLocks();
+                    calculateRemainingValue();
+                    calculateInvoice(); // ران کردن اولیه ماشین حساب
+                    
                     document.getElementById('mainLoader').style.display = 'none';
                     document.getElementById('appContent').style.display = 'block';
                 } else {
                     alert("خطا در یافتن حساب کاربری!"); window.location.href = 'index.html';
                 }
-            } catch (e) { alert("خطا در ارتباط با سرور قیمت‌گذاری."); }
+            } catch (e) { alert("خطا در اتصال."); }
         }
 
         // ==========================================
-        // 🧮 پردازش وضعیت فعلی کاربر
+        // 🧠 استخراج طرح فعلی کاربر
         // ==========================================
-        function renderStatusBox() {
-            document.getElementById('uiCurrentPlan').innerText = currentUser.plan_type || "ثبت نشده";
+        function parseUserPlan() {
+            let plan = (currentUser.plan_type || "").toLowerCase();
+            document.getElementById('uiCurrentPlan').innerText = plan || "طرحی ثبت نشده";
+            
+            // استخراج وضعیت پانسیون
+            if (plan.includes('cip')) currentPansionTier = 'cip';
+            else if (plan.includes('پانسیون') || plan.includes('vip')) currentPansionTier = 'vip'; // پیش‌فرض پانسیون
+            
+            // استخراج وضعیت مشاوره
+            if (plan.includes('vip') && plan.includes('مشاوره')) currentConsultTier = 'vip'; // اگر صراحتاً مشاوره VIP بود
+            else if (plan.includes('طلایی') || plan.includes('منتورینگ')) currentConsultTier = 'vip';
+            else if (plan.includes('مشاوره') || plan.includes('پلاس') || plan.includes('نقره')) currentConsultTier = 'plus';
+
+            // تنظیم دراپ‌داون‌ها روی طرح فعلی کاربر
+            document.getElementById('inpPansion').value = currentPansionTier;
+            document.getElementById('inpConsult').value = currentConsultTier;
+        }
+
+        // ==========================================
+        // 🔒 قفل کردن تنزل درجه (Downgrade)
+        // ==========================================
+        function setupFormLocks() {
+            let pansionSelect = document.getElementById('inpPansion');
+            let consultSelect = document.getElementById('inpConsult');
+
+            if (currentPansionTier === 'cip') {
+                pansionSelect.querySelector('option[value="none"]').disabled = true;
+                pansionSelect.querySelector('option[value="vip"]').disabled = true;
+            } else if (currentPansionTier === 'vip') {
+                pansionSelect.querySelector('option[value="none"]').disabled = true;
+            }
+
+            if (currentConsultTier === 'vip') {
+                consultSelect.querySelector('option[value="none"]').disabled = true;
+                consultSelect.querySelector('option[value="plus"]').disabled = true;
+            } else if (currentConsultTier === 'plus') {
+                consultSelect.querySelector('option[value="none"]').disabled = true;
+            }
+        }
+
+        // ==========================================
+        // 🧮 محاسبه ارزش ریالی روزهای باقیمانده
+        // ==========================================
+        function getPriceForTier(category, type) {
+            if(type === 'none') return 0;
+            let normGrade = ['دهم', 'یازدهم'].includes(currentUser.grade) ? currentUser.grade : 'دوازدهم';
+            let tier = pricingTiers.find(p => p.service_category === category && p.service_type === type && (p.target_grade === normGrade || p.target_grade === 'all'));
+            return tier ? parseInt(tier.monthly_price) : 0;
+        }
+
+        function calculateRemainingValue() {
             document.getElementById('uiWallet').innerHTML = `${(currentUser.wallet_balance || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} <small style="font-weight:normal;font-size:10px;">تومان</small>`;
 
-            let diffDays = 0;
             if (currentUser.end_date) {
                 let endObj = new Date(currentUser.end_date);
                 let today = new Date();
-                diffDays = Math.ceil((endObj - today) / (1000 * 60 * 60 * 24));
+                currentRemainingDays = Math.ceil((endObj - today) / (1000 * 60 * 60 * 24));
                 
-                if (diffDays > 0) {
-                    document.getElementById('uiDaysLeft').innerHTML = `⏳ <b style="color:var(--primary)">${diffDays} روز</b> از قرارداد شما باقی مانده است.`;
+                if (currentRemainingDays > 0) {
+                    document.getElementById('uiDaysLeft').innerHTML = `⏳ <b style="color:var(--primary)">${currentRemainingDays} روز</b> از قرارداد شما باقی مانده است.`;
                     
-                    // محاسبه ارزش روزهای باقیمانده (بر اساس یک پایه فرضی 3 میلیون برای پانسیون در صورت نبود دیتا)
-                    // در حالت ایده‌آل باید قیمت دقیق قرارداد قبلیش رو دونست، اما اینجا تخمین میزنیم:
-                    let currentMonthlyValue = 3000000; 
-                    if(currentUser.plan_type && currentUser.plan_type.includes("جامع")) currentMonthlyValue = 5000000;
-                    if(currentUser.plan_type && currentUser.plan_type.includes("مشاوره") && !currentUser.plan_type.includes("پانسیون")) currentMonthlyValue = 2000000;
+                    // محاسبه دقیق ارزش ریالی ماهانه طرح فعلی
+                    let oldPanPrice = getPriceForTier('pansion', currentPansionTier);
+                    let oldConPrice = getPriceForTier('consult', currentConsultTier);
                     
-                    currentRemainingValue = Math.floor((currentMonthlyValue / 30) * diffDays);
-                    // رند کردن به سمت پایین (مضرب ۱۰۰ هزار تومن)
-                    currentRemainingValue = Math.floor(currentRemainingValue / 100000) * 100000;
+                    // اعمال تخفیف 20 درصدی طرح جامع اگر هر دو رو داشته
+                    let oldTotalMonthly = oldPanPrice + oldConPrice;
+                    if(currentPansionTier !== 'none' && currentConsultTier !== 'none') {
+                        oldTotalMonthly = oldPanPrice + (oldConPrice * 0.8); // فرض میکنیم 20% تخفیف مشاوره بوده
+                    }
+
+                    currentRemainingValue = Math.floor((oldTotalMonthly / 30) * currentRemainingDays);
+                    currentRemainingValue = Math.floor(currentRemainingValue / 10000) * 10000; // رند کردن 
                 } else {
                     document.getElementById('uiDaysLeft').innerHTML = `<span style="color:var(--danger)">قرارداد فعلی منقضی شده است.</span>`;
                     currentRemainingValue = 0;
@@ -259,100 +317,80 @@
         }
 
         // ==========================================
-        // 🛒 موتور محاسبه قیمت و فاکتور
+        // 🛒 موتور محاسبه قیمت نهایی فاکتور
         // ==========================================
-        function formatMoney(num) {
-            return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        }
-
-        function getBasePrice(planName) {
-            // پیدا کردن قیمت از دیتابیس قیمت‌ها (با فرض اینکه کاربر دوازدهم یا همون حالت دیفالت رو داره)
-            let userGrade = currentUser.grade || "دوازدهم";
-            let normGrade = ['دهم', 'یازدهم'].includes(userGrade) ? userGrade : 'دوازدهم';
-            
-            let panPrice = 0; let conPrice = 0;
-            
-            // گرفتن قیمت پانسیون (VIP)
-            let pTier = pricingTiers.find(p => p.service_category === 'pansion' && p.service_type === 'vip');
-            if(pTier) panPrice = pTier.monthly_price;
-            
-            // گرفتن قیمت مشاوره (ویژه پایه کاربر)
-            let cTier = pricingTiers.find(p => p.service_category === 'consult' && (p.target_grade === normGrade || p.target_grade === 'all'));
-            if(cTier) conPrice = cTier.monthly_price;
-            
-            // اگر دیتابیس خالی بود، قیمت‌های دیفالت
-            if(panPrice === 0) panPrice = 3000000;
-            if(conPrice === 0) conPrice = 2000000;
-
-            if (planName.includes('جامع')) return panPrice + (conPrice * 0.4); // 60% تخفیف مشاوره در طرح جامع
-            if (planName.includes('پانسیون')) return panPrice;
-            if (planName.includes('مشاوره')) return conPrice;
-            return 0;
-        }
+        function formatMoney(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
 
         function calculateInvoice() {
-            const plan = document.getElementById('inpPlan').value;
+            const selPansion = document.getElementById('inpPansion').value;
+            const selConsult = document.getElementById('inpConsult').value;
             const duration = parseInt(document.getElementById('inpDuration').value);
-            const invoiceArea = document.getElementById('invoiceArea');
             const uploadSection = document.getElementById('uploadSection');
 
-            if (plan === 'none') {
-                invoiceArea.style.display = 'none'; uploadSection.style.display = 'none'; return;
+            // اگر کاربر هیچ طرحی انتخاب نکرده باشه
+            if (selPansion === 'none' && selConsult === 'none') {
+                document.getElementById('invFinalPrice').innerText = "0 تومان";
+                uploadSection.style.display = 'none';
+                return;
             }
 
-            // ۱. محاسبه پایه
-            let baseMonthly = getBasePrice(plan);
+            // ۱. محاسبه پایه یک ماهه
+            let panMonthly = getPriceForTier('pansion', selPansion);
+            let conMonthly = getPriceForTier('consult', selConsult);
+            let baseMonthly = panMonthly + conMonthly;
+            document.getElementById('invBaseMonthly').innerText = formatMoney(baseMonthly) + ' تومان';
+
+            // ۲. تخفیف طرح جامع (اگر هر دو رو انتخاب کرده باشه)
+            let comboDiscount = 0;
+            if (selPansion !== 'none' && selConsult !== 'none') {
+                comboDiscount = conMonthly * 0.2 * duration; // 20% تخفیف فقط روی مبلغ مشاوره
+                document.getElementById('rowComboDiscount').style.display = 'flex';
+                document.getElementById('invComboDiscount').innerText = '- ' + formatMoney(comboDiscount) + ' تومان';
+                constructedPlanName = `طرح جامع (${selPansion.toUpperCase()} + مشاوره ${selConsult})`;
+            } else {
+                document.getElementById('rowComboDiscount').style.display = 'none';
+                constructedPlanName = selPansion !== 'none' ? `پانسیون ${selPansion.toUpperCase()}` : `مشاوره ${selConsult}`;
+            }
+
+            // ۳. محاسبه تخفیف زمانی (روی کل مبلغ)
             let totalBase = baseMonthly * duration;
-
-            // ۲. محاسبه تخفیف زمانی
             let timeDiscountRate = 0;
-            if (duration === 3) timeDiscountRate = 0.05; // ۵٪ برای ۳ ماهه
-            if (duration === 10) timeDiscountRate = 0.15; // ۱۵٪ برای تا کنکور
+            if (duration === 3) timeDiscountRate = 0.05; 
+            if (duration === 10) timeDiscountRate = 0.15; 
+            
             let timeDiscount = totalBase * timeDiscountRate;
-            
-            let subTotal = totalBase - timeDiscount;
-
-            // ۳. محاسبه تخفیف روزهای باقیمانده (اگر طرح رو عوض کرده یا ارتقا میده)
-            let remainingDiscount = 0;
-            if (currentRemainingValue > 0) {
-                remainingDiscount = currentRemainingValue;
-                if (remainingDiscount > subTotal) remainingDiscount = subTotal; // بیشتر از پول فاکتور نشه
-            }
-
-            subTotal -= remainingDiscount;
-
-            // ۴. استفاده از کیف پول
-            let walletBalance = currentUser.wallet_balance || 0;
-            let walletUsed = 0;
-            if (walletBalance > 0 && subTotal > 0) {
-                walletUsed = walletBalance;
-                if (walletUsed > subTotal) walletUsed = subTotal;
-            }
-
-            finalCalculatedPrice = subTotal - walletUsed;
-
-            // ۵. رندر کردن UI فاکتور
-            document.getElementById('invBasePrice').innerText = formatMoney(totalBase) + ' تومان';
-            
             if (timeDiscount > 0) {
                 document.getElementById('rowTimeDiscount').style.display = 'flex';
                 document.getElementById('lblTimeDiscount').innerText = `⏳ تخفیف خرید ${duration} ماهه (${timeDiscountRate*100}٪):`;
                 document.getElementById('invTimeDiscount').innerText = '- ' + formatMoney(timeDiscount) + ' تومان';
             } else { document.getElementById('rowTimeDiscount').style.display = 'none'; }
 
-            if (remainingDiscount > 0) {
+            let subTotal = totalBase - comboDiscount - timeDiscount;
+
+            // ۴. اعمال اعتبار روزهای باقیمانده (تخفیف ارتقا)
+            let remainingDiscount = 0;
+            if (currentRemainingValue > 0) {
+                remainingDiscount = currentRemainingValue;
+                if (remainingDiscount > subTotal) remainingDiscount = subTotal; 
                 document.getElementById('rowRemainingDiscount').style.display = 'flex';
                 document.getElementById('invRemainingDiscount').innerText = '- ' + formatMoney(remainingDiscount) + ' تومان';
             } else { document.getElementById('rowRemainingDiscount').style.display = 'none'; }
 
-            if (walletUsed > 0) {
+            subTotal -= remainingDiscount;
+
+            // ۵. استفاده از کیف پول
+            let walletBalance = currentUser.wallet_balance || 0;
+            let walletUsed = 0;
+            if (walletBalance > 0 && subTotal > 0) {
+                walletUsed = walletBalance;
+                if (walletUsed > subTotal) walletUsed = subTotal;
                 document.getElementById('rowWalletDiscount').style.display = 'flex';
                 document.getElementById('invWalletDiscount').innerText = '- ' + formatMoney(walletUsed) + ' تومان';
             } else { document.getElementById('rowWalletDiscount').style.display = 'none'; }
 
+            finalCalculatedPrice = subTotal - walletUsed;
             document.getElementById('invFinalPrice').innerText = formatMoney(finalCalculatedPrice) + ' تومان';
             
-            invoiceArea.style.display = 'block';
             uploadSection.style.display = 'block';
         }
 
@@ -375,30 +413,26 @@
         }
 
         async function submitRenewal() {
-            if(!receiptBase64) return alert("❌ لطفاً ابتدا تصویر فیش واریزی خود را آپلود کنید.");
+            if(!receiptBase64 && finalCalculatedPrice > 0) return alert("❌ لطفاً ابتدا تصویر فیش واریزی خود را آپلود کنید.");
             
             const btn = document.getElementById('btnSubmitRenewal');
             btn.disabled = true; btn.innerText = "در حال صدور فاکتور و ارسال... ⏳";
 
-            const newPlan = document.getElementById('inpPlan').value;
             const newDur = parseInt(document.getElementById('inpDuration').value);
 
-            // ساخت متن فاکتور برای ادمین
-            let invoiceText = `درخواست ارتقا/تمدید به ${newPlan} (${newDur} ماهه)\n` +
+            let invoiceText = `درخواست ارتقا/تمدید به ${constructedPlanName} (${newDur} ماهه)\n` +
                               `مبلغ نهایی پرداختی: ${formatMoney(finalCalculatedPrice)} تومان\n`;
-            
-            if (currentUser.wallet_balance > 0) {
-                invoiceText += `(استفاده از ${formatMoney(currentUser.wallet_balance)} تومان اعتبار کیف پول)`;
-            }
+            if (currentRemainingValue > 0) invoiceText += `(کسر ${formatMoney(currentRemainingValue)} بابت روزهای باقیمانده طرح قبل)\n`;
+            if (currentUser.wallet_balance > 0) invoiceText += `(استفاده از ${formatMoney(currentUser.wallet_balance)} تومان اعتبار کیف پول)`;
 
             const updateData = {
-                status: 'pending', // میره تو صف بررسی ادمین
-                plan_type: newPlan,
+                status: 'pending', 
+                plan_type: constructedPlanName,
                 duration_months: newDur,
                 invoice_details: invoiceText,
                 receipt_base64: receiptBase64,
                 file_type: receiptMimeType,
-                wallet_balance: 0 // صفر کردن کیف پول چون استفاده شد
+                wallet_balance: 0 
             };
 
             try {
@@ -427,7 +461,6 @@
             document.documentElement.setAttribute('data-theme', 'dark');
             if(themeBtn) themeBtn.innerText = '☀️';
         }
-
         function toggleTheme() {
             if (document.documentElement.getAttribute('data-theme') === 'dark') {
                 document.documentElement.removeAttribute('data-theme');
