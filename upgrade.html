@@ -169,9 +169,13 @@
                         <div class="pay-method-btn" id="btnRnwPayInst" onclick="setRnwPayMethod('installments')">📑 پرداخت اقساطی</div>
                     </div>
 
-                    <div class="invoice-row"><span>مبلغ پایه تمدید:</span><span id="rnwBasePrice">0 تومان</span></div>
+                    <div class="invoice-row" id="rowRnwPan"><span>پایه پانسیون:</span><span id="rnwPanPrice">0 تومان</span></div>
+                    <div class="invoice-row" id="rowRnwCon"><span>پایه مشاوره:</span><span id="rnwConPrice">0 تومان</span></div>
+                    <div class="invoice-row highlight" id="rowRnwCombo" style="display:none;"><span>💎 تخفیف طرح جامع:</span><span id="rnwComboDisc">- 0 تومان</span></div>
                     <div class="invoice-row highlight" id="rowRnwPromo" style="display:none;"><span>🎟️ تخفیف کد:</span><span id="rnwPromoDisc">- 0 تومان</span></div>
                     <div class="invoice-row highlight" id="rowRnwDisc" style="display:none;"><span id="lblRnwTimeDisc">⏳ تخفیف زمانی:</span><span id="rnwTimeDisc">- 0 تومان</span></div>
+                    <div class="invoice-row wallet" id="rowRnwWallet" style="display:none;"><span>🎁 کسر از کیف پول:</span><span id="rnwWalletUsed">- 0 تومان</span></div>
+                    
                     <div class="invoice-total"><span>مبلغ قابل پرداخت:</span><span id="rnwFinalPrice">0 تومان</span></div>
                     
                     <ul class="installment-details" id="rnwInstallmentDetails"></ul>
@@ -307,13 +311,15 @@
         let promoCodes = [];
         let filesData = { rnw: null, upg: null }; 
 
+        let oldPanBase = 0;
+        let oldConBase = 0;
+        let newWalletBalance = 0;
         let rnwPayMethod = 'cash';
         let rnwPromoRate = 0;
         let oldMonthlyValue = 0;
         let remainingCreditValue = 0; 
         let finalRenewPrice = 0;
         let finalUpgPrice = 0;
-        let newWalletBalance = 0;
         let constructedUpgPlan = "";
         
         let state = {
@@ -362,12 +368,15 @@
             document.getElementById('upgConsult').value = consultStr;
             document.getElementById('topWalletDisplay').innerText = formatMoney(currentUser.wallet_balance || 0);
 
-            let oldPan = getPriceForTier('pansion', pansionStr);
-            let oldCon = getPriceForTier('consult', consultStr);
-            oldMonthlyValue = oldPan + oldCon;
-            if(pansionStr !== 'none' && consultStr !== 'none') oldMonthlyValue -= (oldCon * 0.6); // کسر تخفیف الماس قرارداد قبلی
+            // استخراج و ذخیره پایه‌های قیمت برای تمدید
+            oldPanBase = getPriceForTier('pansion', pansionStr);
+            oldConBase = getPriceForTier('consult', consultStr);
+            
+            oldMonthlyValue = oldPanBase + oldConBase;
+            if(pansionStr !== 'none' && consultStr !== 'none') oldMonthlyValue -= (oldConBase * 0.6);
 
             if (currentUser.end_date) {
+                // ... ادامه کدهای قبلی
                 let endObj = new Date(currentUser.end_date);
                 let diff = Math.ceil((endObj - new Date()) / (1000 * 60 * 60 * 24));
                 if(diff > 0) {
@@ -416,26 +425,35 @@
 
         function calculateRenew() {
             let dur = parseInt(document.getElementById('rnwDuration').value);
-            let totalBase = oldMonthlyValue * dur;
-            document.getElementById('rnwBasePrice').innerText = formatMoney(totalBase) + ' تومان';
             
-            let subTotal = totalBase;
+            document.getElementById('rowRnwPan').style.display = oldPanBase > 0 ? 'flex' : 'none';
+            document.getElementById('rnwPanPrice').innerText = formatMoney(oldPanBase * dur) + ' تومان';
+            document.getElementById('rowRnwCon').style.display = oldConBase > 0 ? 'flex' : 'none';
+            document.getElementById('rnwConPrice').innerText = formatMoney(oldConBase * dur) + ' تومان';
 
-            // کسر کد تخفیف
-            let promoDisc = subTotal * rnwPromoRate;
-            subTotal -= promoDisc;
-            if(promoDisc > 0) {
+            let subTotal = (oldPanBase + oldConBase) * dur;
+
+            // تخفیف الماس
+            if(oldPanBase > 0 && oldConBase > 0) {
+                let comboDisc = (oldConBase * dur) * 0.6;
+                subTotal -= comboDisc;
+                document.getElementById('rowRnwCombo').style.display = 'flex';
+                document.getElementById('rnwComboDisc').innerText = '- ' + formatMoney(comboDisc) + ' تومان';
+            } else { document.getElementById('rowRnwCombo').style.display = 'none'; }
+
+            // تخفیف کد (فقط روی مشاوره)
+            let promoDisc = 0;
+            if(oldConBase > 0 && rnwPromoRate > 0 && !(oldPanBase > 0 && oldConBase > 0)) {
+                promoDisc = (oldConBase * dur) * rnwPromoRate;
+                subTotal -= promoDisc;
                 document.getElementById('rowRnwPromo').style.display = 'flex';
                 document.getElementById('rnwPromoDisc').innerText = '- ' + formatMoney(promoDisc) + ' تومان';
             } else { document.getElementById('rowRnwPromo').style.display = 'none'; }
 
-            // کنترل دکمه اقساط
             const switchCont = document.getElementById('rnwPaySwitchContainer');
-            if (dur === 1 || subTotal < 3000000) {
-                switchCont.style.display = 'none'; rnwPayMethod = 'cash';
-            } else { switchCont.style.display = 'flex'; }
+            if (dur === 1 || subTotal < 3000000) { switchCont.style.display = 'none'; rnwPayMethod = 'cash'; } 
+            else { switchCont.style.display = 'flex'; }
 
-            // تخفیف زمانی
             let timeDiscRate = 0;
             if (dur === 3) timeDiscRate = rnwPayMethod === 'cash' ? 0.05 : 0.02;
             if (dur === 10) timeDiscRate = rnwPayMethod === 'cash' ? 0.15 : 0.08;
@@ -449,31 +467,36 @@
                 document.getElementById('rnwTimeDisc').innerText = '- ' + formatMoney(timeDisc) + ' تومان';
             } else { document.getElementById('rowRnwDisc').style.display = 'none'; }
             
+            // کسر کیف پول
+            newWalletBalance = currentUser.wallet_balance || 0;
+            if (subTotal > 0 && newWalletBalance > 0) {
+                let walletUsed = Math.min(newWalletBalance, subTotal);
+                subTotal -= walletUsed;
+                newWalletBalance -= walletUsed;
+                document.getElementById('rowRnwWallet').style.display = 'flex';
+                document.getElementById('rnwWalletUsed').innerText = '- ' + formatMoney(walletUsed) + ' تومان';
+            } else { document.getElementById('rowRnwWallet').style.display = 'none'; }
+
             finalRenewPrice = subTotal;
             document.getElementById('rnwFinalPrice').innerText = formatMoney(finalRenewPrice) + ' تومان';
 
             // نمایش اقساط
             const instBox = document.getElementById('rnwInstallmentDetails');
             instBox.innerHTML = '';
-            if (rnwPayMethod === 'installments') {
+            if (rnwPayMethod === 'installments' && finalRenewPrice > 0) {
                 instBox.style.display = 'block';
                 let upfront = dur === 3 ? finalRenewPrice * 0.50 : finalRenewPrice * 0.40;
-                if (upfront > 15000000) upfront = 15000000;
-                let upfrontRounded = roundDown100k(upfront); 
+                let upfrontRounded = roundDown100k(Math.min(upfront, 15000000)); 
                 let remaining = finalRenewPrice - upfrontRounded;
-                
                 const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
                 let today = new Date();
-
                 if (dur === 3) {
                     let d1 = new Date(); d1.setDate(today.getDate() + 45); 
-                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت (نقد):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>تاریخ چک صیادی (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>چک صیادی (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
                 } else if (dur === 10) {
                     let checkAmt = roundDown100k(remaining / 3);
                     let lastCheckAmt = remaining - (checkAmt * 2);
-                    let d1 = new Date(); d1.setMonth(today.getMonth() + 2);
-                    let d2 = new Date(); d2.setMonth(today.getMonth() + 4);
-                    let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
+                    let d1 = new Date(); d1.setMonth(today.getMonth() + 2); let d2 = new Date(); d2.setMonth(today.getMonth() + 4); let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
                     instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>چک اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>چک دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>چک سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
                 }
             } else { instBox.style.display = 'none'; }
@@ -564,10 +587,10 @@
                 if(state.promoRate === 0 && promoMsg.innerText.includes('الماس')) promoMsg.innerText = '';
             }
 
-            // ۳. تخفیف کد معرف
+           // ۳. تخفیف کد معرف (فقط روی مشاوره)
             let promoDiscAmt = 0;
-            if (state.promoRate > 0 && comboDisc === 0) {
-                promoDiscAmt = subTotal * state.promoRate;
+            if (state.promoRate > 0 && comboDisc === 0 && baseCon > 0) {
+                promoDiscAmt = (baseCon * dur) * state.promoRate;
                 subTotal -= promoDiscAmt;
                 document.getElementById('rowPromoDisc').style.display = 'flex';
                 document.getElementById('invPromoDisc').innerText = '- ' + formatMoney(promoDiscAmt) + ' تومان';
@@ -593,41 +616,45 @@
                 document.getElementById('invTimeDisc').innerText = '- ' + formatMoney(timeDisc) + ' تومان';
             } else { document.getElementById('rowTimeDisc').style.display = 'none'; }
 
-            // ۵. کسر اعتبار روزهای باقیمانده
-            let remDisc = Math.min(remainingCreditValue, subTotal);
-            subTotal -= remDisc;
-            if (remDisc > 0) {
+// ۵. کسر اعتبار و واریز به کیف پول
+            let transferredToWallet = 0;
+            if (remainingCreditValue > 0) {
                 document.getElementById('rowRemCredit').style.display = 'flex';
-                document.getElementById('invRemCredit').innerText = '- ' + formatMoney(remDisc) + ' تومان';
+                document.getElementById('invRemCredit').innerText = '- ' + formatMoney(remainingCreditValue) + ' تومان';
+                
+                if (remainingCreditValue > subTotal) {
+                    transferredToWallet = remainingCreditValue - subTotal; // اضافه‌پول کاربر
+                    subTotal = 0;
+                } else {
+                    subTotal -= remainingCreditValue;
+                }
             } else { document.getElementById('rowRemCredit').style.display = 'none'; }
 
-            // ۶. کسر کیف پول و محاسبه شارژ مجدد
+            // ۶. کسر از کیف پول موجود
             newWalletBalance = currentUser.wallet_balance || 0;
-            if (subTotal < 0) {
-                // اگر طرح ارزان‌تری انتخاب کرده، مابه‌التفاوت به کیف پولش اضافه می‌شود
-                newWalletBalance += Math.abs(subTotal);
-                document.getElementById('rowWalletUsed').style.display = 'none';
-            } else if (newWalletBalance > 0 && subTotal > 0) {
-                // اگر باید پول بده، اول از کیف پولش کم می‌کنیم
+            if (subTotal > 0 && newWalletBalance > 0) {
                 let walletUsed = Math.min(newWalletBalance, subTotal);
                 subTotal -= walletUsed;
                 newWalletBalance -= walletUsed;
                 document.getElementById('rowWalletUsed').style.display = 'flex';
                 document.getElementById('invWalletUsed').innerText = '- ' + formatMoney(walletUsed) + ' تومان';
-            } else { 
-                document.getElementById('rowWalletUsed').style.display = 'none'; 
-            }
+            } else { document.getElementById('rowWalletUsed').style.display = 'none'; }
 
             finalUpgPrice = subTotal;
-            // نمایش مبلغ و اقساط
+
+            // نمایش پیام واریز به کیف پول
             const instBox = document.getElementById('installmentDetails');
-            instBox.innerHTML = '';
-            
-            if (finalUpgPrice <= 0) {
+            if (transferredToWallet > 0 || finalUpgPrice === 0) {
+                newWalletBalance += transferredToWallet; // اضافه‌پول رفت تو کیفش
+                
                 document.getElementById('upgFinalPrice').innerText = "0 تومان";
                 document.getElementById('upgCreditAlert').style.display = 'block';
+                document.getElementById('upgCreditAlert').innerHTML = transferredToWallet > 0 ? 
+                    `* مبلغ قابل پرداخت ۰ تومان است.<br>مبلغ <b>${formatMoney(transferredToWallet)} تومان</b> بستانکاری، به کیف پول شما واریز شد.` :
+                    `* مبلغ قابل پرداخت ۰ تومان است.`;
                 fileBox.style.display = 'none'; instBox.style.display = 'none'; switchCont.style.display = 'none';
             } else {
+// ... ادامه کد نمایش اقساط (مثل قبل)
                 document.getElementById('upgFinalPrice').innerText = formatMoney(finalUpgPrice) + ' تومان';
                 document.getElementById('upgCreditAlert').style.display = 'none';
                 fileBox.style.display = 'block';
@@ -701,32 +728,30 @@
 
             if (type === 'renew') {
                 let dur = document.getElementById('rnwDuration').value;
-                updateData.invoice_details = `درخواست تمدید سریع\nمبلغ واریزی: ${formatMoney(finalPrice)} تومان\nمدت: ${dur} ماه`;
+                updateData.invoice_details = `درخواست تمدید سریع\nمبلغ فاکتور: ${formatMoney(finalPrice)} تومان\nمدت: ${dur} ماه`;
                 updateData.duration_months = parseInt(dur);
             } else {
-                // بخش ارتقا و تغییر طرح
                 let dur = document.getElementById('upgDuration').value;
-                let invText = `درخواست تغییر طرح به: ${constructedUpgPlan} (${dur} ماهه)\n`;
-                invText += `توضیح زمان: روزهای قرارداد قبلی تسویه مالی شد. قرارداد جدید از "امروز" به مدت ${dur} ماه کامل ثبت شود.\n`;
-                invText += `مبلغ نهایی پرداختی: ${formatMoney(finalPrice)} تومان\n`;
-                invText += `روش پرداخت: ${state.paymentMethod === 'cash' ? 'نقدی' : 'اقساط'}\n`;
+                let invText = `تغییر طرح به: ${constructedUpgPlan} (${dur} ماهه)\n`;
+                invText += `⚠️ توجه ادمین: این یک قرارداد جدید است. لطفاً تاریخ پایان قرارداد را دقیقا از "امروز" به مدت ${dur} ماه ثبت کنید.\n`;
+                invText += `مبلغ پرداختی: ${formatMoney(finalPrice)} تومان | پرداخت: ${state.paymentMethod === 'cash' ? 'نقدی' : 'اقساط'}\n`;
+                if (state.paymentMethod === 'installments') invText += `تعهدات:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
+                if(remainingCreditValue > 0) invText += `(ارزش باقیمانده قرارداد قبل: ${formatMoney(remainingCreditValue)})\n`;
                 
-                if (state.paymentMethod === 'installments') invText += `جزئیات تعهدات:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
-                if (remainingCreditValue > 0) invText += `(ارزش کسر شده از قرارداد قبل: ${formatMoney(remainingCreditValue)} تومان)\n`;
-                if (currentUser.wallet_balance > 0 && finalPrice >= 0) invText += `(کسر از کیف پول: انجام شد)\n`;
-
                 updateData.invoice_details = invText; 
                 updateData.plan_type = constructedUpgPlan; 
                 updateData.duration_months = parseInt(dur);
-                
-                // آپدیت کیف پول در دیتابیس!
-                if (typeof newWalletBalance !== 'undefined') {
-                    updateData.wallet_balance = newWalletBalance;
-                }
             }
 
-            if (filesData[fileKey]) { updateData.receipt_base64 = filesData[fileKey].base64; updateData.file_type = filesData[fileKey].mime; }
-            updateData.wallet_balance = newWalletBalance;
+            // ارسال مبلغ جدید کیف پول به دیتابیس (بسیار مهم)
+            if (typeof newWalletBalance !== 'undefined') {
+                updateData.wallet_balance = newWalletBalance;
+            }
+
+            if (filesData[fileKey]) { 
+                updateData.receipt_base64 = filesData[fileKey].base64; 
+                updateData.file_type = filesData[fileKey].mime; 
+            }
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
                 const response = await fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${currentUser.national_id}`, {
