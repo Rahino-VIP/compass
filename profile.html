@@ -136,44 +136,12 @@
                 </div>
             </div>
 
-            <button class="btn-upgrade" onclick="toggleRenewalBox()" id="btnUpgrade">
-                <span>🔄 ارتقا / تمدید اشتراک</span>
-            </button>
+            <button class="btn-upgrade" onclick="window.location.href='upgrade.html'" id="btnUpgrade">
+    <span>🛒 ارتقا و تمدید اشتراک</span>
+</button>
         </div>
 
-        <!-- 🔄 بخش فرم تمدید (مخفی) -->
-        <div class="renewal-box" id="renewalBox">
-            <div class="renewal-title">ثبت درخواست تمدید / ارتقا</div>
-            
-            <div class="form-group">
-                <label>انتخاب طرح جدید</label>
-                <select class="form-input" id="rnwPlan">
-                    <option value="طرح جامع (پانسیون + مشاوره)">طرح جامع (پانسیون + مشاوره)</option>
-                    <option value="فقط پانسیون">فقط پانسیون</option>
-                    <option value="فقط مشاوره">فقط مشاوره</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>مدت زمان</label>
-                <select class="form-input" id="rnwDuration">
-                    <option value="1">۱ ماهه</option>
-                    <option value="3">۳ ماهه</option>
-                    <option value="10">تا کنکور (۱۰ ماهه)</option>
-                </select>
-            </div>
-
-            <div class="file-upload" onclick="document.getElementById('rnwReceipt').click()">
-                <div style="font-size: 25px; margin-bottom: 5px;">📥</div>
-                <div id="lblFileName" style="font-size: 12px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی (الزامی)</div>
-                <input type="file" id="rnwReceipt" accept="image/*" onchange="handleReceiptSelect(this)">
-            </div>
-
-            <button class="btn-submit-renewal" id="btnSubmitRenewal" onclick="submitRenewal()">ارسال فیش و ثبت درخواست 🚀</button>
-            <div style="font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 10px;">
-                * پس از ثبت، فیش شما توسط مدیریت بررسی و قرارداد فعلی شما تمدید خواهد شد. محاسباتِ تخفیفِ روزهای باقیمانده، مستقیماً توسط مدیریت اعمال می‌گردد.
-            </div>
-        </div>
+    
 
         <!-- ⏳ بخش رادار اقساط -->
         <div class="installments-box" id="installmentsBox">
