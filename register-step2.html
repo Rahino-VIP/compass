@@ -154,9 +154,8 @@
             <div class="invoice-row discount" id="row_time_disc" style="display: none;">
                 <span id="lbl_time_disc">⏳ مجموع تخفیف‌های زمانی:</span><span id="inv_time_disc">- ۰ تومان</span>
             </div>
-            
-            <div class="invoice-row ref-discount" id="row_referral" style="display: none;">
-                <span>🤝 هدیه ثبت‌نام از طریق دوستان:</span><span>- ۱۰۰,۰۰۰ تومان</span>
+            <div class="invoice-row discount" id="row_ref_disc" style="display: none; color: var(--accent);">
+                <span>🤝 هدیه کد معرف:</span><span id="inv_ref_disc">- ۰ تومان</span>
             </div>
 
             <div class="invoice-total">
@@ -247,17 +246,15 @@
                 if (detailsRes.data) dbData.details = detailsRes.data;
                 if (promosRes.data) dbData.promos = promosRes.data;
 
-                // 🤝 بررسی کد معرف از مرحله قبل
+                // بررسی کد معرف (آرایه را چک می‌کنیم تا اگر کد اشتباه بود، صفحه کرش نکند)
                 let refCode = localStorage.getItem('temp_referral_code');
                 if (refCode && refCode.length > 5) {
-                    // چک می‌کنیم آیا این کد ملی متعلق به دانش‌آموزی در سیستم هست؟
-                    let refRes = await supabaseClient.from('students').select('national_id').eq('referral_code', refCode).single();
-                    if (refRes.data) {
+                    let { data: refUsers } = await supabaseClient.from('students').select('national_id').eq('referral_code', refCode);
+                    if (refUsers && refUsers.length > 0) {
                         state.hasReferral = true;
-                        state.referrerId = refRes.data.national_id;
+                        state.referrerId = refUsers[0].national_id;
                     }
                 }
-
                 renderCards();
                 document.getElementById('loaderOverlay').style.opacity = '0';
                 setTimeout(() => document.getElementById('loaderOverlay').style.display = 'none', 300);
@@ -347,11 +344,11 @@
         function applyPromo() {
             const codeInput = document.getElementById('promoCode').value.trim().toUpperCase();
             const msg = document.getElementById('promoMsg');
-            const promoObj = dbData.promos.find(p => p.code.toUpperCase() === codeInput);
             
+            const promoObj = dbData.promos.find(p => p.code.toUpperCase() === codeInput);
             if (promoObj) {
                 state.promoRate = promoObj.discount_percent / 100;
-                msg.innerText = `✅ کد تایید شد: ${promoObj.discount_percent}٪ تخفیف روی مشاوره اعمال شد.`;
+                msg.innerText = `✅ کد تایید شد: ${promoObj.discount_percent}٪ تخفیف روی مشاوره.`;
                 msg.style.color = "var(--success)";
             } else {
                 state.promoRate = 0;
@@ -368,108 +365,106 @@
         function roundDown100k(amount) { return Math.floor(amount / 100000) * 100000; }
 
         function calculateInvoice() {
-            state.panDuration = parseInt(document.getElementById('panDuration').value) || 0;
-            state.conDuration = parseInt(document.getElementById('conDuration').value) || 0;
-
             if (state.pansion === 'none' && state.consult === 'none') {
                 document.getElementById('invoiceArea').style.display = 'none';
                 document.getElementById('checkoutBox').style.display = 'none';
                 return;
             }
-            
             document.getElementById('invoiceArea').style.display = 'block'; document.getElementById('checkoutBox').style.display = 'block';
+
+            // تشخیص مدت زمان هر بخش (پشتیبانی از فرم‌های دارای دو زمان مجزا یا زمان مشترک)
+            let panDur = typeof state.panDuration !== 'undefined' ? state.panDuration : state.duration;
+            let conDur = typeof state.conDuration !== 'undefined' ? state.conDuration : state.duration;
 
             let basePanMonthly = state.pansion !== 'none' ? getPrice('pansion', state.pansion) : 0;
             let baseConMonthly = state.consult !== 'none' ? getPrice('consult', state.consult) : 0;
             
-            let totalPan = basePanMonthly * (state.pansion !== 'none' ? state.panDuration : 0);
-            let totalCon = baseConMonthly * (state.consult !== 'none' ? state.conDuration : 0);
+            let totalPan = basePanMonthly * (state.pansion !== 'none' ? panDur : 0);
+            let totalCon = baseConMonthly * (state.consult !== 'none' ? conDur : 0);
+            let totalBase = totalPan + totalCon;
 
-            // نمایش سطرهای پایه
-            document.getElementById('row_pan_base').style.display = totalPan > 0 ? 'flex' : 'none';
-            document.getElementById('inv_pan_base').innerText = formatMoney(totalPan) + ' تومان';
-            document.getElementById('row_con_base').style.display = totalCon > 0 ? 'flex' : 'none';
-            document.getElementById('inv_con_base').innerText = formatMoney(totalCon) + ' تومان';
+            let comboDisc = 0; let promoDisc = 0;
+            let overlapMonths = 0; let remainingConMonths = state.consult !== 'none' ? conDur : 0;
 
-            // ۱. محاسبه تخفیف الماس (فقط روی ماه‌های مشترک)
-            let comboDisc = 0;
             if (state.pansion !== 'none' && state.consult !== 'none') {
-                let overlapMonths = Math.min(state.panDuration, state.conDuration);
-                comboDisc = (baseConMonthly * overlapMonths) * 0.60;
+                overlapMonths = Math.min(panDur, conDur);
+                remainingConMonths = conDur - overlapMonths;
+                comboDisc = (baseConMonthly * overlapMonths) * 0.60; 
                 
-                document.getElementById('promoCode').disabled = true; document.getElementById('promoCode').value = ''; state.promoRate = 0;
-                document.getElementById('promoMsg').innerText = `💎 طرح الماس روی ${overlapMonths} ماه مشترک فعال شد (بدون نیاز به کد).`;
+                let msg = `💎 طرح الماس روی ${overlapMonths} ماه مشترک اعمال شد.`;
+                if(remainingConMonths > 0) msg += `<br>کد تخفیف روی ${remainingConMonths} ماه باقیمانده اعمال می‌شود.`;
+                
+                document.getElementById('promoMsg').innerHTML = msg;
                 document.getElementById('promoMsg').style.color = "var(--primary)";
-            } else {
-                document.getElementById('promoCode').disabled = false;
-                if(document.getElementById('promoMsg').innerText.includes('الماس')) document.getElementById('promoMsg').innerText = '';
             }
 
-            // ۲. محاسبه کد تخفیف (فقط روی باقی‌مانده مشاوره)
-            let promoDisc = 0;
-            if (state.promoRate > 0 && totalCon > 0) {
-                promoDisc = totalCon * state.promoRate; 
+            if (state.promoRate > 0 && remainingConMonths > 0) {
+                promoDisc = (baseConMonthly * remainingConMonths) * state.promoRate; 
             }
 
-            // ۳. محاسبه تخفیف‌های زمانی (مجزا برای هر سرویس)
-            let panTimeRate = state.panDuration === 3 ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (state.panDuration === 10 ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
-            let conTimeRate = state.conDuration === 3 ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (state.conDuration === 10 ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
-            
-            let panTimeDisc = totalPan * panTimeRate;
-            let conTimeDisc = (totalCon - comboDisc - promoDisc) * conTimeRate; // تخفیف زمانی مشاوره روی مبلغ باقی‌مانده‌اش حساب میشه
-            let totalTimeDisc = panTimeDisc + conTimeDisc;
+            let subTotal = totalBase - comboDisc - promoDisc;
 
-            // ۴. جمع‌بندی
-            let subTotal = totalPan + totalCon - comboDisc - promoDisc - totalTimeDisc;
-
-            // ۵. کسر هدیه معرفی
-            if (state.hasReferral) {
-                document.getElementById('row_referral').style.display = 'flex';
-                subTotal -= 100000;
-            } else { document.getElementById('row_referral').style.display = 'none'; }
-            
-            subTotal = Math.max(0, subTotal); // که منفی نشه
-
-            // آپدیت UI فاکتور
-            document.getElementById('row_combo_disc').style.display = comboDisc > 0 ? 'flex' : 'none';
-            document.getElementById('inv_combo_disc').innerText = '- ' + formatMoney(comboDisc) + ' تومان';
-            document.getElementById('row_promo_disc').style.display = promoDisc > 0 ? 'flex' : 'none';
-            document.getElementById('inv_promo_disc').innerText = '- ' + formatMoney(promoDisc) + ' تومان';
-            document.getElementById('row_time_disc').style.display = totalTimeDisc > 0 ? 'flex' : 'none';
-            document.getElementById('inv_time_disc').innerText = '- ' + formatMoney(totalTimeDisc) + ' تومان';
-            document.getElementById('inv_total').innerText = formatMoney(subTotal) + ' تومان';
-
-            // کنترل دکمه‌های اقساط
-            let maxDur = Math.max(state.pansion !== 'none' ? state.panDuration : 0, state.consult !== 'none' ? state.conDuration : 0);
+            // محاسبه تخفیف زمانی و کنترل دکمه اقساط
+            let maxDur = Math.max(state.pansion !== 'none' ? panDur : 0, state.consult !== 'none' ? conDur : 0);
             const switchCont = document.getElementById('paySwitchContainer');
             if (maxDur <= 1 || subTotal < 3000000) { switchCont.style.display = 'none'; state.paymentMethod = 'cash'; } 
             else { switchCont.style.display = 'flex'; }
 
-            // 💳 فرمول اقساط بر اساس طولانی‌ترین قرارداد سبد خرید
+            let timeDiscRate = 0;
+            if (maxDur === 3) timeDiscRate = state.paymentMethod === 'cash' ? 0.05 : 0.02;
+            if (maxDur >= 10) timeDiscRate = state.paymentMethod === 'cash' ? 0.15 : 0.08;
+
+            let timeDisc = subTotal * timeDiscRate;
+            let finalTotal = subTotal - timeDisc;
+
+            // کسر هدیه معرف (۱۰۰ هزار تومان)
+            let refDiscount = 0;
+            if (state.hasReferral) {
+                refDiscount = 100000;
+                finalTotal -= refDiscount;
+                finalTotal = Math.max(0, finalTotal);
+            }
+
+            // --- بروزرسانی مقادیر روی صفحه ---
+            document.getElementById('inv_duration').innerText = maxDur >= 10 ? 'تا کنکور (۱۰ ماهه)' : `${maxDur} ماهه`;
+            document.getElementById('inv_base').innerText = formatMoney(totalBase) + ' تومان';
+            document.getElementById('row_combo_disc').style.display = comboDisc > 0 ? 'flex' : 'none';
+            document.getElementById('inv_combo_disc').innerText = '- ' + formatMoney(comboDisc) + ' تومان';
+            document.getElementById('row_promo_disc').style.display = promoDisc > 0 ? 'flex' : 'none';
+            document.getElementById('inv_promo_disc').innerText = '- ' + formatMoney(promoDisc) + ' تومان';
+            document.getElementById('row_time_disc').style.display = timeDisc > 0 ? 'flex' : 'none';
+            document.getElementById('inv_time_disc').innerText = '- ' + formatMoney(timeDisc) + ' تومان';
+            
+            let refRow = document.getElementById('row_ref_disc');
+            if(refRow) {
+                refRow.style.display = refDiscount > 0 ? 'flex' : 'none';
+                document.getElementById('inv_ref_disc').innerText = '- ' + formatMoney(refDiscount) + ' تومان';
+            }
+
+            document.getElementById('inv_total').innerText = formatMoney(finalTotal) + ' تومان';
+
+            // --- موتور محاسبه اقساط ---
             const instBox = document.getElementById('installmentDetails');
             instBox.innerHTML = '';
-            
-            if (state.paymentMethod === 'installments' && subTotal > 0) {
+            if (state.paymentMethod === 'installments' && finalTotal > 0) {
                 instBox.style.display = 'block';
-                let upfront = maxDur === 3 ? subTotal * 0.50 : subTotal * 0.40;
+                let upfront = maxDur === 3 ? finalTotal * 0.50 : finalTotal * 0.40;
                 let upfrontRounded = roundDown100k(Math.min(upfront, 15000000)); 
-                let remaining = subTotal - upfrontRounded;
-                
+                let remaining = finalTotal - upfrontRounded;
                 const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
                 let today = new Date();
 
                 if (maxDur === 3) {
                     let d1 = new Date(); d1.setDate(today.getDate() + 45); 
-                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (پیش‌پرداخت):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>چک صیادی (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (آپلود فیش):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>تاریخ چک/قسط (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
                 } else if (maxDur >= 10) {
                     let checkAmt = roundDown100k(remaining / 3);
                     let lastCheckAmt = remaining - (checkAmt * 2);
                     let d1 = new Date(); d1.setMonth(today.getMonth() + 2); let d2 = new Date(); d2.setMonth(today.getMonth() + 4); let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
-                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (پیش‌پرداخت):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>چک اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>چک دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>چک سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (آپلود فیش):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>قسط اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>قسط دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>قسط سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
                 }
             } else { instBox.style.display = 'none'; }
         }
-
         // ==========================================
         // 📤 آپلود و ارسال نهایی
         // ==========================================
@@ -494,14 +489,17 @@
             if(state.paymentMethod === 'installments') invoiceText += `اقساط:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
             if(state.hasReferral) invoiceText += `(کسر ۱۰۰ هزار تومان هدیه معرفی در فاکتور لحاظ شد)\n`;
 
+            // آماده‌سازی دیتای ارسالی با فرمت دو فاکتوره
             const payload = {
                 action: 'web_auth', sub_action: 'register_step2', national_id: userNid,
                 plan_data: {
-                    pansion_tier: state.pansion, pansion_duration_months: state.panDuration,
-                    consult_tier: state.consult, consult_duration_months: state.conDuration,
+                    pansion_tier: state.pansion,
+                    pansion_duration_months: typeof state.panDuration !== 'undefined' ? state.panDuration : state.duration,
+                    consult_tier: state.consult,
+                    consult_duration_months: typeof state.conDuration !== 'undefined' ? state.conDuration : state.duration,
+                    referrer_id: state.referrerId || null,
                     invoice_text: invoiceText,
-                    receipt_base64: receiptBase64, mime_type: receiptMimeType,
-                    referrer_id: state.referrerId // ارسال کد ملی شخص معرف به بک‌اند
+                    receipt_base64: receiptBase64, mime_type: receiptMimeType
                 }
             };
 
