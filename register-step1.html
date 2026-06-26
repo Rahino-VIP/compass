@@ -138,15 +138,15 @@
             <div class="form-section-title">📞 اطلاعات ارتباطی و تحصیلی</div>
 
             <div class="input-group">
-                <label>موبایل دانش‌آموز</label>
+                <label>موبایل دانش‌آموز (متصل به پیام‌رسان بله)</label>
                 <input type="text" id="regPhone" placeholder="09..." maxlength="11" style="direction: ltr; text-align: left;">
             </div>
             <div class="input-group">
-                <label>موبایل پدر</label>
+                <label>موبایل پدر (متصل به پیام‌رسان بله)</label>
                 <input type="text" id="regFather" placeholder="09..." maxlength="11" style="direction: ltr; text-align: left;">
             </div>
             <div class="input-group">
-                <label>موبایل مادر</label>
+                <label>موبایل مادر (متصل به پیام‌رسان بله)</label>
                 <input type="text" id="regMother" placeholder="09..." maxlength="11" style="direction: ltr; text-align: left;">
             </div>
 
@@ -291,6 +291,7 @@
             const bDay = document.getElementById('regBirthDay').value;
             const finalBirthdate = (bYear && bMonth && bDay) ? `${bYear}/${bMonth}/${bDay}` : "";
 
+            // استخراج دیتا (اضافه شدن فیلد invited_by)
             const data = {
                 full_name: document.getElementById('regName').value.trim(),
                 national_id: document.getElementById('regNid').value.trim(),
@@ -306,16 +307,22 @@
                 referral_source: document.getElementById('regReferral').value,
                 password: document.getElementById('regPass').value.trim(),
                 security_question: document.getElementById('regQuestion').value,
-                security_answer: document.getElementById('regAnswer').value.trim()
+                security_answer: document.getElementById('regAnswer').value.trim(),
+                invited_by: document.getElementById('referralInput').value.trim().toUpperCase() // 👈 دریافت کد معرف دوستان
             };
 
-            // 🛡️ اعتبارسنجی دقیق
-            if (!data.full_name || !data.national_id || !data.phone_number) return showAlert("نام، کدملی و شماره موبایل الزامی است.");
+            // 🛡️ اعتبارسنجی دقیق و سخت‌گیرانه
+            if (!data.full_name || !data.national_id || !data.phone_number || !data.province || !data.city || !data.school_name) {
+                return showAlert("لطفاً تمامی فیلدهای متنی (نام، استان، شهر، مدرسه و...) را پر کنید.");
+            }
             if (data.national_id.length !== 10) return showAlert("کد ملی باید دقیقاً ۱۰ رقم باشد.");
             if (!finalBirthdate) return showAlert("لطفاً تاریخ تولد خود را کامل وارد کنید.");
+            if (data.phone_number.length !== 11 || data.father_phone.length !== 11 || data.mother_phone.length !== 11) {
+                return showAlert("تمامی شماره‌های تماس (دانش‌آموز، پدر و مادر) باید دقیقاً ۱۱ رقم باشند.");
+            }
             if (!data.grade || !data.major) return showAlert("انتخاب پایه و رشته تحصیلی الزامی است.");
             if (data.password.length < 4) return showAlert("رمز عبور باید حداقل ۴ حرف یا عدد باشد.");
-            if (!data.security_answer) return showAlert("لطفاً پاسخ سوال امنیتی را وارد کنید تا در صورت فراموشی رمز به مشکل نخورید.");
+            if (!data.security_answer) return showAlert("لطفاً پاسخ سوال امنیتی را وارد کنید.");
 
             const btn = document.getElementById('btnSubmit');
             btn.disabled = true; btn.innerText = "در حال ایجاد پرونده... ⏳";
@@ -337,8 +344,13 @@
                 if (!result.success) throw new Error(result.error);
 
                 // 🎉 موفقیت‌آمیز بود! کدملی رو تو مرورگر ذخیره می‌کنیم تا تو صفحه بعد بشناسیمش
+                // ذخیره اطلاعات برای فرم مرحله دوم
                 localStorage.setItem('temp_reg_nid', data.national_id);
-                
+                if (data.invited_by) {
+                    localStorage.setItem('temp_referral_code', data.invited_by);
+                } else {
+                    localStorage.removeItem('temp_referral_code');
+                }
                 // پرتاب به صفحه مرحله دوم
                 window.location.href = 'register-step2.html';
 
