@@ -11,14 +11,14 @@
         :root { 
             --primary: #1e3a8a; --primary-hover: #1e40af; --accent: #d97706;  
             --bg-color: #f8fafc; --surface: #ffffff; --text-main: #0f172a; 
-            --text-muted: #64748b; --border: #e2e8f0; --shadow: 0 4px 20px rgba(0,0,0,0.05);
+            --text-muted: #64748b; --border: #e2e8f0; --shadow: 0 10px 25px rgba(0,0,0,0.05);
             --danger: #ef4444; --success: #10b981; 
         }
 
         [data-theme="dark"] {
             --primary: #3b82f6; --primary-hover: #60a5fa; --accent: #f59e0b;
             --bg-color: #0f172a; --surface: #1e293b; --text-main: #f8fafc;
-            --text-muted: #94a3b8; --border: #334155; --shadow: 0 4px 20px rgba(0,0,0,0.4);
+            --text-muted: #94a3b8; --border: #334155; --shadow: 0 10px 25px rgba(0,0,0,0.4);
         }
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
@@ -44,9 +44,8 @@
         .option-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; text-align: right; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; display: flex; flex-direction: column; }
         .option-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow); }
         .option-card.selected { border-color: var(--primary); background: rgba(59, 130, 246, 0.03); border-width: 2px; }
-        .option-card.selected::before { content: '✅'; position: absolute; top: 15px; left: 15px; font-size: 16px; }
+        .option-card.selected::before { content: '✅'; position: absolute; top: 15px; left: 15px; font-size: 16px; z-index: 5; }
         
-        /* 🚨 تگ ظرفیت محدود */
         .fomo-badge { position: absolute; top: 12px; left: -30px; background: var(--danger); color: white; font-size: 10px; padding: 4px 30px; font-weight: bold; transform: rotate(-45deg); text-align: center; width: 120px; z-index: 2; box-shadow: 0 2px 5px rgba(0,0,0,0.2); animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; background: #b91c1c; } 100% { opacity: 1; } }
 
@@ -135,7 +134,7 @@
                 <input type="text" id="promoCode" placeholder="کد تخفیف (اختیاری)">
                 <button class="promo-btn" onclick="applyPromo()">ثبت کد</button>
             </div>
-            <div id="promoMsg" style="font-size: 11px; margin-top: -10px; margin-bottom: 15px; font-weight: bold;"></div>
+            <div id="promoMsg" style="font-size: 11px; margin-top: -10px; margin-bottom: 15px; font-weight: bold; min-height: 16px;"></div>
 
             <div class="pay-method-switch" id="paySwitchContainer">
                 <div class="pay-method-btn active" id="btnPayCash" onclick="setPayMethod('cash')">💳 پرداخت نقدی</div>
@@ -154,8 +153,9 @@
             <div class="invoice-row discount" id="row_time_disc" style="display: none;">
                 <span id="lbl_time_disc">⏳ مجموع تخفیف‌های زمانی:</span><span id="inv_time_disc">- ۰ تومان</span>
             </div>
-            <div class="invoice-row discount" id="row_ref_disc" style="display: none; color: var(--accent);">
-                <span>🤝 هدیه کد معرف:</span><span id="inv_ref_disc">- ۰ تومان</span>
+            
+            <div class="invoice-row ref-discount" id="row_ref_disc" style="display: none;">
+                <span>🤝 هدیه کد معرف دوستان:</span><span id="inv_ref_disc">- ۰ تومان</span>
             </div>
 
             <div class="invoice-total">
@@ -173,7 +173,7 @@
                 </span>
             </label>
 
-            <div class="file-upload" id="boxFile">
+            <div class="file-upload" id="boxFile" onclick="document.getElementById('regReceipt').click()">
                 <div style="font-size: 30px; margin-bottom: 5px;">📥</div>
                 <div id="lblFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود فیش واریزی پیش‌پرداخت (الزامی)</div>
                 <input type="file" id="regReceipt" accept="image/*" onchange="handleReceiptSelect(this)">
@@ -199,11 +199,11 @@
         }
 
         // ==========================================
-        // 🔗 تنظیمات سیستم
+        // 🔗 تنظیمات و متغیرها
         // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; // کلید پابلیک رو جایگزین کن
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec'; // لینک وب‌هوک
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec'; 
         
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -228,33 +228,36 @@
             if (!userNid) { window.location.href = 'index.html'; return; }
             
             try {
-                // دریافت دیتای پایه
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
                 const [studentRes, pricingRes, detailsRes, promosRes] = await Promise.all([
-                    supabaseClient.from('students').select('full_name, grade').eq('national_id', userNid).single(),
-                    supabaseClient.from('pricing_tiers').select('*'),
-                    supabaseClient.from('plan_details').select('*'),
-                    supabaseClient.from('promo_codes').select('*').eq('is_active', true)
+                    fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userNid}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+                    fetch(`${cleanUrl}/rest/v1/pricing_tiers`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+                    fetch(`${cleanUrl}/rest/v1/plan_details`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+                    fetch(`${cleanUrl}/rest/v1/promo_codes?is_active=eq.true`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
                 ]);
 
-                if (studentRes.data) {
-                    let g = studentRes.data.grade;
+                const studentData = await studentRes.json();
+                if (studentData && studentData.length > 0) {
+                    let g = studentData[0].grade;
                     normalizedGrade = ['دهم', 'یازدهم'].includes(g) ? g : 'دوازدهم';
-                    document.getElementById('lblUserInfo').innerText = `👤 ${studentRes.data.full_name || 'کاربر'} | پایه: ${g || 'ثبت نشده'}`;
+                    document.getElementById('lblUserInfo').innerText = `👤 ${studentData[0].full_name || 'کاربر'} | پایه: ${g || 'ثبت نشده'}`;
                 }
 
-                if (pricingRes.data) dbData.pricing = pricingRes.data;
-                if (detailsRes.data) dbData.details = detailsRes.data;
-                if (promosRes.data) dbData.promos = promosRes.data;
+                dbData.pricing = await pricingRes.json() || [];
+                dbData.details = await detailsRes.json() || [];
+                dbData.promos = await promosRes.json() || [];
 
-                // بررسی کد معرف (آرایه را چک می‌کنیم تا اگر کد اشتباه بود، صفحه کرش نکند)
+                // 🤝 بررسی کد معرف
                 let refCode = localStorage.getItem('temp_referral_code');
                 if (refCode && refCode.length > 5) {
-                    let { data: refUsers } = await supabaseClient.from('students').select('national_id').eq('referral_code', refCode);
+                    const refRes = await fetch(`${cleanUrl}/rest/v1/students?referral_code=eq.${refCode}&select=national_id`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+                    const refUsers = await refRes.json();
                     if (refUsers && refUsers.length > 0) {
                         state.hasReferral = true;
                         state.referrerId = refUsers[0].national_id;
                     }
                 }
+
                 renderCards();
                 document.getElementById('loaderOverlay').style.opacity = '0';
                 setTimeout(() => document.getElementById('loaderOverlay').style.display = 'none', 300);
@@ -263,11 +266,12 @@
         };
 
         // ==========================================
-        // 🃏 ساخت کارت‌ها و ظرفیت‌های فیک (FOMO)
+        // 🃏 ساخت کارت‌های داینامیک
         // ==========================================
         function getPrice(category, type) {
             let p = dbData.pricing.find(x => x.service_category === category && x.service_type === type && (x.target_grade === normalizedGrade || x.target_grade === 'all'));
-            return p ? p.monthly_price : 0;
+            if(!p) p = dbData.pricing.find(x => x.service_category === category && x.service_type === type);
+            return p ? parseInt(p.monthly_price) : 0;
         }
 
         function renderCards() {
@@ -294,16 +298,15 @@
                 let price = getPrice(plan.category, plan.type);
                 if (price === 0) return; 
 
-                // ایجاد تگ ظرفیت محدود به صورت رندوم برای ایجاد فوریت
                 let fomoHtml = '';
-                if (plan.category === 'pansion') {
-                    let randomLeft = plan.type === 'cip' ? 2 : 4; // CIP ظرفیتش کمتره
+                if (plan.category === 'pansion' && plan.type !== 'none') {
+                    let randomLeft = plan.type === 'cip' ? 2 : 4; 
                     fomoHtml = `<div class="fomo-badge">🔥 فقط ${randomLeft} میز باقیست</div>`;
                 }
 
                 let featuresHtml = plan.features ? '<ul class="features-list">' + plan.features.split('\n').map(l => `<li>${l}</li>`).join('') + '</ul>' : '';
-                
                 let isSelected = state[plan.category] === plan.type;
+                
                 let cardHtml = `
                     <div class="option-card ${isSelected ? 'selected' : ''}" onclick="select${plan.category === 'pansion' ? 'Pansion' : 'Consult'}('${plan.type}')">
                         ${fomoHtml}
@@ -344,11 +347,11 @@
         function applyPromo() {
             const codeInput = document.getElementById('promoCode').value.trim().toUpperCase();
             const msg = document.getElementById('promoMsg');
-            
             const promoObj = dbData.promos.find(p => p.code.toUpperCase() === codeInput);
+            
             if (promoObj) {
                 state.promoRate = promoObj.discount_percent / 100;
-                msg.innerText = `✅ کد تایید شد: ${promoObj.discount_percent}٪ تخفیف روی مشاوره.`;
+                msg.innerText = `✅ کد تایید شد: ${promoObj.discount_percent}٪ تخفیف روی مشاوره اعمال شد.`;
                 msg.style.color = "var(--success)";
             } else {
                 state.promoRate = 0;
@@ -359,65 +362,73 @@
         }
 
         // ==========================================
-        // 🧮 موتور هوشمند محاسبات (با قانون هم‌پوشانی)
+        // 🧮 موتور هوشمند محاسبات و اقساط
         // ==========================================
         function formatMoney(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
         function roundDown100k(amount) { return Math.floor(amount / 100000) * 100000; }
 
         function calculateInvoice() {
+            state.panDuration = parseInt(document.getElementById('panDuration').value) || 0;
+            state.conDuration = parseInt(document.getElementById('conDuration').value) || 0;
+
             if (state.pansion === 'none' && state.consult === 'none') {
                 document.getElementById('invoiceArea').style.display = 'none';
                 document.getElementById('checkoutBox').style.display = 'none';
                 return;
             }
-            document.getElementById('invoiceArea').style.display = 'block'; document.getElementById('checkoutBox').style.display = 'block';
-
-            // تشخیص مدت زمان هر بخش (پشتیبانی از فرم‌های دارای دو زمان مجزا یا زمان مشترک)
-            let panDur = typeof state.panDuration !== 'undefined' ? state.panDuration : state.duration;
-            let conDur = typeof state.conDuration !== 'undefined' ? state.conDuration : state.duration;
+            
+            document.getElementById('invoiceArea').style.display = 'block'; 
+            document.getElementById('checkoutBox').style.display = 'block';
 
             let basePanMonthly = state.pansion !== 'none' ? getPrice('pansion', state.pansion) : 0;
             let baseConMonthly = state.consult !== 'none' ? getPrice('consult', state.consult) : 0;
             
-            let totalPan = basePanMonthly * (state.pansion !== 'none' ? panDur : 0);
-            let totalCon = baseConMonthly * (state.consult !== 'none' ? conDur : 0);
+            let totalPan = basePanMonthly * (state.pansion !== 'none' ? state.panDuration : 0);
+            let totalCon = baseConMonthly * (state.consult !== 'none' ? state.conDuration : 0);
             let totalBase = totalPan + totalCon;
 
             let comboDisc = 0; let promoDisc = 0;
-            let overlapMonths = 0; let remainingConMonths = state.consult !== 'none' ? conDur : 0;
+            let overlapMonths = 0; let remainingConMonths = state.consult !== 'none' ? state.conDuration : 0;
 
+            // ۱. تخفیف الماس (فقط روی مشترک‌ها)
             if (state.pansion !== 'none' && state.consult !== 'none') {
-                overlapMonths = Math.min(panDur, conDur);
-                remainingConMonths = conDur - overlapMonths;
-                comboDisc = (baseConMonthly * overlapMonths) * 0.60; 
+                overlapMonths = Math.min(state.panDuration, state.conDuration);
+                remainingConMonths = state.conDuration - overlapMonths;
+                comboDisc = (baseConMonthly * overlapMonths) * 0.60;
                 
                 let msg = `💎 طرح الماس روی ${overlapMonths} ماه مشترک اعمال شد.`;
-                if(remainingConMonths > 0) msg += `<br>کد تخفیف روی ${remainingConMonths} ماه باقیمانده اعمال می‌شود.`;
+                if(remainingConMonths > 0) msg += `<br>کد تخفیف وارد شده روی ${remainingConMonths} ماه باقیمانده مشاوره اعمال می‌شود.`;
                 
                 document.getElementById('promoMsg').innerHTML = msg;
                 document.getElementById('promoMsg').style.color = "var(--primary)";
+            } else {
+                if(document.getElementById('promoMsg').innerText.includes('الماس')) document.getElementById('promoMsg').innerText = '';
             }
 
+            // ۲. کد تخفیف (روی باقیمانده مشاوره)
             if (state.promoRate > 0 && remainingConMonths > 0) {
                 promoDisc = (baseConMonthly * remainingConMonths) * state.promoRate; 
             }
 
             let subTotal = totalBase - comboDisc - promoDisc;
 
-            // محاسبه تخفیف زمانی و کنترل دکمه اقساط
-            let maxDur = Math.max(state.pansion !== 'none' ? panDur : 0, state.consult !== 'none' ? conDur : 0);
+            // ۳. دکمه اقساط و تخفیف زمانی
+            let maxDur = Math.max(state.pansion !== 'none' ? state.panDuration : 0, state.consult !== 'none' ? state.conDuration : 0);
             const switchCont = document.getElementById('paySwitchContainer');
-            if (maxDur <= 1 || subTotal < 3000000) { switchCont.style.display = 'none'; state.paymentMethod = 'cash'; } 
-            else { switchCont.style.display = 'flex'; }
+            
+            if (subTotal <= 0) { switchCont.style.display = 'none'; state.paymentMethod = 'cash'; } 
+            else { switchCont.style.display = 'flex'; } // اقساط الان برای ۱ ماهه هم بازه!
 
-            let timeDiscRate = 0;
-            if (maxDur === 3) timeDiscRate = state.paymentMethod === 'cash' ? 0.05 : 0.02;
-            if (maxDur >= 10) timeDiscRate = state.paymentMethod === 'cash' ? 0.15 : 0.08;
+            let panTimeRate = state.panDuration === 3 ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (state.panDuration === 10 ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
+            let conTimeRate = state.conDuration === 3 ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (state.conDuration === 10 ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
+            
+            let panTimeDisc = totalPan * panTimeRate;
+            let conTimeDisc = (totalCon - comboDisc - promoDisc) * conTimeRate; 
+            let totalTimeDisc = panTimeDisc + conTimeDisc;
 
-            let timeDisc = subTotal * timeDiscRate;
-            let finalTotal = subTotal - timeDisc;
+            let finalTotal = subTotal - totalTimeDisc;
 
-            // کسر هدیه معرف (۱۰۰ هزار تومان)
+            // ۴. کسر هدیه معرفی
             let refDiscount = 0;
             if (state.hasReferral) {
                 refDiscount = 100000;
@@ -425,54 +436,65 @@
                 finalTotal = Math.max(0, finalTotal);
             }
 
-            // --- بروزرسانی مقادیر روی صفحه ---
-            document.getElementById('inv_duration').innerText = maxDur >= 10 ? 'تا کنکور (۱۰ ماهه)' : `${maxDur} ماهه`;
-            document.getElementById('inv_base').innerText = formatMoney(totalBase) + ' تومان';
+            // بروزرسانی ردیف‌های فاکتور
+            document.getElementById('row_pan_base').style.display = totalPan > 0 ? 'flex' : 'none';
+            document.getElementById('inv_pan_base').innerText = formatMoney(totalPan) + ' تومان';
+            document.getElementById('row_con_base').style.display = totalCon > 0 ? 'flex' : 'none';
+            document.getElementById('inv_con_base').innerText = formatMoney(totalCon) + ' تومان';
+            
             document.getElementById('row_combo_disc').style.display = comboDisc > 0 ? 'flex' : 'none';
             document.getElementById('inv_combo_disc').innerText = '- ' + formatMoney(comboDisc) + ' تومان';
             document.getElementById('row_promo_disc').style.display = promoDisc > 0 ? 'flex' : 'none';
             document.getElementById('inv_promo_disc').innerText = '- ' + formatMoney(promoDisc) + ' تومان';
-            document.getElementById('row_time_disc').style.display = timeDisc > 0 ? 'flex' : 'none';
-            document.getElementById('inv_time_disc').innerText = '- ' + formatMoney(timeDisc) + ' تومان';
+            document.getElementById('row_time_disc').style.display = totalTimeDisc > 0 ? 'flex' : 'none';
+            document.getElementById('inv_time_disc').innerText = '- ' + formatMoney(totalTimeDisc) + ' تومان';
             
-            let refRow = document.getElementById('row_ref_disc');
-            if(refRow) {
-                refRow.style.display = refDiscount > 0 ? 'flex' : 'none';
-                document.getElementById('inv_ref_disc').innerText = '- ' + formatMoney(refDiscount) + ' تومان';
-            }
+            document.getElementById('row_ref_disc').style.display = refDiscount > 0 ? 'flex' : 'none';
+            document.getElementById('inv_ref_disc').innerText = '- ' + formatMoney(refDiscount) + ' تومان';
 
             document.getElementById('inv_total').innerText = formatMoney(finalTotal) + ' تومان';
 
-            // --- موتور محاسبه اقساط ---
+            // ۵. تولید اقساط (شامل ۱ ماهه‌ها)
             const instBox = document.getElementById('installmentDetails');
             instBox.innerHTML = '';
+            
             if (state.paymentMethod === 'installments' && finalTotal > 0) {
                 instBox.style.display = 'block';
-                let upfront = maxDur === 3 ? finalTotal * 0.50 : finalTotal * 0.40;
-                let upfrontRounded = roundDown100k(Math.min(upfront, 15000000)); 
-                let remaining = finalTotal - upfrontRounded;
                 const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
                 let today = new Date();
 
-                if (maxDur === 3) {
+                if (maxDur === 1) {
+                    // قانون جدید اقساط ۱ ماهه: ۵۰ درصد نقد، ۵۰ درصد ۱۰ روز بعد
+                    let upfrontRounded = roundDown100k(finalTotal * 0.50);
+                    let remaining = finalTotal - upfrontRounded;
+                    let d1 = new Date(); d1.setDate(today.getDate() + 10); 
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (پیش‌پرداخت):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b> (۱۰ روز دیگر)</li>`;
+                } 
+                else if (maxDur === 3) {
+                    let upfrontRounded = roundDown100k(finalTotal * 0.50);
+                    let remaining = finalTotal - upfrontRounded;
                     let d1 = new Date(); d1.setDate(today.getDate() + 45); 
-                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (آپلود فیش):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>تاریخ چک/قسط (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
-                } else if (maxDur >= 10) {
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (پیش‌پرداخت):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>چک صیادی (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
+                } 
+                else if (maxDur >= 10) {
+                    let upfrontRounded = roundDown100k(Math.min(finalTotal * 0.40, 15000000));
+                    let remaining = finalTotal - upfrontRounded;
                     let checkAmt = roundDown100k(remaining / 3);
                     let lastCheckAmt = remaining - (checkAmt * 2);
                     let d1 = new Date(); d1.setMonth(today.getMonth() + 2); let d2 = new Date(); d2.setMonth(today.getMonth() + 4); let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
-                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (آپلود فیش):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>قسط اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>قسط دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>قسط سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (پیش‌پرداخت):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>چک اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>چک دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>چک سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
                 }
             } else { instBox.style.display = 'none'; }
         }
+
         // ==========================================
-        // 📤 آپلود و ارسال نهایی
+        // 📤 آپلود فیش و ارسال به بک‌اند
         // ==========================================
         let receiptBase64 = null; let receiptMimeType = null;
         function handleReceiptSelect(input) {
             if (input.files && input.files[0]) {
                 if(input.files[0].size > 5 * 1024 * 1024) { alert("حجم عکس نباید بیشتر از ۵ مگابایت باشد."); input.value = ''; return; }
-                document.getElementById('lblFileName').innerText = `✅ فیش ضمیمه شد.`;
+                document.getElementById('lblFileName').innerText = `✅ فیش ضمیمه شد: ${input.files[0].name}`;
                 document.getElementById('boxFile').classList.add('has-file');
                 receiptMimeType = input.files[0].type;
                 const reader = new FileReader(); reader.onload = function(e) { receiptBase64 = e.target.result.split(',')[1]; }; reader.readAsDataURL(input.files[0]);
@@ -489,27 +511,23 @@
             if(state.paymentMethod === 'installments') invoiceText += `اقساط:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
             if(state.hasReferral) invoiceText += `(کسر ۱۰۰ هزار تومان هدیه معرفی در فاکتور لحاظ شد)\n`;
 
-            // آماده‌سازی دیتای ارسالی با فرمت دو فاکتوره
             const payload = {
                 action: 'web_auth', sub_action: 'register_step2', national_id: userNid,
                 plan_data: {
-                    pansion_tier: state.pansion,
-                    pansion_duration_months: typeof state.panDuration !== 'undefined' ? state.panDuration : state.duration,
-                    consult_tier: state.consult,
-                    consult_duration_months: typeof state.conDuration !== 'undefined' ? state.conDuration : state.duration,
-                    referrer_id: state.referrerId || null,
+                    pansion_tier: state.pansion, pansion_duration_months: state.panDuration,
+                    consult_tier: state.consult, consult_duration_months: state.conDuration,
                     invoice_text: invoiceText,
-                    receipt_base64: receiptBase64, mime_type: receiptMimeType
+                    receipt_base64: receiptBase64, mime_type: receiptMimeType,
+                    referrer_id: state.referrerId 
                 }
             };
 
             try {
-                // ارسال به وب‌هوک گوگل اسکریپت
                 const response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await response.json();
                 if(!result.success) throw new Error(result.error);
 
-                alert("🎉 ثبت‌نام با موفقیت انجام شد و قرارداد برای مدیریت ارسال گردید.");
+                alert("🎉 ثبت‌نام با موفقیت انجام شد و فاکتور برای مدیریت ارسال گردید.");
                 localStorage.removeItem('temp_reg_nid'); localStorage.removeItem('temp_referral_code');
                 window.location.href = 'index.html';
             } catch(err) { alert("خطا: " + err.message); btn.disabled = false; btn.innerText = "تلاش مجدد"; }
