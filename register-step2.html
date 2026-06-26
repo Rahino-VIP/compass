@@ -367,6 +367,9 @@
         function formatMoney(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
         function roundDown100k(amount) { return Math.floor(amount / 100000) * 100000; }
 
+        // متغیرهای گلوبال برای ذخیره دیتای مالی (بالای توابع اضافه کن اگر نیست)
+        let financeData = { total: 0, discount: 0, final: 0, upfront: 0, installments: [] };
+
         function calculateInvoice() {
             state.panDuration = parseInt(document.getElementById('panDuration').value) || 0;
             state.conDuration = parseInt(document.getElementById('conDuration').value) || 0;
@@ -390,71 +393,51 @@
             let comboDisc = 0; let promoDisc = 0;
             let overlapMonths = 0; let remainingConMonths = state.consult !== 'none' ? state.conDuration : 0;
 
-            // ۱. تخفیف الماس (فقط روی مشترک‌ها)
             if (state.pansion !== 'none' && state.consult !== 'none') {
                 overlapMonths = Math.min(state.panDuration, state.conDuration);
                 remainingConMonths = state.conDuration - overlapMonths;
                 comboDisc = (baseConMonthly * overlapMonths) * 0.60;
-                
                 let msg = `💎 طرح الماس روی ${overlapMonths} ماه مشترک اعمال شد.`;
-                if(remainingConMonths > 0) msg += `<br>کد تخفیف وارد شده روی ${remainingConMonths} ماه باقیمانده مشاوره اعمال می‌شود.`;
-                
-                document.getElementById('promoMsg').innerHTML = msg;
-                document.getElementById('promoMsg').style.color = "var(--primary)";
+                if(remainingConMonths > 0) msg += `<br>کد تخفیف روی ${remainingConMonths} ماه باقیمانده مشاوره اعمال می‌شود.`;
+                document.getElementById('promoMsg').innerHTML = msg; document.getElementById('promoMsg').style.color = "var(--primary)";
             } else {
                 if(document.getElementById('promoMsg').innerText.includes('الماس')) document.getElementById('promoMsg').innerText = '';
             }
 
-            // ۲. کد تخفیف (روی باقیمانده مشاوره)
-            if (state.promoRate > 0 && remainingConMonths > 0) {
-                promoDisc = (baseConMonthly * remainingConMonths) * state.promoRate; 
-            }
-
+            if (state.promoRate > 0 && remainingConMonths > 0) promoDisc = (baseConMonthly * remainingConMonths) * state.promoRate; 
             let subTotal = totalBase - comboDisc - promoDisc;
 
-            // ۳. دکمه اقساط و تخفیف زمانی
             let maxDur = Math.max(state.pansion !== 'none' ? state.panDuration : 0, state.consult !== 'none' ? state.conDuration : 0);
             const switchCont = document.getElementById('paySwitchContainer');
             
             if (subTotal <= 0) { switchCont.style.display = 'none'; state.paymentMethod = 'cash'; } 
-            else { switchCont.style.display = 'flex'; } // اقساط الان برای ۱ ماهه هم بازه!
+            else { switchCont.style.display = 'flex'; } 
 
             let panTimeRate = state.panDuration === 3 ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (state.panDuration === 10 ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
             let conTimeRate = state.conDuration === 3 ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (state.conDuration === 10 ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
             
-            let panTimeDisc = totalPan * panTimeRate;
-            let conTimeDisc = (totalCon - comboDisc - promoDisc) * conTimeRate; 
-            let totalTimeDisc = panTimeDisc + conTimeDisc;
+            let timeDisc = (totalPan * panTimeRate) + ((totalCon - comboDisc - promoDisc) * conTimeRate); 
+            let finalTotal = subTotal - timeDisc;
 
-            let finalTotal = subTotal - totalTimeDisc;
-
-            // ۴. کسر هدیه معرفی
             let refDiscount = 0;
-            if (state.hasReferral) {
-                refDiscount = 100000;
-                finalTotal -= refDiscount;
-                finalTotal = Math.max(0, finalTotal);
-            }
+            if (state.hasReferral) { refDiscount = 100000; finalTotal = Math.max(0, finalTotal - refDiscount); }
 
-            // بروزرسانی ردیف‌های فاکتور
-            document.getElementById('row_pan_base').style.display = totalPan > 0 ? 'flex' : 'none';
-            document.getElementById('inv_pan_base').innerText = formatMoney(totalPan) + ' تومان';
-            document.getElementById('row_con_base').style.display = totalCon > 0 ? 'flex' : 'none';
-            document.getElementById('inv_con_base').innerText = formatMoney(totalCon) + ' تومان';
-            
-            document.getElementById('row_combo_disc').style.display = comboDisc > 0 ? 'flex' : 'none';
-            document.getElementById('inv_combo_disc').innerText = '- ' + formatMoney(comboDisc) + ' تومان';
-            document.getElementById('row_promo_disc').style.display = promoDisc > 0 ? 'flex' : 'none';
-            document.getElementById('inv_promo_disc').innerText = '- ' + formatMoney(promoDisc) + ' تومان';
-            document.getElementById('row_time_disc').style.display = totalTimeDisc > 0 ? 'flex' : 'none';
-            document.getElementById('inv_time_disc').innerText = '- ' + formatMoney(totalTimeDisc) + ' تومان';
-            
-            document.getElementById('row_ref_disc').style.display = refDiscount > 0 ? 'flex' : 'none';
-            document.getElementById('inv_ref_disc').innerText = '- ' + formatMoney(refDiscount) + ' تومان';
+            // ذخیره دیتای مالی برای ارسال به بک‌اند
+            financeData.total = totalBase;
+            financeData.discount = comboDisc + promoDisc + timeDisc + refDiscount;
+            financeData.final = finalTotal;
+            financeData.installments = []; // ریست کردن اقساط
 
+            // آپدیت ظاهر فاکتور
+            document.getElementById('row_pan_base').style.display = totalPan > 0 ? 'flex' : 'none'; document.getElementById('inv_pan_base').innerText = formatMoney(totalPan) + ' تومان';
+            document.getElementById('row_con_base').style.display = totalCon > 0 ? 'flex' : 'none'; document.getElementById('inv_con_base').innerText = formatMoney(totalCon) + ' تومان';
+            document.getElementById('row_combo_disc').style.display = comboDisc > 0 ? 'flex' : 'none'; document.getElementById('inv_combo_disc').innerText = '- ' + formatMoney(comboDisc) + ' تومان';
+            document.getElementById('row_promo_disc').style.display = promoDisc > 0 ? 'flex' : 'none'; document.getElementById('inv_promo_disc').innerText = '- ' + formatMoney(promoDisc) + ' تومان';
+            document.getElementById('row_time_disc').style.display = timeDisc > 0 ? 'flex' : 'none'; document.getElementById('inv_time_disc').innerText = '- ' + formatMoney(timeDisc) + ' تومان';
+            let refRow = document.getElementById('row_ref_disc'); if(refRow) { refRow.style.display = refDiscount > 0 ? 'flex' : 'none'; document.getElementById('inv_ref_disc').innerText = '- ' + formatMoney(refDiscount) + ' تومان'; }
             document.getElementById('inv_total').innerText = formatMoney(finalTotal) + ' تومان';
 
-            // ۵. تولید اقساط (شامل ۱ ماهه‌ها)
+            // تولید اقساط و ذخیره در آرایه دیتابیس
             const instBox = document.getElementById('installmentDetails');
             instBox.innerHTML = '';
             
@@ -464,29 +447,45 @@
                 let today = new Date();
 
                 if (maxDur === 1) {
-                    // قانون جدید اقساط ۱ ماهه: ۵۰ درصد نقد، ۵۰ درصد ۱۰ روز بعد
                     let upfrontRounded = roundDown100k(finalTotal * 0.50);
                     let remaining = finalTotal - upfrontRounded;
+                    financeData.upfront = upfrontRounded;
+                    
                     let d1 = new Date(); d1.setDate(today.getDate() + 10); 
-                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (پیش‌پرداخت):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b> (۱۰ روز دیگر)</li>`;
+                    financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (آپلود فیش):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b> (۱۰ روز دیگر)</li>`;
                 } 
                 else if (maxDur === 3) {
                     let upfrontRounded = roundDown100k(finalTotal * 0.50);
                     let remaining = finalTotal - upfrontRounded;
+                    financeData.upfront = upfrontRounded;
+
                     let d1 = new Date(); d1.setDate(today.getDate() + 45); 
-                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (پیش‌پرداخت):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>چک صیادی (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
+                    financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (آپلود فیش):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
                 } 
                 else if (maxDur >= 10) {
                     let upfrontRounded = roundDown100k(Math.min(finalTotal * 0.40, 15000000));
                     let remaining = finalTotal - upfrontRounded;
+                    financeData.upfront = upfrontRounded;
+
                     let checkAmt = roundDown100k(remaining / 3);
                     let lastCheckAmt = remaining - (checkAmt * 2);
-                    let d1 = new Date(); d1.setMonth(today.getMonth() + 2); let d2 = new Date(); d2.setMonth(today.getMonth() + 4); let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
-                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (پیش‌پرداخت):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>چک اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>چک دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>چک سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
+                    
+                    let d1 = new Date(); d1.setMonth(today.getMonth() + 2);
+                    let d2 = new Date(); d2.setMonth(today.getMonth() + 4);
+                    let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
+                    
+                    financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: checkAmt, installment_number: 1 });
+                    financeData.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: 2 });
+                    financeData.installments.push({ due_date: d3.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: 3 });
+                    
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (آپلود فیش):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>قسط اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>قسط دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>قسط سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
                 }
-            } else { instBox.style.display = 'none'; }
-        }
-
+            } else { 
+                instBox.style.display = 'none'; 
+                financeData.upfront = finalTotal; 
+            }
         // ==========================================
         // 📤 آپلود فیش و ارسال به بک‌اند
         // ==========================================
@@ -505,36 +504,34 @@
             if(!document.getElementById('regRules').checked) return alert("❌ لطفاً ابتدا تعهدنامه را تایید کنید.");
             if(!receiptBase64) return alert("❌ آپلود تصویر فیش پیش‌پرداخت الزامی است.");
             
-            const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = "در حال صدور قرارداد... ⏳";
+            const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = "در حال صدور فاکتور... ⏳";
 
-            let invoiceText = `مبلغ کل پرداختی/تعهد: ${document.getElementById('inv_total').innerText}\nروش پرداخت: ${state.paymentMethod === 'cash' ? 'نقدی' : 'اقساط'}\n`;
-            if(state.paymentMethod === 'installments') invoiceText += `اقساط:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
+            let invoiceText = `طرح انتخابی: ${state.pansion !== 'none' ? 'پانسیون '+state.pansion : ''} ${state.consult !== 'none' ? 'مشاوره '+state.consult : ''}\n`;
+            invoiceText += `مبلغ نهایی فاکتور: ${document.getElementById('inv_total').innerText}\nروش پرداخت: ${state.paymentMethod === 'cash' ? 'نقدی' : 'اقساط'}\n`;
+            if(state.paymentMethod === 'installments') invoiceText += `زمان‌بندی اقساط:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
             if(state.hasReferral) invoiceText += `(کسر ۱۰۰ هزار تومان هدیه معرفی در فاکتور لحاظ شد)\n`;
-
-            // پیدا کردن طولانی‌ترین زمان برای ثبت در دیتابیس
-            let maxDur = Math.max(state.pansion !== 'none' ? state.panDuration : 0, state.consult !== 'none' ? state.conDuration : 0);
 
             const payload = {
                 action: 'web_auth', sub_action: 'register_step2', national_id: userNid,
-                plan_data: {
-                    plan_summary: `پانسیون: ${state.pansion} | مشاوره: ${state.consult}`, // برای پشتیبانی از سیستم قدیم
-                    duration_months: maxDur, // جلوگیری از ارور دیتابیس
-                    pansion_tier: state.pansion, 
-                    pansion_duration_months: typeof state.panDuration !== 'undefined' ? state.panDuration : state.duration,
-                    consult_tier: state.consult, 
-                    consult_duration_months: typeof state.conDuration !== 'undefined' ? state.conDuration : state.duration,
+                receipt_base64: receiptBase64, mime_type: receiptMimeType,
+                invoice_data: {
+                    plan_summary: `ثبت‌نام جدید`,
                     invoice_text: invoiceText,
-                    receipt_base64: receiptBase64, 
-                    mime_type: receiptMimeType,
-                    referrer_id: state.referrerId || null
-                }
+                    total_amount: financeData.total,
+                    discount_amount: financeData.discount,
+                    final_amount: financeData.final,
+                    payment_method: state.paymentMethod,
+                    paid_upfront: financeData.upfront
+                },
+                installments: financeData.installments
             };
+
             try {
                 const response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await response.json();
                 if(!result.success) throw new Error(result.error);
 
-                alert("🎉 ثبت‌نام با موفقیت انجام شد و فاکتور برای مدیریت ارسال گردید.");
+                alert("🎉 فاکتور شما با موفقیت ثبت شد و در انتظار تایید مدیریت است.");
                 localStorage.removeItem('temp_reg_nid'); localStorage.removeItem('temp_referral_code');
                 window.location.href = 'index.html';
             } catch(err) { alert("خطا: " + err.message); btn.disabled = false; btn.innerText = "تلاش مجدد"; }
