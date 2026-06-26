@@ -511,17 +511,24 @@
             if(state.paymentMethod === 'installments') invoiceText += `اقساط:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
             if(state.hasReferral) invoiceText += `(کسر ۱۰۰ هزار تومان هدیه معرفی در فاکتور لحاظ شد)\n`;
 
+            // پیدا کردن طولانی‌ترین زمان برای ثبت در دیتابیس
+            let maxDur = Math.max(state.pansion !== 'none' ? state.panDuration : 0, state.consult !== 'none' ? state.conDuration : 0);
+
             const payload = {
                 action: 'web_auth', sub_action: 'register_step2', national_id: userNid,
                 plan_data: {
-                    pansion_tier: state.pansion, pansion_duration_months: state.panDuration,
-                    consult_tier: state.consult, consult_duration_months: state.conDuration,
+                    plan_summary: `پانسیون: ${state.pansion} | مشاوره: ${state.consult}`, // برای پشتیبانی از سیستم قدیم
+                    duration_months: maxDur, // جلوگیری از ارور دیتابیس
+                    pansion_tier: state.pansion, 
+                    pansion_duration_months: typeof state.panDuration !== 'undefined' ? state.panDuration : state.duration,
+                    consult_tier: state.consult, 
+                    consult_duration_months: typeof state.conDuration !== 'undefined' ? state.conDuration : state.duration,
                     invoice_text: invoiceText,
-                    receipt_base64: receiptBase64, mime_type: receiptMimeType,
-                    referrer_id: state.referrerId 
+                    receipt_base64: receiptBase64, 
+                    mime_type: receiptMimeType,
+                    referrer_id: state.referrerId || null
                 }
             };
-
             try {
                 const response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await response.json();
