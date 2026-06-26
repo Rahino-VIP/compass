@@ -251,7 +251,7 @@
                 let refCode = localStorage.getItem('temp_referral_code');
                 if (refCode && refCode.length > 5) {
                     // چک می‌کنیم آیا این کد ملی متعلق به دانش‌آموزی در سیستم هست؟
-                    let refRes = await supabaseClient.from('students').select('national_id').eq('national_id', refCode).single();
+                    let refRes = await supabaseClient.from('students').select('national_id').eq('referral_code', refCode).single();
                     if (refRes.data) {
                         state.hasReferral = true;
                         state.referrerId = refRes.data.national_id;
