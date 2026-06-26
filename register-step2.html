@@ -3,34 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>انتخاب طرح و فاکتور | قطب‌نمای راهینو</title>
+    <title>تکمیل ثبت‌نام و فاکتور | قطب‌نمای راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* ==========================================
-           🎨 پالت رنگی مینیمال
-           ========================================== */
         :root { 
             --primary: #1e3a8a; --primary-hover: #1e40af; --accent: #d97706;  
             --bg-color: #f8fafc; --surface: #ffffff; --text-main: #0f172a; 
-            --text-muted: #64748b; --border: #e2e8f0; --shadow: 0 4px 20px rgba(0,0,0,0.03);
+            --text-muted: #64748b; --border: #e2e8f0; --shadow: 0 4px 20px rgba(0,0,0,0.05);
             --danger: #ef4444; --success: #10b981; 
         }
 
         [data-theme="dark"] {
             --primary: #3b82f6; --primary-hover: #60a5fa; --accent: #f59e0b;
             --bg-color: #0f172a; --surface: #1e293b; --text-main: #f8fafc;
-            --text-muted: #94a3b8; --border: #334155; --shadow: 0 4px 20px rgba(0,0,0,0.2);
+            --text-muted: #94a3b8; --border: #334155; --shadow: 0 4px 20px rgba(0,0,0,0.4);
         }
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-color); color: var(--text-main); min-height: 100vh; padding: 30px 15px; transition: 0.3s; line-height: 1.6; }
         
-        .main-container { width: 100%; max-width: 800px; margin: 0 auto; animation: slideUp 0.4s ease-out; position: relative; }
+        .main-container { width: 100%; max-width: 800px; margin: 0 auto; animation: slideUp 0.4s ease-out; position: relative; padding-bottom: 50px; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 🌓 کلید تم */
         .theme-toggle { position: absolute; top: -10px; left: 0; background: var(--surface); border: 1px solid var(--border); color: var(--text-main); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; justify-content: center; align-items: center; box-shadow: var(--shadow); z-index: 100; transition: 0.3s; }
         .theme-toggle:hover { transform: scale(1.1); border-color: var(--primary); }
 
@@ -38,73 +34,60 @@
         .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* 👑 هدر مینیمال */
         .header-title { text-align: center; margin-bottom: 30px; margin-top: 20px; }
         .header-title h1 { font-size: 22px; font-weight: 900; color: var(--primary); margin-bottom: 10px; }
-        .user-badge { display: inline-block; background: var(--surface); color: var(--text-main); padding: 6px 15px; border-radius: 12px; font-size: 13px; font-weight: bold; border: 1px solid var(--border); box-shadow: var(--shadow); }
+        .user-badge { display: inline-block; background: var(--surface); color: var(--text-main); padding: 6px 15px; border-radius: 12px; font-size: 13px; font-weight: bold; border: 1px dashed var(--accent); box-shadow: var(--shadow); }
 
-        /* 🎚️ سوییچ زمان ظریف */
-        .duration-toggle { display: flex; justify-content: center; margin-bottom: 30px; position: relative; }
-        .toggle-bg { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 4px; position: relative; box-shadow: var(--shadow); width: 100%; max-width: 450px; }
-        .toggle-btn { flex: 1; padding: 10px 0; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 13px; color: var(--text-muted); transition: 0.3s; z-index: 1; text-align: center; }
-        .toggle-btn.active { color: white; }
-        .toggle-slider { position: absolute; top: 4px; bottom: 4px; background: var(--primary); border-radius: 12px; transition: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 0; }
-        .discount-badge { position: absolute; top: -12px; background: var(--danger); color: white; font-size: 10px; padding: 2px 8px; border-radius: 8px; font-weight: bold; }
-
-        /* 🗂️ گرید کارت‌ها */
         .section-title { font-size: 15px; font-weight: 900; color: var(--text-main); margin: 25px 0 15px 0; display: flex; align-items: center; gap: 8px; }
-        .selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 15px; }
         
         .option-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; text-align: right; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; display: flex; flex-direction: column; }
         .option-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow); }
         .option-card.selected { border-color: var(--primary); background: rgba(59, 130, 246, 0.03); border-width: 2px; }
-        .option-card.selected::before { content: '✅'; position: absolute; top: 10px; left: 10px; font-size: 14px; }
+        .option-card.selected::before { content: '✅'; position: absolute; top: 15px; left: 15px; font-size: 16px; }
         
-        .opt-title { font-size: 15px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; }
+        /* 🚨 تگ ظرفیت محدود */
+        .fomo-badge { position: absolute; top: 12px; left: -30px; background: var(--danger); color: white; font-size: 10px; padding: 4px 30px; font-weight: bold; transform: rotate(-45deg); text-align: center; width: 120px; z-index: 2; box-shadow: 0 2px 5px rgba(0,0,0,0.2); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; background: #b91c1c; } 100% { opacity: 1; } }
+
+        .opt-title { font-size: 15px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; padding-right: 5px; }
         .opt-desc { font-size: 11px; color: var(--text-muted); margin-bottom: 12px; min-height: 30px; }
         .opt-price { font-size: 18px; font-weight: 900; color: var(--primary); margin-bottom: 15px; }
-        
         .features-list { list-style: none; font-size: 11px; color: var(--text-main); flex-grow: 1; }
         .features-list li { margin-bottom: 6px; display: flex; align-items: flex-start; gap: 5px; }
-        .capacity-badge { position: absolute; top: 10px; left: -25px; background: var(--danger); color: white; font-size: 10px; padding: 3px 25px; font-weight: bold; transform: rotate(-45deg); text-align: center; width: 100px; z-index: 2; }
 
-        /* 🧾 فاکتور زنده */
+        .duration-box { background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--primary-light); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none; animation: fadeIn 0.3s; }
+        .duration-box label { font-size: 12px; font-weight: bold; color: var(--primary); display: block; margin-bottom: 8px; }
+        .duration-select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text-main); font-family: inherit; font-size: 13px; font-weight: bold; outline: none; }
+
+        /* 🧾 فاکتور */
         .invoice-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 25px; margin-top: 30px; box-shadow: var(--shadow); display: none; animation: fadeIn 0.4s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
         .promo-group { display: flex; gap: 10px; margin-bottom: 20px; }
         .promo-group input { flex: 1; padding: 10px 15px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); outline: none; font-size: 12px; }
-        .promo-btn { padding: 10px 20px; background: var(--primary); border: none; border-radius: 12px; cursor: pointer; font-size: 12px; font-weight: bold; color: white; transition: 0.2s; }
+        .promo-btn { padding: 10px 20px; background: var(--primary); border: none; border-radius: 12px; cursor: pointer; font-size: 12px; font-weight: bold; color: white; }
         
-        .invoice-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px; color: var(--text-muted); }
+        .invoice-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; color: var(--text-muted); align-items: center; }
         .invoice-row.discount { color: var(--success); font-weight: bold; }
+        .invoice-row.ref-discount { color: var(--accent); font-weight: bold; background: rgba(217, 119, 6, 0.1); padding: 5px 10px; border-radius: 8px; }
         .invoice-total { display: flex; justify-content: space-between; border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 15px; font-size: 18px; font-weight: 900; color: var(--primary); }
         
-        /* 💳 اقساط */
         .pay-method-switch { display: flex; gap: 10px; margin: 20px 0; background: var(--bg-color); padding: 5px; border-radius: 12px; border: 1px solid var(--border); }
         .pay-method-btn { flex: 1; text-align: center; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; color: var(--text-muted); }
         .pay-method-btn.active { background: var(--primary); color: white; box-shadow: var(--shadow); }
 
         .installment-details { background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); padding: 15px; border-radius: 12px; font-size: 12px; display: none; margin-top: 10px; }
-        .installment-details li { margin-right: 15px; margin-bottom: 5px; color: var(--text-main); }
+        .installment-details li { margin-right: 15px; margin-bottom: 8px; color: var(--text-main); font-weight: bold; }
 
-        /* 📜 قوانین جذاب و واضح */
         .checkout-box { margin-top: 25px; display: none; }
-        .rules-container { background: var(--surface); border: 1px solid var(--danger); border-radius: 16px; padding: 20px; margin-bottom: 20px; position: relative; overflow: hidden; }
-        .rules-container::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; background: var(--danger); }
-        .rules-title { font-size: 14px; font-weight: 900; color: var(--danger); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-        .rule-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; font-size: 12px; color: var(--text-main); line-height: 1.8; }
-        .rule-icon { font-size: 16px; }
-
-        .file-upload { border: 1px dashed var(--accent); padding: 25px; border-radius: 16px; text-align: center; cursor: pointer; position: relative; margin-bottom: 20px; background: var(--bg-color); transition: 0.2s; }
-        .file-upload:hover { border-color: var(--primary); background: var(--surface); }
+        .file-upload { border: 2px dashed var(--accent); padding: 25px; border-radius: 16px; text-align: center; cursor: pointer; position: relative; margin-bottom: 20px; background: rgba(217, 119, 6, 0.02); transition: 0.2s; }
+        .file-upload.has-file { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
         .file-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
         
-        .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
+        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), #312e81); color: white; box-shadow: 0 10px 20px rgba(30, 58, 138, 0.2); }
+        .btn-primary:hover { transform: translateY(-2px); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); margin-top: 10px; }
-        .btn-outline:hover { background: var(--bg-color); }
     </style>
 </head>
 <body data-theme="dark">
@@ -113,7 +96,7 @@
 
     <div id="loaderOverlay">
         <div class="spinner"></div>
-        <h3 style="color: var(--primary); font-size: 14px;">در حال همگام‌سازی...</h3>
+        <h3 style="color: var(--primary); font-size: 14px;">در حال آماده‌سازی میز شما...</h3>
     </div>
 
     <div class="main-container">
@@ -123,26 +106,30 @@
             <div class="user-badge" id="lblUserInfo">👤 در حال بارگذاری...</div>
         </div>
 
-        <div class="duration-toggle">
-            <div class="toggle-bg" id="toggleBg">
-                <div class="toggle-slider" id="toggleSlider"></div>
-                <div class="discount-badge" style="right: 38%;">۵٪ تخفیف</div>
-                <div class="discount-badge" style="left: 10px;">۱۵٪ تخفیف</div>
-                
-                <div class="toggle-btn active" onclick="setDuration(1, this)">۱ ماهه</div>
-                <div class="toggle-btn" onclick="setDuration(3, this)">۳ ماهه</div>
-                <div class="toggle-btn" onclick="setDuration(10, this)">تا کنکور</div>
-            </div>
+        <div class="section-title">🏠 ۱. رزرو میز پانسیون مطالعاتی</div>
+        <div class="selection-grid" id="pansionGrid"></div>
+        <div class="duration-box" id="panDurationBox">
+            <label>⏱️ مدت زمان رزرو پانسیون را انتخاب کنید:</label>
+            <select class="duration-select" id="panDuration" onchange="calculateInvoice()">
+                <option value="1">۱ ماهه</option>
+                <option value="3">۳ ماهه (۵٪ تخفیف پانسیون)</option>
+                <option value="10">تا کنکور - ۱۰ ماهه (۱۵٪ تخفیف پانسیون)</option>
+            </select>
         </div>
 
-        <div class="section-title">🏠 ۱. پانسیون (شعبه شهرقدس - ویژه دختران)</div>
-        <div class="selection-grid" id="pansionGrid"></div>
-
-        <div class="section-title">🧠 ۲. انتخاب مربی و برنامه (مشاوره)</div>
+        <div class="section-title">🧠 ۲. انتخاب مربی و برنامه تحصیلی</div>
         <div class="selection-grid" id="consultGrid"></div>
+        <div class="duration-box" id="conDurationBox">
+            <label>⏱️ مدت زمان دریافت مشاوره را انتخاب کنید:</label>
+            <select class="duration-select" id="conDuration" onchange="calculateInvoice()">
+                <option value="1">۱ ماهه</option>
+                <option value="3">۳ ماهه (۵٪ تخفیف مشاوره)</option>
+                <option value="10">تا کنکور - ۱۰ ماهه (۱۵٪ تخفیف مشاوره)</option>
+            </select>
+        </div>
 
         <div class="invoice-box" id="invoiceArea">
-            <h3 style="color: var(--primary); font-size: 15px; margin-bottom: 20px;">🧾 صورت‌حساب قطعی</h3>
+            <h3 style="color: var(--primary); font-size: 15px; margin-bottom: 20px; text-align: center;">🧾 سبد خرید شما</h3>
             
             <div class="promo-group">
                 <input type="text" id="promoCode" placeholder="کد تخفیف (اختیاری)">
@@ -151,63 +138,49 @@
             <div id="promoMsg" style="font-size: 11px; margin-top: -10px; margin-bottom: 15px; font-weight: bold;"></div>
 
             <div class="pay-method-switch" id="paySwitchContainer">
-                <div class="pay-method-btn active" id="btnPayCash" onclick="setPayMethod('cash')">💳 نقدی (تخفیف بیشتر)</div>
-                <div class="pay-method-btn" id="btnPayInst" onclick="setPayMethod('installments')">📑 اقساطی</div>
+                <div class="pay-method-btn active" id="btnPayCash" onclick="setPayMethod('cash')">💳 پرداخت نقدی</div>
+                <div class="pay-method-btn" id="btnPayInst" onclick="setPayMethod('installments')">📑 پرداخت اقساطی</div>
             </div>
 
-            <div class="invoice-row"><span>مدت قرارداد:</span><span id="inv_duration" style="color: var(--text-main); font-weight: bold;">۱ ماهه</span></div>
-            <div class="invoice-row"><span>مجموع خدمات:</span><span id="inv_base">۰ تومان</span></div>
+            <div class="invoice-row" id="row_pan_base" style="display:none;"><span>هزینه پانسیون:</span><span id="inv_pan_base">۰ تومان</span></div>
+            <div class="invoice-row" id="row_con_base" style="display:none;"><span>هزینه مشاوره:</span><span id="inv_con_base">۰ تومان</span></div>
             
             <div class="invoice-row discount" id="row_combo_disc" style="display: none;">
-                <span>💎 طرح جامع (۶۰٪ مشاوره):</span><span id="inv_combo_disc">- ۰ تومان</span>
+                <span>💎 تخفیف طرح جامع (۶۰٪ مشاوره مشترک):</span><span id="inv_combo_disc">- ۰ تومان</span>
             </div>
             <div class="invoice-row discount" id="row_promo_disc" style="display: none;">
-                <span>🎟️ کد معرف:</span><span id="inv_promo_disc">- ۰ تومان</span>
+                <span>🎟️ کد تخفیف اضافه:</span><span id="inv_promo_disc">- ۰ تومان</span>
             </div>
             <div class="invoice-row discount" id="row_time_disc" style="display: none;">
-                <span id="lbl_time_disc">⏳ تخفیف خرید بلندمدت:</span><span id="inv_time_disc">- ۰ تومان</span>
+                <span id="lbl_time_disc">⏳ مجموع تخفیف‌های زمانی:</span><span id="inv_time_disc">- ۰ تومان</span>
+            </div>
+            
+            <div class="invoice-row ref-discount" id="row_referral" style="display: none;">
+                <span>🤝 هدیه ثبت‌نام از طریق دوستان:</span><span>- ۱۰۰,۰۰۰ تومان</span>
             </div>
 
             <div class="invoice-total">
-                <span>مبلغ قابل پرداخت:</span><span id="inv_total">۰ تومان</span>
+                <span>مبلغ نهایی قابل پرداخت:</span><span id="inv_total">۰ تومان</span>
             </div>
 
             <ul class="installment-details" id="installmentDetails"></ul>
         </div>
 
         <div class="checkout-box" id="checkoutBox">
-            
-            <div class="rules-container">
-                <div class="rules-title">⚠️ لطفاً پیش از پرداخت با دقت مطالعه کنید:</div>
-                <div class="rule-item">
-                    <span class="rule-icon">🔕</span>
-                    <div><strong>قانون سکوت:</strong> رعایت نظم و سکوت مطلق الزامی است. استفاده از گوشی موبایل مطلقاً ممنوع است.</div>
-                </div>
-                <div class="rule-item">
-                    <span class="rule-icon">🚫</span>
-                    <div><strong>شرایط اخراج:</strong> دریافت ۳ اخطار انضباطی یا غیبت‌های غیرموجه مکرر، منجر به لغو آنی ثبت‌نام خواهد شد.</div>
-                </div>
-                <div class="rule-item">
-                    <span class="rule-icon">💸</span>
-                    <div><strong>قانون فسخ مالی:</strong> در صورت اخراج یا انصراف، کلیه تخفیف‌های بلندمدت باطل شده و ماه‌های استفاده شده با نرخ آزاد (یک‌ماهه) محاسبه می‌گردد. همچنین ۲۰٪ جریمه کسر می‌شود.</div>
-                </div>
-            </div>
-
-            <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin-bottom: 25px; padding: 10px;">
+            <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin-bottom: 25px; padding: 10px; background: rgba(0,0,0,0.02); border-radius: 12px; border: 1px solid var(--border);">
                 <input type="checkbox" id="regRules" style="width: 20px; height: 20px; margin-top: 2px;">
-                <span style="font-size: 13px; font-weight: bold; color: var(--text-main);">
-                    تعهدنامه، قوانین انضباطی و شرایط فسخ قرارداد را به دقت خواندم و می‌پذیرم.
+                <span style="font-size: 12px; font-weight: bold; color: var(--text-main); line-height: 1.8;">
+                    قوانین انضباطی و مالی را می‌پذیرم. (در صورت انصراف، ماه‌های استفاده شده با تعرفه آزاد محاسبه و مبلغ باقیمانده عودت داده می‌شود).
                 </span>
             </label>
 
-            <div class="file-upload" onclick="document.getElementById('regReceipt').click()">
-                <div style="font-size: 25px; margin-bottom: 5px;">📥</div>
-                <div id="lblFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود فیش پیش‌پرداخت (الزامی)</div>
-                <div style="font-size: 10px; color: var(--text-muted); margin-top: 5px;">فقط فرمت JPG/PNG</div>
+            <div class="file-upload" id="boxFile">
+                <div style="font-size: 30px; margin-bottom: 5px;">📥</div>
+                <div id="lblFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود فیش واریزی پیش‌پرداخت (الزامی)</div>
                 <input type="file" id="regReceipt" accept="image/*" onchange="handleReceiptSelect(this)">
             </div>
 
-            <button class="btn btn-primary" id="btnSubmit" onclick="submitFinalStep()">تایید نهایی و ارسال فاکتور 🚀</button>
+            <button class="btn btn-primary" id="btnSubmit" onclick="submitFinalStep()">تایید نهایی و ارسال قرارداد 🚀</button>
             <button class="btn btn-outline" onclick="window.location.href='index.html'">بازگشت</button>
         </div>
 
@@ -215,54 +188,48 @@
 
     <script>
         // ==========================================
-        // 🌓 مدیریت تم مینیمال
+        // 🌓 مدیریت تم
         // ==========================================
         const themeBtn = document.getElementById('themeBtn');
-        if ((localStorage.getItem('theme') || 'dark') === 'dark') {
-            document.body.setAttribute('data-theme', 'dark'); themeBtn.innerText = '☀️';
-        } else {
-            document.body.removeAttribute('data-theme'); themeBtn.innerText = '🌙';
-        }
+        if ((localStorage.getItem('theme') || 'dark') === 'dark') { document.body.setAttribute('data-theme', 'dark'); themeBtn.innerText = '☀️'; } 
+        else { document.body.removeAttribute('data-theme'); themeBtn.innerText = '🌙'; }
+        
         function toggleTheme() {
-            if (document.body.getAttribute('data-theme') === 'dark') {
-                document.body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); themeBtn.innerText = '🌙';
-            } else {
-                document.body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); themeBtn.innerText = '☀️';
-            }
+            if (document.body.getAttribute('data-theme') === 'dark') { document.body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); themeBtn.innerText = '🌙'; } 
+            else { document.body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); themeBtn.innerText = '☀️'; }
         }
 
         // ==========================================
-        // 🔗 تنظیمات و متغیرهای سراسری سیستم
+        // 🔗 تنظیمات سیستم
         // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; // کلید پابلیک رو جایگزین کن
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec'; // لینک وب‌هوک
         
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let userNid = null;
-        let userName = 'دانش‌آموز';
-        let originalGrade = 'دوازدهم'; // پایه‌ای که تو دیتابیس ثبت شده
-        let normalizedGrade = 'دوازدهم'; // پایه‌ای که برای قیمت‌گذاری استفاده میشه
+        let normalizedGrade = 'دوازدهم'; 
         
         let state = {
-            duration: 1, 
-            pansion: 'none', 
-            consult: 'none',
+            pansion: 'none', panDuration: 1,
+            consult: 'none', conDuration: 1,
             paymentMethod: 'cash', 
-            promoRate: 0
+            promoRate: 0,
+            hasReferral: false, referrerId: null
         };
 
         let dbData = { pricing: [], details: [], promos: [] };
 
         // ==========================================
-        // 🚀 راه‌اندازی اولیه
+        // 🚀 راه‌اندازی و بررسی کد معرف
         // ==========================================
         window.onload = async function() {
             userNid = localStorage.getItem('temp_reg_nid');
             if (!userNid) { window.location.href = 'index.html'; return; }
             
             try {
+                // دریافت دیتای پایه
                 const [studentRes, pricingRes, detailsRes, promosRes] = await Promise.all([
                     supabaseClient.from('students').select('full_name, grade').eq('national_id', userNid).single(),
                     supabaseClient.from('pricing_tiers').select('*'),
@@ -271,41 +238,38 @@
                 ]);
 
                 if (studentRes.data) {
-                    userName = studentRes.data.full_name || 'کاربر';
-                    originalGrade = studentRes.data.grade || 'دوازدهم';
-                    
-                    // 🌟 حل مشکل پشت کنکوری‌ها: نرمال‌سازی پایه‌ها
-                    if (['دهم', 'یازدهم', 'دوازدهم'].includes(originalGrade)) {
-                        normalizedGrade = originalGrade;
-                    } else {
-                        normalizedGrade = 'دوازدهم'; // هر چیز دیگه‌ای بود قیمت دوازدهم حساب بشه
-                    }
+                    let g = studentRes.data.grade;
+                    normalizedGrade = ['دهم', 'یازدهم'].includes(g) ? g : 'دوازدهم';
+                    document.getElementById('lblUserInfo').innerText = `👤 ${studentRes.data.full_name || 'کاربر'} | پایه: ${g || 'ثبت نشده'}`;
                 }
 
                 if (pricingRes.data) dbData.pricing = pricingRes.data;
                 if (detailsRes.data) dbData.details = detailsRes.data;
                 if (promosRes.data) dbData.promos = promosRes.data;
 
-                document.getElementById('lblUserInfo').innerText = `👤 ${userName} | پایه: ${originalGrade}`;
+                // 🤝 بررسی کد معرف از مرحله قبل
+                let refCode = localStorage.getItem('temp_referral_code');
+                if (refCode && refCode.length > 5) {
+                    // چک می‌کنیم آیا این کد ملی متعلق به دانش‌آموزی در سیستم هست؟
+                    let refRes = await supabaseClient.from('students').select('national_id').eq('national_id', refCode).single();
+                    if (refRes.data) {
+                        state.hasReferral = true;
+                        state.referrerId = refRes.data.national_id;
+                    }
+                }
 
                 renderCards();
-                initToggleSlider();
-
                 document.getElementById('loaderOverlay').style.opacity = '0';
                 setTimeout(() => document.getElementById('loaderOverlay').style.display = 'none', 300);
 
-            } catch (err) {
-                alert("خطا در ارتباط با سرور: " + err.message);
-            }
+            } catch (err) { alert("خطا در ارتباط با سرور."); }
         };
 
         // ==========================================
-        // 🃏 ساخت کارت‌های داینامیک
+        // 🃏 ساخت کارت‌ها و ظرفیت‌های فیک (FOMO)
         // ==========================================
         function getPrice(category, type) {
-            // استفاده از normalizedGrade به جای پایه اصلی
             let p = dbData.pricing.find(x => x.service_category === category && x.service_type === type && (x.target_grade === normalizedGrade || x.target_grade === 'all'));
-            if (!p) p = dbData.pricing.find(x => x.service_category === category && x.service_type === type); 
             return p ? p.monthly_price : 0;
         }
 
@@ -314,16 +278,16 @@
             const conGrid = document.getElementById('consultGrid');
 
             panGrid.innerHTML = `
-                <div class="option-card ${state.pansion === 'none' ? 'selected' : ''}" id="pan_none" onclick="selectPansion('none')">
-                    <div class="opt-title">فقط مشاوره می‌خوام</div>
-                    <div class="opt-desc">بدون رزرو صندلی در پانسیون</div>
+                <div class="option-card ${state.pansion === 'none' ? 'selected' : ''}" onclick="selectPansion('none')">
+                    <div class="opt-title">فعلاً پانسیون نمی‌خوام</div>
+                    <div class="opt-desc">بدون رزرو میز مطالعه</div>
                     <div class="opt-price">۰ تومان</div>
                 </div>
             `;
 
             conGrid.innerHTML = `
-                <div class="option-card ${state.consult === 'none' ? 'selected' : ''}" id="con_none" onclick="selectConsult('none')">
-                    <div class="opt-title">فقط پانسیون می‌خوام</div>
+                <div class="option-card ${state.consult === 'none' ? 'selected' : ''}" onclick="selectConsult('none')">
+                    <div class="opt-title">فعلاً مشاوره نمی‌خوام</div>
                     <div class="opt-desc">بدون دریافت برنامه تحصیلی</div>
                     <div class="opt-price">۰ تومان</div>
                 </div>
@@ -333,14 +297,19 @@
                 let price = getPrice(plan.category, plan.type);
                 if (price === 0) return; 
 
-                let featuresHtml = '';
-                if (plan.features) {
-                    let lines = plan.features.split('\n');
-                    featuresHtml = '<ul class="features-list">' + lines.map(l => `<li>${l}</li>`).join('') + '</ul>';
+                // ایجاد تگ ظرفیت محدود به صورت رندوم برای ایجاد فوریت
+                let fomoHtml = '';
+                if (plan.category === 'pansion') {
+                    let randomLeft = plan.type === 'cip' ? 2 : 4; // CIP ظرفیتش کمتره
+                    fomoHtml = `<div class="fomo-badge">🔥 فقط ${randomLeft} میز باقیست</div>`;
                 }
 
+                let featuresHtml = plan.features ? '<ul class="features-list">' + plan.features.split('\n').map(l => `<li>${l}</li>`).join('') + '</ul>' : '';
+                
+                let isSelected = state[plan.category] === plan.type;
                 let cardHtml = `
-                    <div class="option-card ${state[plan.category] === plan.type ? 'selected' : ''}" id="${plan.category.substring(0,3)}_${plan.type}" onclick="select${plan.category === 'pansion' ? 'Pansion' : 'Consult'}('${plan.type}')">
+                    <div class="option-card ${isSelected ? 'selected' : ''}" onclick="select${plan.category === 'pansion' ? 'Pansion' : 'Consult'}('${plan.type}')">
+                        ${fomoHtml}
                         <div class="opt-title">${plan.title}</div>
                         <div class="opt-desc">${plan.description || ''}</div>
                         <div class="opt-price">${formatMoney(price)} <span style="font-size:10px;color:var(--text-muted);">/ ماه</span></div>
@@ -354,40 +323,21 @@
         }
 
         // ==========================================
-        // 🎛️ کنترلرهای رابط کاربری
+        // 🎛️ کنترلرهای انتخاب
         // ==========================================
-        function initToggleSlider() {
-            const activeBtn = document.querySelector('.toggle-btn.active');
-            const slider = document.getElementById('toggleSlider');
-            if(activeBtn && slider) {
-                slider.style.width = activeBtn.offsetWidth + 'px';
-                slider.style.left = activeBtn.offsetLeft + 'px';
-            }
-        }
-
-        function setDuration(months, element) {
-            state.duration = months;
-            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
-            element.classList.add('active');
-            initToggleSlider();
-            if(months === 1) state.paymentMethod = 'cash'; 
-            calculateInvoice();
-        }
-
         function selectPansion(type) {
-            state.pansion = type;
-            renderCards(); 
+            state.pansion = type; renderCards();
+            document.getElementById('panDurationBox').style.display = type === 'none' ? 'none' : 'block';
             calculateInvoice();
         }
 
         function selectConsult(type) {
-            state.consult = type;
-            renderCards();
+            state.consult = type; renderCards();
+            document.getElementById('conDurationBox').style.display = type === 'none' ? 'none' : 'block';
             calculateInvoice();
         }
 
         function setPayMethod(method) {
-            if (state.duration === 1) return; 
             state.paymentMethod = method;
             document.getElementById('btnPayCash').classList.toggle('active', method === 'cash');
             document.getElementById('btnPayInst').classList.toggle('active', method === 'installments');
@@ -397,19 +347,11 @@
         function applyPromo() {
             const codeInput = document.getElementById('promoCode').value.trim().toUpperCase();
             const msg = document.getElementById('promoMsg');
-            
-            if (state.pansion !== 'none' && state.consult !== 'none') {
-                msg.innerText = "⚠️ طرح الماس (۶۰٪ تخفیف) فعال است. کدهای تخفیف مجزا اعمال نمی‌شوند.";
-                msg.style.color = "var(--accent)";
-                state.promoRate = 0;
-                calculateInvoice();
-                return;
-            }
-
             const promoObj = dbData.promos.find(p => p.code.toUpperCase() === codeInput);
+            
             if (promoObj) {
                 state.promoRate = promoObj.discount_percent / 100;
-                msg.innerText = `✅ کد تایید شد: ${promoObj.discount_percent}٪ تخفیف اعمال شد.`;
+                msg.innerText = `✅ کد تایید شد: ${promoObj.discount_percent}٪ تخفیف روی مشاوره اعمال شد.`;
                 msg.style.color = "var(--success)";
             } else {
                 state.promoRate = 0;
@@ -420,176 +362,159 @@
         }
 
         // ==========================================
-        // 🧮 موتور پیچیده محاسبات (با رند کردن دقیق به پایین)
+        // 🧮 موتور هوشمند محاسبات (با قانون هم‌پوشانی)
         // ==========================================
-        
-        // 🌟 تابع رند کردن به پایین (مضرب ۱۰۰ هزار تومان)
-        function roundDown100k(amount) {
-            return Math.floor(amount / 100000) * 100000;
-        }
+        function formatMoney(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+        function roundDown100k(amount) { return Math.floor(amount / 100000) * 100000; }
 
         function calculateInvoice() {
+            state.panDuration = parseInt(document.getElementById('panDuration').value) || 0;
+            state.conDuration = parseInt(document.getElementById('conDuration').value) || 0;
+
             if (state.pansion === 'none' && state.consult === 'none') {
                 document.getElementById('invoiceArea').style.display = 'none';
                 document.getElementById('checkoutBox').style.display = 'none';
                 return;
             }
             
-            document.getElementById('invoiceArea').style.display = 'block';
-            document.getElementById('checkoutBox').style.display = 'block';
+            document.getElementById('invoiceArea').style.display = 'block'; document.getElementById('checkoutBox').style.display = 'block';
 
-            let basePan = state.pansion !== 'none' ? getPrice('pansion', state.pansion) : 0;
-            let baseCon = state.consult !== 'none' ? getPrice('consult', state.consult) : 0;
+            let basePanMonthly = state.pansion !== 'none' ? getPrice('pansion', state.pansion) : 0;
+            let baseConMonthly = state.consult !== 'none' ? getPrice('consult', state.consult) : 0;
             
-            let totalBase = (basePan + baseCon) * state.duration;
+            let totalPan = basePanMonthly * (state.pansion !== 'none' ? state.panDuration : 0);
+            let totalCon = baseConMonthly * (state.consult !== 'none' ? state.conDuration : 0);
 
+            // نمایش سطرهای پایه
+            document.getElementById('row_pan_base').style.display = totalPan > 0 ? 'flex' : 'none';
+            document.getElementById('inv_pan_base').innerText = formatMoney(totalPan) + ' تومان';
+            document.getElementById('row_con_base').style.display = totalCon > 0 ? 'flex' : 'none';
+            document.getElementById('inv_con_base').innerText = formatMoney(totalCon) + ' تومان';
+
+            // ۱. محاسبه تخفیف الماس (فقط روی ماه‌های مشترک)
             let comboDisc = 0;
-            let promoDisc = 0;
-
             if (state.pansion !== 'none' && state.consult !== 'none') {
-                comboDisc = (baseCon * state.duration) * 0.60; 
-                document.getElementById('promoMsg').innerText = "💎 طرح جامع الماس به صورت خودکار برای شما فعال شد.";
+                let overlapMonths = Math.min(state.panDuration, state.conDuration);
+                comboDisc = (baseConMonthly * overlapMonths) * 0.60;
+                
+                document.getElementById('promoCode').disabled = true; document.getElementById('promoCode').value = ''; state.promoRate = 0;
+                document.getElementById('promoMsg').innerText = `💎 طرح الماس روی ${overlapMonths} ماه مشترک فعال شد (بدون نیاز به کد).`;
                 document.getElementById('promoMsg').style.color = "var(--primary)";
-            } else if (state.promoRate > 0) {
-                promoDisc = totalBase * state.promoRate; 
-            }
-
-            let subTotal = totalBase - comboDisc - promoDisc;
-
-            const switchCont = document.getElementById('paySwitchContainer');
-            if (state.duration === 1 || subTotal < 3000000) {
-                switchCont.style.display = 'none';
-                state.paymentMethod = 'cash';
             } else {
-                switchCont.style.display = 'flex';
+                document.getElementById('promoCode').disabled = false;
+                if(document.getElementById('promoMsg').innerText.includes('الماس')) document.getElementById('promoMsg').innerText = '';
             }
 
-            let timeDiscRate = 0;
-            if (state.duration === 3) timeDiscRate = state.paymentMethod === 'cash' ? 0.05 : 0.02;
-            if (state.duration === 10) timeDiscRate = state.paymentMethod === 'cash' ? 0.15 : 0.08;
+            // ۲. محاسبه کد تخفیف (فقط روی باقی‌مانده مشاوره)
+            let promoDisc = 0;
+            if (state.promoRate > 0 && totalCon > 0) {
+                promoDisc = totalCon * state.promoRate; 
+            }
 
-            let timeDisc = subTotal * timeDiscRate;
-            let finalTotal = subTotal - timeDisc;
+            // ۳. محاسبه تخفیف‌های زمانی (مجزا برای هر سرویس)
+            let panTimeRate = state.panDuration === 3 ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (state.panDuration === 10 ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
+            let conTimeRate = state.conDuration === 3 ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (state.conDuration === 10 ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
+            
+            let panTimeDisc = totalPan * panTimeRate;
+            let conTimeDisc = (totalCon - comboDisc - promoDisc) * conTimeRate; // تخفیف زمانی مشاوره روی مبلغ باقی‌مانده‌اش حساب میشه
+            let totalTimeDisc = panTimeDisc + conTimeDisc;
+
+            // ۴. جمع‌بندی
+            let subTotal = totalPan + totalCon - comboDisc - promoDisc - totalTimeDisc;
+
+            // ۵. کسر هدیه معرفی
+            if (state.hasReferral) {
+                document.getElementById('row_referral').style.display = 'flex';
+                subTotal -= 100000;
+            } else { document.getElementById('row_referral').style.display = 'none'; }
+            
+            subTotal = Math.max(0, subTotal); // که منفی نشه
 
             // آپدیت UI فاکتور
-            document.getElementById('inv_duration').innerText = state.duration === 10 ? 'تا کنکور (۱۰ ماهه)' : `${state.duration} ماهه`;
-            document.getElementById('inv_base').innerText = formatMoney(totalBase) + ' تومان';
-            
             document.getElementById('row_combo_disc').style.display = comboDisc > 0 ? 'flex' : 'none';
             document.getElementById('inv_combo_disc').innerText = '- ' + formatMoney(comboDisc) + ' تومان';
-
             document.getElementById('row_promo_disc').style.display = promoDisc > 0 ? 'flex' : 'none';
             document.getElementById('inv_promo_disc').innerText = '- ' + formatMoney(promoDisc) + ' تومان';
+            document.getElementById('row_time_disc').style.display = totalTimeDisc > 0 ? 'flex' : 'none';
+            document.getElementById('inv_time_disc').innerText = '- ' + formatMoney(totalTimeDisc) + ' تومان';
+            document.getElementById('inv_total').innerText = formatMoney(subTotal) + ' تومان';
 
-            document.getElementById('row_time_disc').style.display = timeDisc > 0 ? 'flex' : 'none';
-            document.getElementById('lbl_time_disc').innerText = state.paymentMethod === 'cash' ? `⏳ تخفیف نقدی (${timeDiscRate*100}٪):` : `⏳ تخفیف اقساطی (${timeDiscRate*100}٪):`;
-            document.getElementById('inv_time_disc').innerText = '- ' + formatMoney(timeDisc) + ' تومان';
+            // کنترل دکمه‌های اقساط
+            let maxDur = Math.max(state.pansion !== 'none' ? state.panDuration : 0, state.consult !== 'none' ? state.conDuration : 0);
+            const switchCont = document.getElementById('paySwitchContainer');
+            if (maxDur <= 1 || subTotal < 3000000) { switchCont.style.display = 'none'; state.paymentMethod = 'cash'; } 
+            else { switchCont.style.display = 'flex'; }
 
-            document.getElementById('inv_total').innerText = formatMoney(finalTotal) + ' تومان';
-
-            // 💳 موتور محاسبه اقساط (با رند کردن به پایین)
+            // 💳 فرمول اقساط بر اساس طولانی‌ترین قرارداد سبد خرید
             const instBox = document.getElementById('installmentDetails');
             instBox.innerHTML = '';
             
-            if (state.paymentMethod === 'installments') {
+            if (state.paymentMethod === 'installments' && subTotal > 0) {
                 instBox.style.display = 'block';
-                
-                // محاسبه پیش پرداخت
-                let upfront = state.duration === 3 ? finalTotal * 0.50 : finalTotal * 0.40;
-                if (upfront > 15000000) upfront = 15000000;
-                
-                // رند کردن پیش‌پرداخت به پایین
-                let upfrontRounded = roundDown100k(upfront); 
-                let remaining = finalTotal - upfrontRounded;
+                let upfront = maxDur === 3 ? subTotal * 0.50 : subTotal * 0.40;
+                let upfrontRounded = roundDown100k(Math.min(upfront, 15000000)); 
+                let remaining = subTotal - upfrontRounded;
                 
                 const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
                 let today = new Date();
 
-                if (state.duration === 3) {
+                if (maxDur === 3) {
                     let d1 = new Date(); d1.setDate(today.getDate() + 45); 
-                    instBox.innerHTML = `
-                        <li><strong style="color:var(--danger)">نقد (آپلود فیش):</strong> ${formatMoney(upfrontRounded)} تومان</li>
-                        <li>تاریخ چک صیادی (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>
-                    `;
-                } else if (state.duration === 10) {
-                    // رند کردن چک‌ها به پایین
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (پیش‌پرداخت):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>چک صیادی (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
+                } else if (maxDur >= 10) {
                     let checkAmt = roundDown100k(remaining / 3);
-                    let lastCheckAmt = remaining - (checkAmt * 2); // چک آخر بقیه پول رو پوشش میده تا دقیق بشه
-
-                    let d1 = new Date(); d1.setMonth(today.getMonth() + 2);
-                    let d2 = new Date(); d2.setMonth(today.getMonth() + 4);
-                    let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
-                    
-                    instBox.innerHTML = `
-                        <li><strong style="color:var(--danger)">نقد (آپلود فیش):</strong> ${formatMoney(upfrontRounded)} تومان</li>
-                        <li>چک اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li>
-                        <li>چک دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li>
-                        <li>چک سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>
-                    `;
+                    let lastCheckAmt = remaining - (checkAmt * 2);
+                    let d1 = new Date(); d1.setMonth(today.getMonth() + 2); let d2 = new Date(); d2.setMonth(today.getMonth() + 4); let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (پیش‌پرداخت):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>چک اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>چک دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>چک سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
                 }
-            } else {
-                instBox.style.display = 'none';
-            }
-        }
-
-        function formatMoney(num) {
-            return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            } else { instBox.style.display = 'none'; }
         }
 
         // ==========================================
-        // 📤 ارسال نهایی
+        // 📤 آپلود و ارسال نهایی
         // ==========================================
         let receiptBase64 = null; let receiptMimeType = null;
-
         function handleReceiptSelect(input) {
             if (input.files && input.files[0]) {
-                if(input.files[0].size > 5 * 1024 * 1024) {
-                    alert("حجم عکس نباید بیشتر از ۵ مگابایت باشد."); input.value = ''; return;
-                }
-                document.getElementById('lblFileName').innerText = `✅ فایل ضمیمه شد.`;
-                document.getElementById('lblFileName').style.color = 'var(--success)';
+                if(input.files[0].size > 5 * 1024 * 1024) { alert("حجم عکس نباید بیشتر از ۵ مگابایت باشد."); input.value = ''; return; }
+                document.getElementById('lblFileName').innerText = `✅ فیش ضمیمه شد.`;
+                document.getElementById('boxFile').classList.add('has-file');
                 receiptMimeType = input.files[0].type;
-                
-                const reader = new FileReader();
-                reader.onload = function(e) { receiptBase64 = e.target.result.split(',')[1]; };
-                reader.readAsDataURL(input.files[0]);
+                const reader = new FileReader(); reader.onload = function(e) { receiptBase64 = e.target.result.split(',')[1]; }; reader.readAsDataURL(input.files[0]);
             }
         }
 
         async function submitFinalStep() {
-            if(!document.getElementById('regRules').checked) return alert("❌ لطفاً ابتدا تعهدنامه و قوانین را تایید کنید.");
+            if(!document.getElementById('regRules').checked) return alert("❌ لطفاً ابتدا تعهدنامه را تایید کنید.");
             if(!receiptBase64) return alert("❌ آپلود تصویر فیش پیش‌پرداخت الزامی است.");
             
-            const btn = document.getElementById('btnSubmit');
-            btn.disabled = true; btn.innerText = "در حال ارسال... ⏳";
+            const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = "در حال صدور قرارداد... ⏳";
 
-            let invoiceText = `مبلغ کل: ${document.getElementById('inv_total').innerText}\n` +
-                              `روش پرداخت: ${state.paymentMethod === 'cash' ? 'نقدی' : 'اقساط'}\n`;
-            if(state.paymentMethod === 'installments') {
-                invoiceText += `جزئیات اقساط:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ');
-            }
+            let invoiceText = `مبلغ کل پرداختی/تعهد: ${document.getElementById('inv_total').innerText}\nروش پرداخت: ${state.paymentMethod === 'cash' ? 'نقدی' : 'اقساط'}\n`;
+            if(state.paymentMethod === 'installments') invoiceText += `اقساط:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
+            if(state.hasReferral) invoiceText += `(کسر ۱۰۰ هزار تومان هدیه معرفی در فاکتور لحاظ شد)\n`;
 
             const payload = {
                 action: 'web_auth', sub_action: 'register_step2', national_id: userNid,
                 plan_data: {
-                    plan_summary: `پانسیون: ${state.pansion} | مشاوره: ${state.consult}`,
-                    duration_months: state.duration, invoice_text: invoiceText,
-                    start_date: new Date().toISOString().split('T')[0],
-                    receipt_base64: receiptBase64, mime_type: receiptMimeType
+                    pansion_tier: state.pansion, pansion_duration_months: state.panDuration,
+                    consult_tier: state.consult, consult_duration_months: state.conDuration,
+                    invoice_text: invoiceText,
+                    receipt_base64: receiptBase64, mime_type: receiptMimeType,
+                    referrer_id: state.referrerId // ارسال کد ملی شخص معرف به بک‌اند
                 }
             };
 
             try {
+                // ارسال به وب‌هوک گوگل اسکریپت
                 const response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await response.json();
                 if(!result.success) throw new Error(result.error);
 
-                alert("🎉 فیش و فاکتور با موفقیت به مدیریت ارسال شد.");
-                localStorage.removeItem('temp_reg_nid'); window.location.href = 'index.html';
-            } catch(err) {
-                alert("خطا: " + err.message);
-                btn.disabled = false; btn.innerText = "تلاش مجدد";
-            }
+                alert("🎉 ثبت‌نام با موفقیت انجام شد و قرارداد برای مدیریت ارسال گردید.");
+                localStorage.removeItem('temp_reg_nid'); localStorage.removeItem('temp_referral_code');
+                window.location.href = 'index.html';
+            } catch(err) { alert("خطا: " + err.message); btn.disabled = false; btn.innerText = "تلاش مجدد"; }
         }
     </script>
 </body>
