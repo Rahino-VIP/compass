@@ -10,40 +10,49 @@
     <style>
         :root { 
             --primary: #1e3a8a; --primary-hover: #1e40af; --accent: #d97706;  
-            --bg-color: #f8fafc; --surface: #ffffff; --text-main: #0f172a; 
-            --text-muted: #64748b; --border: #e2e8f0; --shadow: 0 10px 25px rgba(0,0,0,0.05);
+            --bg-color: #f1f5f9; --surface: #ffffff; --text-main: #1e293b; 
+            --text-muted: #64748b; --border: #e2e8f0; --shadow: 0 20px 40px rgba(30, 58, 138, 0.15);
             --danger: #ef4444; --success: #10b981; 
         }
 
         [data-theme="dark"] {
             --primary: #3b82f6; --primary-hover: #60a5fa; --accent: #f59e0b;
             --bg-color: #0f172a; --surface: #1e293b; --text-main: #f8fafc;
-            --text-muted: #94a3b8; --border: #334155; --shadow: 0 10px 25px rgba(0,0,0,0.4);
+            --text-muted: #94a3b8; --border: #334155; --shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
         }
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
-        body { background: var(--bg-color); color: var(--text-main); min-height: 100vh; padding: 30px 15px; transition: 0.3s; line-height: 1.6; }
         
-        .main-container { width: 100%; max-width: 800px; margin: 0 auto; animation: slideUp 0.4s ease-out; position: relative; padding-bottom: 50px; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        body { background: var(--bg-color); color: var(--text-main); min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 30px 15px; transition: background-color 0.4s ease, color 0.4s ease; }
 
-        .theme-toggle { position: absolute; top: -10px; left: 0; background: var(--surface); border: 1px solid var(--border); color: var(--text-main); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; justify-content: center; align-items: center; box-shadow: var(--shadow); z-index: 100; transition: 0.3s; }
+        .theme-toggle { position: absolute; top: 20px; left: 20px; background: var(--surface); border: 2px solid var(--border); color: var(--text-main); width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); z-index: 100; transition: 0.3s; }
         .theme-toggle:hover { transform: scale(1.1); border-color: var(--primary); }
 
-        #loaderOverlay { position: fixed; inset: 0; background: var(--bg-color); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.3s opacity; }
+        .auth-box { background: var(--surface); border-radius: 32px; padding: 40px; width: 100%; max-width: 850px; box-shadow: var(--shadow); border: 1px solid var(--border); animation: slideUp 0.5s ease-out; position: relative; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 📍 نوار پیشرفت (Progress Bar) */
+        .progress-container { display: flex; justify-content: center; align-items: center; margin-bottom: 30px; gap: 15px; }
+        .step { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 14px; color: var(--text-muted); }
+        .step.active { color: var(--primary); }
+        .step-circle { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-color); border: 2px solid var(--border); display: flex; justify-content: center; align-items: center; transition: 0.3s; }
+        .step.active .step-circle { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+        .step-line { width: 50px; height: 3px; background: var(--border); border-radius: 2px; }
+
+        #loaderOverlay { position: absolute; inset: 0; background: var(--surface); border-radius: 32px; z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.3s opacity; }
         .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .header-title { text-align: center; margin-bottom: 30px; margin-top: 20px; }
+        .header-title { text-align: center; margin-bottom: 30px; margin-top: 10px; }
         .header-title h1 { font-size: 22px; font-weight: 900; color: var(--primary); margin-bottom: 10px; }
-        .user-badge { display: inline-block; background: var(--surface); color: var(--text-main); padding: 6px 15px; border-radius: 12px; font-size: 13px; font-weight: bold; border: 1px dashed var(--accent); box-shadow: var(--shadow); }
+        .user-badge { display: inline-block; background: var(--bg-color); color: var(--text-main); padding: 6px 15px; border-radius: 12px; font-size: 13px; font-weight: bold; border: 1px dashed var(--accent); }
 
-        .section-title { font-size: 15px; font-weight: 900; color: var(--text-main); margin: 25px 0 15px 0; display: flex; align-items: center; gap: 8px; }
-        .selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .section-title { font-size: 15px; font-weight: bold; color: var(--accent); margin: 25px 0 15px 0; border-bottom: 1px solid var(--border); padding-bottom: 5px; display: flex; align-items: center; gap: 8px; }
         
-        .option-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; text-align: right; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; display: flex; flex-direction: column; }
-        .option-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow); }
-        .option-card.selected { border-color: var(--primary); background: rgba(59, 130, 246, 0.03); border-width: 2px; }
+        .selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .option-card { background: var(--bg-color); border: 2px solid var(--border); border-radius: 16px; padding: 20px; text-align: right; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+        .option-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .option-card.selected { border-color: var(--primary); background: rgba(59, 130, 246, 0.05); }
         .option-card.selected::before { content: '✅'; position: absolute; top: 15px; left: 15px; font-size: 16px; z-index: 5; }
         
         .fomo-badge { position: absolute; top: 12px; left: -30px; background: var(--danger); color: white; font-size: 10px; padding: 4px 30px; font-weight: bold; transform: rotate(-45deg); text-align: center; width: 120px; z-index: 2; box-shadow: 0 2px 5px rgba(0,0,0,0.2); animation: pulse 2s infinite; }
@@ -55,27 +64,28 @@
         .features-list { list-style: none; font-size: 11px; color: var(--text-main); flex-grow: 1; }
         .features-list li { margin-bottom: 6px; display: flex; align-items: flex-start; gap: 5px; }
 
-        .duration-box { background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--primary-light); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none; animation: fadeIn 0.3s; }
-        .duration-box label { font-size: 12px; font-weight: bold; color: var(--primary); display: block; margin-bottom: 8px; }
-        .duration-select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text-main); font-family: inherit; font-size: 13px; font-weight: bold; outline: none; }
+        .duration-box { background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--primary); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none; animation: fadeIn 0.3s; }
+        .duration-box label { font-size: 13px; font-weight: bold; color: var(--primary); display: block; margin-bottom: 8px; }
+        .duration-select { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface); color: var(--text-main); font-family: inherit; font-size: 13px; font-weight: bold; outline: none; }
+        .duration-select:focus { border-color: var(--primary); }
 
         /* 🧾 فاکتور */
-        .invoice-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 25px; margin-top: 30px; box-shadow: var(--shadow); display: none; animation: fadeIn 0.4s; }
+        .invoice-box { background: var(--bg-color); border: 2px dashed var(--border); border-radius: 16px; padding: 25px; margin-top: 30px; display: none; animation: fadeIn 0.4s; }
         
         .promo-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        .promo-group input { flex: 1; padding: 10px 15px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); outline: none; font-size: 12px; }
-        .promo-btn { padding: 10px 20px; background: var(--primary); border: none; border-radius: 12px; cursor: pointer; font-size: 12px; font-weight: bold; color: white; }
+        .promo-group input { flex: 1; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--border); background: var(--surface); color: var(--text-main); outline: none; font-size: 13px; }
+        .promo-btn { padding: 10px 20px; background: var(--primary); border: none; border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: bold; color: white; }
         
-        .invoice-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; color: var(--text-muted); align-items: center; }
-        .invoice-row.discount { color: var(--success); font-weight: bold; }
-        .invoice-row.ref-discount { color: var(--accent); font-weight: bold; background: rgba(217, 119, 6, 0.1); padding: 5px 10px; border-radius: 8px; }
-        .invoice-total { display: flex; justify-content: space-between; border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 15px; font-size: 18px; font-weight: 900; color: var(--primary); }
+        .invoice-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px; color: var(--text-muted); align-items: center; font-weight: bold; }
+        .invoice-row.discount { color: var(--success); }
+        .invoice-row.ref-discount { color: var(--accent); background: rgba(217, 119, 6, 0.1); padding: 8px 12px; border-radius: 8px; }
+        .invoice-total { display: flex; justify-content: space-between; border-top: 2px dashed var(--border); padding-top: 15px; margin-top: 15px; font-size: 18px; font-weight: 900; color: var(--primary); }
         
-        .pay-method-switch { display: flex; gap: 10px; margin: 20px 0; background: var(--bg-color); padding: 5px; border-radius: 12px; border: 1px solid var(--border); }
-        .pay-method-btn { flex: 1; text-align: center; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; color: var(--text-muted); }
-        .pay-method-btn.active { background: var(--primary); color: white; box-shadow: var(--shadow); }
+        .pay-method-switch { display: flex; gap: 10px; margin: 20px 0; background: var(--surface); padding: 5px; border-radius: 12px; border: 2px solid var(--border); }
+        .pay-method-btn { flex: 1; text-align: center; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; color: var(--text-muted); }
+        .pay-method-btn.active { background: var(--primary); color: white; }
 
-        .installment-details { background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); padding: 15px; border-radius: 12px; font-size: 12px; display: none; margin-top: 10px; }
+        .installment-details { background: rgba(245, 158, 11, 0.05); border: 1px dashed rgba(245, 158, 11, 0.4); padding: 15px; border-radius: 12px; font-size: 12px; display: none; margin-top: 10px; }
         .installment-details li { margin-right: 15px; margin-bottom: 8px; color: var(--text-main); font-weight: bold; }
 
         .checkout-box { margin-top: 25px; display: none; }
@@ -83,23 +93,37 @@
         .file-upload.has-file { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
         .file-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
         
-        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
-        .btn-primary { background: linear-gradient(135deg, var(--primary), #312e81); color: white; box-shadow: 0 10px 20px rgba(30, 58, 138, 0.2); }
-        .btn-primary:hover { transform: translateY(-2px); }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); margin-top: 10px; }
+        .action-bar { display: flex; gap: 15px; margin-top: 20px; }
+        .btn { flex: 1; padding: 16px; border-radius: 16px; border: none; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.3s; text-align: center; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; box-shadow: 0 10px 20px rgba(30, 58, 138, 0.2); }
+        .btn-primary:hover { transform: translateY(-3px); filter: brightness(1.1); box-shadow: 0 15px 25px rgba(30, 58, 138, 0.3); }
+        .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background: var(--bg-color); }
     </style>
 </head>
 <body data-theme="dark">
 
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️</button>
 
-    <div id="loaderOverlay">
-        <div class="spinner"></div>
-        <h3 style="color: var(--primary); font-size: 14px;">در حال آماده‌سازی میز شما...</h3>
-    </div>
-
-    <div class="main-container">
+    <div class="auth-box">
         
+        <div id="loaderOverlay">
+            <div class="spinner"></div>
+            <h3 style="color: var(--primary); font-size: 14px;">در حال آماده‌سازی میز شما...</h3>
+        </div>
+
+        <div class="progress-container">
+            <div class="step" style="color: var(--success);">
+                <div class="step-circle" style="background: var(--success); color: white; border-color: var(--success);">✔</div>
+                <span>تشکیل پرونده</span>
+            </div>
+            <div class="step-line" style="background: var(--success);"></div>
+            <div class="step active">
+                <div class="step-circle">۲</div>
+                <span>انتخاب طرح و پرداخت</span>
+            </div>
+        </div>
+
         <div class="header-title">
             <h1>سرمایه‌گذاری روی آینده</h1>
             <div class="user-badge" id="lblUserInfo">👤 در حال بارگذاری...</div>
@@ -128,7 +152,7 @@
         </div>
 
         <div class="invoice-box" id="invoiceArea">
-            <h3 style="color: var(--primary); font-size: 15px; margin-bottom: 20px; text-align: center;">🧾 سبد خرید شما</h3>
+            <h3 style="color: var(--primary); font-size: 16px; margin-bottom: 20px; text-align: center;">🧾 سبد خرید شما</h3>
             
             <div class="promo-group">
                 <input type="text" id="promoCode" placeholder="کد تخفیف (اختیاری)">
@@ -166,7 +190,7 @@
         </div>
 
         <div class="checkout-box" id="checkoutBox">
-            <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin-bottom: 25px; padding: 10px; background: rgba(0,0,0,0.02); border-radius: 12px; border: 1px solid var(--border);">
+            <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin-bottom: 25px; padding: 10px; background: rgba(0,0,0,0.03); border-radius: 12px; border: 1px solid var(--border);">
                 <input type="checkbox" id="regRules" style="width: 20px; height: 20px; margin-top: 2px;">
                 <span style="font-size: 12px; font-weight: bold; color: var(--text-main); line-height: 1.8;">
                     قوانین انضباطی و مالی را می‌پذیرم. (در صورت انصراف، ماه‌های استفاده شده با تعرفه آزاد محاسبه و مبلغ باقیمانده عودت داده می‌شود).
@@ -175,12 +199,14 @@
 
             <div class="file-upload" id="boxFile" onclick="document.getElementById('regReceipt').click()">
                 <div style="font-size: 30px; margin-bottom: 5px;">📥</div>
-                <div id="lblFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود فیش واریزی پیش‌پرداخت (الزامی)</div>
+                <div id="lblFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی پیش‌پرداخت (الزامی)</div>
                 <input type="file" id="regReceipt" accept="image/*" onchange="handleReceiptSelect(this)">
             </div>
 
-            <button class="btn btn-primary" id="btnSubmit" onclick="submitFinalStep()">تایید نهایی و ارسال قرارداد 🚀</button>
-            <button class="btn btn-outline" onclick="window.location.href='index.html'">بازگشت</button>
+            <div class="action-bar">
+                <button class="btn btn-primary" id="btnSubmit" onclick="submitFinalStep()">تایید نهایی و صدور فاکتور 🚀</button>
+                <button class="btn btn-outline" onclick="window.location.href='index.html'">انصراف</button>
+            </div>
         </div>
 
     </div>
@@ -190,7 +216,8 @@
         // 🌓 مدیریت تم
         // ==========================================
         const themeBtn = document.getElementById('themeBtn');
-        if ((localStorage.getItem('theme') || 'dark') === 'dark') { document.body.setAttribute('data-theme', 'dark'); themeBtn.innerText = '☀️'; } 
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        if (currentTheme === 'dark') { document.body.setAttribute('data-theme', 'dark'); themeBtn.innerText = '☀️'; } 
         else { document.body.removeAttribute('data-theme'); themeBtn.innerText = '🌙'; }
         
         function toggleTheme() {
@@ -219,9 +246,11 @@
         };
 
         let dbData = { pricing: [], details: [], promos: [] };
+        // متغیر ذخیره اقساط و پرداختی
+        let financeData = { total: 0, discount: 0, final: 0, upfront: 0, installments: [] };
 
         // ==========================================
-        // 🚀 راه‌اندازی و بررسی کد معرف
+        // 🚀 راه‌اندازی
         // ==========================================
         window.onload = async function() {
             userNid = localStorage.getItem('temp_reg_nid');
@@ -247,7 +276,6 @@
                 dbData.details = await detailsRes.json() || [];
                 dbData.promos = await promosRes.json() || [];
 
-                // 🤝 بررسی کد معرف
                 let refCode = localStorage.getItem('temp_referral_code');
                 if (refCode && refCode.length > 5) {
                     const refRes = await fetch(`${cleanUrl}/rest/v1/students?referral_code=eq.${refCode}&select=national_id`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
@@ -262,11 +290,11 @@
                 document.getElementById('loaderOverlay').style.opacity = '0';
                 setTimeout(() => document.getElementById('loaderOverlay').style.display = 'none', 300);
 
-            } catch (err) { alert("خطا در ارتباط با سرور."); }
+            } catch (err) { alert("خطا در دریافت اطلاعات. صفحه را رفرش کنید."); }
         };
 
         // ==========================================
-        // 🃏 ساخت کارت‌های داینامیک
+        // 🃏 ساخت کارت‌ها
         // ==========================================
         function getPrice(category, type) {
             let p = dbData.pricing.find(x => x.service_category === category && x.service_type === type && (x.target_grade === normalizedGrade || x.target_grade === 'all'));
@@ -323,7 +351,7 @@
         }
 
         // ==========================================
-        // 🎛️ کنترلرهای انتخاب
+        // 🎛️ کنترلرها
         // ==========================================
         function selectPansion(type) {
             state.pansion = type; renderCards();
@@ -362,13 +390,10 @@
         }
 
         // ==========================================
-        // 🧮 موتور هوشمند محاسبات و اقساط
+        // 🧮 موتور محاسبات (دیباگ شده و کامل)
         // ==========================================
         function formatMoney(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
         function roundDown100k(amount) { return Math.floor(amount / 100000) * 100000; }
-
-        // متغیرهای گلوبال برای ذخیره دیتای مالی (بالای توابع اضافه کن اگر نیست)
-        let financeData = { total: 0, discount: 0, final: 0, upfront: 0, installments: [] };
 
         function calculateInvoice() {
             state.panDuration = parseInt(document.getElementById('panDuration').value) || 0;
@@ -422,13 +447,11 @@
             let refDiscount = 0;
             if (state.hasReferral) { refDiscount = 100000; finalTotal = Math.max(0, finalTotal - refDiscount); }
 
-            // ذخیره دیتای مالی برای ارسال به بک‌اند
             financeData.total = totalBase;
             financeData.discount = comboDisc + promoDisc + timeDisc + refDiscount;
             financeData.final = finalTotal;
-            financeData.installments = []; // ریست کردن اقساط
+            financeData.installments = [];
 
-            // آپدیت ظاهر فاکتور
             document.getElementById('row_pan_base').style.display = totalPan > 0 ? 'flex' : 'none'; document.getElementById('inv_pan_base').innerText = formatMoney(totalPan) + ' تومان';
             document.getElementById('row_con_base').style.display = totalCon > 0 ? 'flex' : 'none'; document.getElementById('inv_con_base').innerText = formatMoney(totalCon) + ' تومان';
             document.getElementById('row_combo_disc').style.display = comboDisc > 0 ? 'flex' : 'none'; document.getElementById('inv_combo_disc').innerText = '- ' + formatMoney(comboDisc) + ' تومان';
@@ -437,7 +460,6 @@
             let refRow = document.getElementById('row_ref_disc'); if(refRow) { refRow.style.display = refDiscount > 0 ? 'flex' : 'none'; document.getElementById('inv_ref_disc').innerText = '- ' + formatMoney(refDiscount) + ' تومان'; }
             document.getElementById('inv_total').innerText = formatMoney(finalTotal) + ' تومان';
 
-            // تولید اقساط و ذخیره در آرایه دیتابیس
             const instBox = document.getElementById('installmentDetails');
             instBox.innerHTML = '';
             
@@ -486,6 +508,8 @@
                 instBox.style.display = 'none'; 
                 financeData.upfront = finalTotal; 
             }
+        } // <--- حل مشکل ارور: این آکولادِ بسته شدن تابع در کد قبلی جا افتاده بود!
+
         // ==========================================
         // 📤 آپلود فیش و ارسال به بک‌اند
         // ==========================================
