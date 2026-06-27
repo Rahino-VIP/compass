@@ -245,44 +245,69 @@
         document.getElementById('greetingText').innerText = `سلام ${firstName} عزیز!`;
 
         // ==========================================
-        // 🧠 سیستم هوشمند تشخیص طرح (تطبیق با دیتابیس جدید)
+        // 🔗 اتصال به دیتابیس برای استخراج زنده اشتراک‌ها
         // ==========================================
-        const userPlan = localStorage.getItem('qotbnama_plan') || '';
-        const consultTier = localStorage.getItem('qotbnama_consult_tier') || 'none';
-        const pansionTier = localStorage.getItem('qotbnama_pansion_tier') || 'none';
-        
-        const planTextEl = document.getElementById('planText');
-        
-        // سیستم الان هم ستون‌های جدید دیتابیس رو می‌خونه و هم دیتای قدیمی رو پوشش می‌ده
-        let isConsultant = (consultTier !== 'none' && consultTier !== '') || userPlan.includes('مشاوره') || userPlan.includes('plus'); 
-        let isPansion = (pansionTier !== 'none' && pansionTier !== '') || userPlan.includes('پانسیون');
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
 
-        // تعیین متن بنر بر اساس تحلیل دقیق بالا
-        if (isConsultant && isPansion) {
-            planTextEl.innerText = "طرح جامع (پانسیون + مشاوره)";
-        } else if (isPansion && !isConsultant) {
-            planTextEl.innerText = `طرح اختصاصی (پانسیون ${pansionTier !== 'none' ? pansionTier : ''})`;
-        } else if (isConsultant && !isPansion) {
-            planTextEl.innerText = `طرح راهیار (مشاوره ${consultTier !== 'none' ? consultTier : ''})`;
-        } else {
-            planTextEl.innerText = userPlan ? userPlan.substring(0, 20) + "..." : "نامشخص";
-        }
+        let isConsultant = false; 
 
         // ==========================================
-        // 🔒 اعمال قفل روی کارت‌های VIP (فقط برای پانسیونی‌های بدون مشاوره)
+        // 🧠 سیستم هوشمند استخراج اشتراک‌ها (متصل به جدول Subscriptions)
         // ==========================================
-        // قانون: اگر شخص فقط پانسیون داره (!isConsultant)، بخش‌های مشاوره و برنامه براش قفله.
-        if (!isConsultant) {
-            const protectedCards = ['btn-schedule', 'btn-ai-promax'];
-            protectedCards.forEach(id => {
-                const card = document.getElementById(id);
-                if(card) {
-                    card.classList.add('vip-locked');
-                    card.innerHTML += '<div class="lock-badge">🔒</div>';
+        async function fetchUserSubscriptions() {
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                
+                // دریافت فقط اشتراک‌های فعال (active) این دانش‌آموز از هسته دیتابیس
+                let res = await fetch(`${cleanUrl}/rest/v1/subscriptions?student_nid=eq.${userId}&status=eq.active`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                
+                let subs = await res.json();
+                
+                let isPansion = false;
+                let consultTier = '';
+                let pansionTier = '';
+
+                // اسکن کردن خریدهای کاربر
+                if (subs && subs.length > 0) {
+                    subs.forEach(sub => {
+                        if (sub.service_category === 'consult') { isConsultant = true; consultTier = sub.service_type; }
+                        if (sub.service_category === 'pansion') { isPansion = true; pansionTier = sub.service_type; }
+                    });
                 }
-            });
+
+                // آپدیت متن بنر طلایی بالای صفحه
+                const planTextEl = document.getElementById('planText');
+                if (isConsultant && isPansion) planTextEl.innerText = "طرح جامع (پانسیون + مشاوره)";
+                else if (isPansion) planTextEl.innerText = `طرح اختصاصی (پانسیون ${pansionTier})`;
+                else if (isConsultant) planTextEl.innerText = `طرح راهیار (مشاوره ${consultTier})`;
+                else planTextEl.innerText = "طرح فعالی ندارید";
+
+                // ==========================================
+                // 🔒 اعمال قفل روی کارت‌های VIP (در صورت نداشتن مشاوره)
+                // ==========================================
+                if (!isConsultant) {
+                    const protectedCards = ['btn-schedule', 'btn-ai-promax'];
+                    protectedCards.forEach(id => {
+                        const card = document.getElementById(id);
+                        if(card) {
+                            card.classList.add('vip-locked');
+                            // جلوگیری از دوتا شدن آیکون قفل
+                            if(!card.innerHTML.includes('lock-badge')) {
+                                card.innerHTML += '<div class="lock-badge">🔒</div>';
+                            }
+                        }
+                    });
+                }
+            } catch (err) {
+                console.log("خطا در دریافت اشتراک‌ها:", err);
+            }
         }
 
+        // اجرای موتور تشخیص به محض باز شدن داشبورد
+        fetchUserSubscriptions();
         // ==========================================
         // 🧭 سیستم هدایت (Navigation)
         // ==========================================
