@@ -236,6 +236,7 @@
 
         let userNid = null;
         let normalizedGrade = 'دوازدهم'; 
+        let normalizedMajor = 'all'; // 👈 اضافه شد
         
         let state = {
             pansion: 'none', panDuration: 1,
@@ -267,8 +268,9 @@
                 const studentData = await studentRes.json();
                 if (studentData && studentData.length > 0) {
                     let g = studentData[0].grade;
-                    normalizedGrade = ['دهم', 'یازدهم'].includes(g) ? g : 'دوازدهم'; // پشت کنکوری اتوماتیک میشه دوازدهم!
-                    document.getElementById('lblUserInfo').innerText = `👤 ${studentData[0].full_name || 'کاربر'} | پایه: ${g || 'ثبت نشده'}`;
+                    normalizedGrade = ['دهم', 'یازدهم'].includes(g) ? g : 'دوازدهم';
+                    normalizedMajor = studentData[0].major || 'all'; // 👈 استخراج رشته کاربر
+                    document.getElementById('lblUserInfo').innerText = `👤 ${studentData[0].full_name || 'کاربر'} | پایه: ${g || 'ثبت نشده'} (${normalizedMajor})`;
                 }
 
                 dbData.services = await servicesRes.json() || [];
@@ -296,7 +298,12 @@
         // 🃏 ساخت کارت‌ها (با سیستم ظرفیت پویا)
         // ==========================================
         function getPrice(category, type) {
-            let p = dbData.services.find(x => x.category === category && x.type === type && (x.target_grade === normalizedGrade || x.target_grade === 'all'));
+            // پیدا کردن قیمت دقیق بر اساس نوع، پایه و رشته
+            let p = dbData.services.find(x => 
+                x.category === category && x.type === type && 
+                (x.target_grade === normalizedGrade || x.target_grade === 'all') &&
+                (x.target_major === normalizedMajor || x.target_major === 'all')
+            );
             return p ? parseInt(p.base_price) : 0;
         }
 
@@ -304,23 +311,14 @@
             const panGrid = document.getElementById('pansionGrid');
             const conGrid = document.getElementById('consultGrid');
 
-            panGrid.innerHTML = `
-                <div class="option-card ${state.pansion === 'none' ? 'selected' : ''}" onclick="selectPansion('none')">
-                    <div class="opt-title">فعلاً پانسیون نمی‌خوام</div>
-                    <div class="opt-desc">بدون رزرو میز مطالعه</div>
-                    <div class="opt-price">۰ تومان</div>
-                </div>
-            `;
+            panGrid.innerHTML = `<div class="option-card ${state.pansion === 'none' ? 'selected' : ''}" onclick="selectPansion('none')"><div class="opt-title">فعلاً پانسیون نمی‌خوام</div><div class="opt-desc">بدون رزرو میز مطالعه</div><div class="opt-price">۰ تومان</div></div>`;
+            conGrid.innerHTML = `<div class="option-card ${state.consult === 'none' ? 'selected' : ''}" onclick="selectConsult('none')"><div class="opt-title">فعلاً مشاوره نمی‌خوام</div><div class="opt-desc">بدون دریافت برنامه تحصیلی</div><div class="opt-price">۰ تومان</div></div>`;
 
-            conGrid.innerHTML = `
-                <div class="option-card ${state.consult === 'none' ? 'selected' : ''}" onclick="selectConsult('none')">
-                    <div class="opt-title">فعلاً مشاوره نمی‌خوام</div>
-                    <div class="opt-desc">بدون دریافت برنامه تحصیلی</div>
-                    <div class="opt-price">۰ تومان</div>
-                </div>
-            `;
-
-            let availablePlans = dbData.services.filter(x => x.target_grade === normalizedGrade || x.target_grade === 'all');
+            // 👈 فیلتر جادویی: فقط طرح‌هایی که به پایه و رشته این دانش‌آموز می‌خورد!
+            let availablePlans = dbData.services.filter(x => 
+                (x.target_grade === normalizedGrade || x.target_grade === 'all') &&
+                (x.target_major === normalizedMajor || x.target_major === 'all')
+            );
 
             availablePlans.forEach(plan => {
                 let price = parseInt(plan.base_price);
@@ -330,20 +328,13 @@
                 let capacity = parseInt(plan.capacity) || 0;
                 let isFull = capacity <= 0;
                 
-                // هندل کردن ظرفیت
-                let capHtml = '';
-                if (capacity > 0) {
-                    let color = capacity <= 5 ? 'var(--danger)' : 'var(--success)';
-                    capHtml = `<div style="font-size: 12px; font-weight: bold; color: ${color}; margin-top: 5px;">👥 ظرفیت باقیمانده: ${capacity} نفر</div>`;
-                } else {
-                    capHtml = `<div style="font-size: 12px; font-weight: bold; color: var(--danger); margin-top: 5px;">❌ ظرفیت تکمیل</div>`;
-                }
+                let capHtml = capacity > 0 ? 
+                    `<div style="font-size: 12px; font-weight: bold; color: ${capacity <= 5 ? 'var(--danger)' : 'var(--success)'}; margin-top: 5px;">👥 ظرفیت باقیمانده: ${capacity} نفر</div>` : 
+                    `<div style="font-size: 12px; font-weight: bold; color: var(--danger); margin-top: 5px;">❌ ظرفیت تکمیل</div>`;
 
                 let featuresHtml = plan.features ? '<ul class="features-list">' + plan.features.split('\n').map(l => `<li>${l}</li>`).join('') + '</ul>' : '';
-                
                 let onclickAttr = isFull ? '' : `onclick="select${plan.category === 'pansion' ? 'Pansion' : 'Consult'}('${plan.type}')"`;
-                let cardClass = isSelected ? 'selected' : '';
-                if (isFull) cardClass += ' disabled';
+                let cardClass = isSelected ? 'selected' : ''; if (isFull) cardClass += ' disabled';
 
                 let cardHtml = `
                     <div class="option-card ${cardClass}" ${onclickAttr}>
