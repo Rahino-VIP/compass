@@ -206,9 +206,9 @@
                 <span class="card-icon">📨</span>
                 <span class="card-title">صندوق پیام‌ها</span>
             </a>
-            <a href="#" class="card" onclick="navigate('settings')">
-                <span class="card-icon">⚙️</span>
-                <span class="card-title">تنظیمات حساب</span>
+            <a href="#" class="card" onclick="navigate('profile')">
+                <span class="card-icon">👤</span>
+                <span class="card-title">پروفایل و اشتراک من</span>
             </a>
         </div>
 
@@ -248,22 +248,22 @@
         // 🧠 سیستم هوشمند تشخیص طرح (تطبیق با دیتابیس جدید)
         // ==========================================
         const userPlan = localStorage.getItem('qotbnama_plan') || '';
+        const consultTier = localStorage.getItem('qotbnama_consult_tier') || 'none';
+        const pansionTier = localStorage.getItem('qotbnama_pansion_tier') || 'none';
+        
         const planTextEl = document.getElementById('planText');
         
-        let isConsultant = false; // آیا این شخص مشاور داره؟
-        let isPansion = false; // آیا این شخص پانسیون داره؟
+        // سیستم الان هم ستون‌های جدید دیتابیس رو می‌خونه و هم دیتای قدیمی رو پوشش می‌ده
+        let isConsultant = (consultTier !== 'none' && consultTier !== '') || userPlan.includes('مشاوره') || userPlan.includes('plus'); 
+        let isPansion = (pansionTier !== 'none' && pansionTier !== '') || userPlan.includes('پانسیون');
 
-        // تحلیل هوشمند متنِ ذخیره شده در دیتابیس (بدون نیاز به نام‌گذاری دقیق)
-        if (userPlan.includes('مشاوره')) { isConsultant = true; }
-        if (userPlan.includes('پانسیون')) { isPansion = true; }
-
-        // تعیین متن بنر بر اساس تحلیل بالا
+        // تعیین متن بنر بر اساس تحلیل دقیق بالا
         if (isConsultant && isPansion) {
             planTextEl.innerText = "طرح جامع (پانسیون + مشاوره)";
         } else if (isPansion && !isConsultant) {
-            planTextEl.innerText = "طرح اختصاصی (فقط پانسیون)";
+            planTextEl.innerText = `طرح اختصاصی (پانسیون ${pansionTier !== 'none' ? pansionTier : ''})`;
         } else if (isConsultant && !isPansion) {
-            planTextEl.innerText = "طرح راهیار (فقط مشاوره)";
+            planTextEl.innerText = `طرح راهیار (مشاوره ${consultTier !== 'none' ? consultTier : ''})`;
         } else {
             planTextEl.innerText = userPlan ? userPlan.substring(0, 20) + "..." : "نامشخص";
         }
@@ -299,7 +299,7 @@
                 window.location.href = 'schedule.html';
             } else if (page === 'ai-promax') {
                 window.location.href = 'promax-sprints.html';
-            } else if (page === 'settings') {
+            } else if (page === 'profile') {
                 window.location.href = 'profile.html';
             } else {
                 alert("این صفحه به زودی ساخته می‌شود: " + page);
