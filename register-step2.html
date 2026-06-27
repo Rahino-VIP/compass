@@ -563,7 +563,12 @@
                     discount_amount: financeData.discount,
                     final_amount: financeData.final,
                     payment_method: state.paymentMethod,
-                    paid_upfront: financeData.upfront
+                    paid_upfront: financeData.upfront,
+                    // ارسال جزئیات برای فاکتور
+                    pansion_tier: state.pansion,       
+                    pan_duration: state.panDuration,   
+                    consult_tier: state.consult,       
+                    con_duration: state.conDuration    
                 },
                 installments: financeData.installments
             };
