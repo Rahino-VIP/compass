@@ -212,7 +212,7 @@
     </div>
 
     <script>
-        // ==========================================
+// ==========================================
         // 🌓 مدیریت تم
         // ==========================================
         const themeBtn = document.getElementById('themeBtn');
@@ -245,12 +245,12 @@
             hasReferral: false, referrerId: null
         };
 
-        let dbData = { pricing: [], details: [], promos: [] };
-        // متغیر ذخیره اقساط و پرداختی
+        // 👈 تغییر مهم: فقط یک آرایه services داریم
+        let dbData = { services: [], promos: [] };
         let financeData = { total: 0, discount: 0, final: 0, upfront: 0, installments: [] };
 
         // ==========================================
-        // 🚀 راه‌اندازی
+        // 🚀 راه‌اندازی و خواندن از جدول جدید Services
         // ==========================================
         window.onload = async function() {
             userNid = localStorage.getItem('temp_reg_nid');
@@ -258,10 +258,10 @@
             
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
-                const [studentRes, pricingRes, detailsRes, promosRes] = await Promise.all([
+                // 👈 تغییر مهم: خواندن مستقیم از جدول services
+                const [studentRes, servicesRes, promosRes] = await Promise.all([
                     fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userNid}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
-                    fetch(`${cleanUrl}/rest/v1/pricing_tiers`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
-                    fetch(`${cleanUrl}/rest/v1/plan_details`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+                    fetch(`${cleanUrl}/rest/v1/services?is_active=eq.true`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
                     fetch(`${cleanUrl}/rest/v1/promo_codes?is_active=eq.true`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
                 ]);
 
@@ -272,8 +272,7 @@
                     document.getElementById('lblUserInfo').innerText = `👤 ${studentData[0].full_name || 'کاربر'} | پایه: ${g || 'ثبت نشده'}`;
                 }
 
-                dbData.pricing = await pricingRes.json() || [];
-                dbData.details = await detailsRes.json() || [];
+                dbData.services = await servicesRes.json() || [];
                 dbData.promos = await promosRes.json() || [];
 
                 let refCode = localStorage.getItem('temp_referral_code');
@@ -294,12 +293,11 @@
         };
 
         // ==========================================
-        // 🃏 ساخت کارت‌ها
+        // 🃏 ساخت کارت‌ها (با منطق جدید)
         // ==========================================
         function getPrice(category, type) {
-            let p = dbData.pricing.find(x => x.service_category === category && x.service_type === type && (x.target_grade === normalizedGrade || x.target_grade === 'all'));
-            if(!p) p = dbData.pricing.find(x => x.service_category === category && x.service_type === type);
-            return p ? parseInt(p.monthly_price) : 0;
+            let p = dbData.services.find(x => x.category === category && x.type === type && (x.target_grade === normalizedGrade || x.target_grade === 'all'));
+            return p ? parseInt(p.base_price) : 0;
         }
 
         function renderCards() {
@@ -322,8 +320,11 @@
                 </div>
             `;
 
-            dbData.details.forEach(plan => {
-                let price = getPrice(plan.category, plan.type);
+            // فقط طرح‌هایی رو نشون بده که مختص این پایه تحصیلی یا برای همه (all) هستن
+            let availablePlans = dbData.services.filter(x => x.target_grade === normalizedGrade || x.target_grade === 'all');
+
+            availablePlans.forEach(plan => {
+                let price = parseInt(plan.base_price);
                 if (price === 0) return; 
 
                 let fomoHtml = '';
@@ -351,7 +352,7 @@
         }
 
         // ==========================================
-        // 🎛️ کنترلرها
+        // 🎛️ کنترلرها و موتور محاسبات (بدون تغییر)
         // ==========================================
         function selectPansion(type) {
             state.pansion = type; renderCards();
@@ -389,9 +390,6 @@
             calculateInvoice();
         }
 
-        // ==========================================
-        // 🧮 موتور محاسبات (دیباگ شده و کامل)
-        // ==========================================
         function formatMoney(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
         function roundDown100k(amount) { return Math.floor(amount / 100000) * 100000; }
 
@@ -508,7 +506,7 @@
                 instBox.style.display = 'none'; 
                 financeData.upfront = finalTotal; 
             }
-        } // <--- حل مشکل ارور: این آکولادِ بسته شدن تابع در کد قبلی جا افتاده بود!
+        }
 
         // ==========================================
         // 📤 آپلود فیش و ارسال به بک‌اند
