@@ -3,89 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فروشگاه و ارتقا | راهینو</title>
+    <title>فروشگاه و ارتقا | قطب‌نمای راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         :root { 
-            --primary: #1e3a8a; --primary-light: #3b82f6; 
-            --accent: #d97706; --accent-light: #f59e0b;
-            --bg-color: #f8fafc; --surface: #ffffff;
+            --primary: #1e3a8a; --primary-light: #3b82f6; --primary-fade: rgba(30, 58, 138, 0.05);
+            --accent: #d97706; --bg-color: #f8fafc; --surface: #ffffff;
             --text-main: #0f172a; --text-muted: #64748b;
             --border: #e2e8f0; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
             --shadow: 0 10px 25px rgba(0,0,0,0.05);
         }
 
         [data-theme="dark"] {
-            --primary: #3b82f6; --accent: #f59e0b; --bg-color: #0f172a; --surface: #1e293b;
+            --primary: #3b82f6; --primary-fade: rgba(59, 130, 246, 0.1); --accent: #f59e0b; 
+            --bg-color: #0f172a; --surface: #1e293b;
             --text-main: #f8fafc; --text-muted: #94a3b8;
             --border: #334155; --shadow: 0 10px 25px rgba(0,0,0,0.4);
         }
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
-        body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 50px; transition: 0.3s; }
-        
+        body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 50px; transition: background-color 0.3s, color 0.3s; }
         .app-container { max-width: 600px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* هدر */
+        /* 🎩 هدر */
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .back-btn { background: var(--surface); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; box-shadow: var(--shadow); cursor: pointer; }
+        .back-btn { background: var(--surface); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; box-shadow: var(--shadow); cursor: pointer; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--primary); }
         .page-title { font-size: 18px; font-weight: 900; color: var(--primary); }
 
-        /* تب‌ها */
-        .tabs { display: flex; background: var(--surface); padding: 5px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 25px; box-shadow: var(--shadow); }
-        .tab-btn { flex: 1; padding: 10px; border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: bold; color: var(--text-muted); transition: 0.3s; border: none; background: transparent; }
-        .tab-btn.active { background: var(--primary); color: white; }
+        /* 💳 کارت بانکی */
+        .payment-card { background: linear-gradient(135deg, #0f172a, #1e3a8a); border-radius: 20px; padding: 25px; color: white; position: relative; overflow: hidden; box-shadow: 0 15px 30px rgba(30, 58, 138, 0.3); margin-bottom: 20px; }
+        .payment-card::after { content: '🏦'; position: absolute; left: -10px; top: -10px; font-size: 120px; opacity: 0.05; transform: rotate(-20deg); pointer-events: none; }
+        .pc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; opacity: 0.9; font-size: 13px; }
+        .pc-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; backdrop-filter: blur(5px); }
+        .pc-label { font-size: 11px; opacity: 0.8; margin-bottom: 3px; display: block; }
+        .pc-value { font-size: 18px; font-weight: 900; letter-spacing: 2px; direction: ltr; text-align: left; }
+        .pc-value.shaba { font-size: 14px; letter-spacing: 1px; }
+        .btn-copy-mini { background: var(--accent); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; }
 
-        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        /* نمایش موجودی */
+        .wallet-banner { background: rgba(217, 119, 6, 0.1); border: 1px dashed var(--accent); padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 25px; }
+
+        /* 📑 تب‌ها */
+        .tabs { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 5px; margin-bottom: 25px; box-shadow: var(--shadow); }
+        .tab-btn { flex: 1; padding: 12px 5px; text-align: center; font-size: 13px; font-weight: bold; color: var(--text-muted); cursor: pointer; border-radius: 12px; transition: 0.3s; user-select: none; border: none; background: transparent; }
+        .tab-btn.active { background: var(--primary-fade); color: var(--primary); }
+        .tab-content { display: none; animation: slideUp 0.3s ease-out; }
         .tab-content.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* کارت‌های طرح */
-        .plan-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: var(--shadow); cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
-        .plan-card:hover { border-color: var(--primary); }
-        .plan-card.selected { border: 2px solid var(--accent); background: rgba(217, 119, 6, 0.05); }
+        /* 🃏 کارت‌های طرح (Grid) */
+        .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
+        .plan-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 15px; text-align: center; cursor: pointer; transition: 0.3s; position: relative; box-shadow: var(--shadow); }
+        .plan-card:hover { border-color: var(--primary-light); transform: translateY(-3px); }
+        .plan-card.selected { border: 2px solid var(--primary); background: var(--primary-fade); }
+        .plan-badge { font-size: 10px; background: rgba(59, 130, 246, 0.1); color: var(--primary); padding: 3px 8px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; display: inline-block; }
+        .plan-title { font-size: 14px; font-weight: 900; margin-bottom: 5px; color: var(--text-main); }
+        .plan-price { font-size: 13px; color: var(--success); font-weight: bold; }
+
+        /* فرم‌ها و باکس‌ها */
+        .panel-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 25px; box-shadow: var(--shadow); margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; }
+        .form-select, .form-input { width: 100%; padding: 14px 15px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 14px; outline: none; transition: 0.3s; font-family: inherit; }
+        .form-select:focus, .form-input:focus { border-color: var(--primary); }
+
+        /* 🧾 فاکتور زنده و کد تخفیف */
+        .promo-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        .promo-group input { flex: 1; padding: 12px 15px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); outline: none; font-size: 13px; }
+        .promo-btn { padding: 10px 20px; background: var(--primary); border: none; border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: bold; color: white; transition: 0.2s; }
         
-        .p-title { font-size: 16px; font-weight: 900; color: var(--primary); margin-bottom: 5px; }
-        .p-price { font-size: 18px; font-weight: bold; color: var(--success); margin-bottom: 10px; }
-        .p-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 15px; }
-        .cap-badge { position: absolute; top: 15px; left: 15px; background: rgba(239, 68, 68, 0.1); color: var(--danger); font-size: 11px; padding: 4px 8px; border-radius: 8px; font-weight: bold; }
+        .invoice-box { background: rgba(0,0,0,0.02); border: 1px dashed var(--border); border-radius: 16px; padding: 20px; margin-top: 20px; }
+        .invoice-title { font-size: 15px; font-weight: 900; color: var(--primary); margin-bottom: 15px; text-align: center; }
+        .invoice-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; color: var(--text-muted); align-items: center; }
+        .invoice-row.highlight { color: var(--success); font-weight: bold; }
+        .invoice-row.wallet { color: var(--accent); font-weight: bold; }
+        .invoice-total { display: flex; justify-content: space-between; border-top: 2px dashed var(--border); padding-top: 15px; margin-top: 10px; font-size: 18px; font-weight: 900; color: var(--primary); }
 
-        /* فرم‌ها و ورودی‌ها */
-        .form-group { margin-bottom: 15px; }
-        .form-label { display: block; font-size: 12px; font-weight: bold; color: var(--text-muted); margin-bottom: 5px; }
-        .form-select, .form-input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 14px; outline: none; }
-        
-        .promo-box { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-apply { background: var(--surface); border: 1px solid var(--primary); color: var(--primary); border-radius: 12px; padding: 0 20px; font-weight: bold; cursor: pointer; }
+        /* 💳 اقساط */
+        .pay-method-switch { display: flex; gap: 10px; margin-bottom: 20px; background: var(--bg-color); padding: 5px; border-radius: 12px; border: 1px solid var(--border); }
+        .pay-method-btn { flex: 1; text-align: center; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; color: var(--text-muted); }
+        .pay-method-btn.active { background: var(--primary); color: white; box-shadow: var(--shadow); }
+        .installment-details { background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); padding: 15px; border-radius: 12px; font-size: 12px; margin-top: 15px; display: none; }
+        .installment-details li { margin-right: 15px; margin-bottom: 8px; color: var(--text-main); }
 
-        /* باکس پرداخت نهایی */
-        .checkout-box { background: linear-gradient(135deg, var(--surface), rgba(59, 130, 246, 0.05)); border: 1px dashed var(--primary); border-radius: 20px; padding: 20px; margin-top: 25px; }
-        .chk-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: var(--text-muted); }
-        .chk-row.total { font-size: 18px; font-weight: 900; color: var(--primary); border-top: 1px solid var(--border); padding-top: 15px; margin-top: 10px; margin-bottom: 0; }
-        .btn-submit { background: var(--primary); color: white; width: 100%; padding: 15px; border-radius: 14px; border: none; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.2s; }
+        /* آپلود و دکمه‌ها */
+        .file-upload { border: 2px dashed var(--border); padding: 25px 20px; border-radius: 16px; text-align: center; cursor: pointer; position: relative; background: var(--bg-color); margin-bottom: 20px; transition: 0.2s; }
+        .file-upload.has-file { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
+        .file-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 
-        /* 🏦 کارت بانکی گرافیکی */
-        .bank-card { background: linear-gradient(135deg, #0f172a, #1e3a8a); color: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; position: relative; overflow: hidden; box-shadow: 0 15px 30px rgba(30, 58, 138, 0.3); }
-        .bank-card::before { content: '💳'; position: absolute; right: -10px; bottom: -20px; font-size: 120px; opacity: 0.1; transform: rotate(-20deg); }
-        .card-title { font-size: 12px; opacity: 0.8; margin-bottom: 5px; }
-        .card-number { font-size: 22px; font-weight: 900; letter-spacing: 3px; font-family: monospace; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .card-sheba { font-size: 12px; font-family: monospace; opacity: 0.9; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-copy { background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 10px; border-radius: 8px; font-size: 11px; cursor: pointer; transition: 0.2s; }
-        .btn-copy:hover { background: rgba(255,255,255,0.4); }
+        .btn-submit { background: linear-gradient(135deg, var(--primary), #312e81); color: white; width: 100%; padding: 16px; border-radius: 14px; border: none; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 10px 25px rgba(30, 58, 138, 0.2); transition: 0.2s; }
+        .btn-submit.danger { background: linear-gradient(135deg, var(--danger), #991b1b); box-shadow: 0 10px 25px rgba(239, 68, 68, 0.2); }
+        .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
 
-        /* ماشین حساب انصراف */
-        .cancel-calc { background: rgba(239, 68, 68, 0.05); border: 1px solid var(--danger); border-radius: 16px; padding: 20px; margin-top: 20px; }
-        .cancel-calc h3 { color: var(--danger); font-size: 16px; margin-bottom: 15px; font-weight: 900; }
-        .c-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: var(--text-main); }
-        
         .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
         .spinner { font-size: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body data-theme="dark">
+<body>
 
     <div class="loader-overlay" id="mainLoader">
         <div class="spinner">🛒</div>
@@ -100,111 +119,183 @@
             <button class="back-btn" onclick="toggleTheme()" id="themeBtn">☀️</button>
         </div>
 
-        <div class="bank-card">
-            <div class="card-title">حساب بانکی قطب‌نمای راهینو</div>
-            <div class="card-number">
-                <span id="txtCard">6219861810380484</span> 
-                <button class="btn-copy" onclick="copyText('txtCard')">کپی</button>
+        <!-- 💳 کارت بانکی -->
+        <div class="payment-card">
+            <div class="pc-header">
+                <div>صاحب حساب: <b>ارشاد شفیعی فرد</b></div>
+                <div>بانک سامان</div>
             </div>
-            <div class="card-sheba">
-                <span id="txtSheba">IR200560611828006108618001</span> 
-                <button class="btn-copy" onclick="copyText('txtSheba')">کپی</button>
+            <div class="pc-row">
+                <div><span class="pc-label">شماره کارت:</span><div class="pc-value" id="txtCard">6219861810380484</div></div>
+                <button class="btn-copy-mini" onclick="copyText('txtCard')">کپی</button>
             </div>
-            <div style="font-size: 12px; margin-top: 10px; font-weight: bold;">به نام: ارشاد شفیعی فرد</div>
+            <div class="pc-row" style="margin-bottom: 0;">
+                <div><span class="pc-label">شماره شبا:</span><div class="pc-value shaba" id="txtSheba">IR200560611828006108618001</div></div>
+                <button class="btn-copy-mini" onclick="copyText('txtSheba')">کپی</button>
+            </div>
         </div>
 
+        <div class="wallet-banner">
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: bold;">موجودی کیف پول شما:</span>
+            <span id="uiWalletBalance" style="font-size: 16px; font-weight: 900; color: var(--accent); margin-right: 5px;">0</span>
+            <span style="font-size: 11px; color: var(--accent);">تومان</span>
+        </div>
+
+        <!-- 📑 تب‌ها -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('tab-renew', this)">🔄 تمدید / افزودن</button>
+            <button class="tab-btn active" onclick="switchTab('tab-store', this)">🔄 فروشگاه و تمدید</button>
             <button class="tab-btn" onclick="switchTab('tab-swap', this)">🔀 تعویض طرح</button>
             <button class="tab-btn" onclick="switchTab('tab-cancel', this)">🛑 ابطال اشتراک</button>
         </div>
 
-        <div id="tab-renew" class="tab-content active">
-            <div style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">طرح‌های فعال شما برای تمدید، یا طرح‌های جدید برای افزودن به پکیج:</div>
+        <!-- ==============================================
+             ۱. تب فروشگاه و تمدید (کارت‌ها)
+             ============================================== -->
+        <div class="tab-content active" id="tab-store">
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:15px; text-align:justify;">
+                طرح فعلی خود را تمدید کنید یا سرویس جدیدی به پرونده خود اضافه نمایید. (طرح‌های نمایش داده شده مختص رشته و پایه شماست).
+            </div>
             
-            <div id="renewPlansList">
+            <div class="cards-grid" id="storeCardsGrid">
+                <!-- کارت‌ها توسط JS لود می‌شوند -->
+            </div>
+
+            <!-- سبد خرید تمدید/خرید -->
+            <div class="panel-box" id="storeCheckoutBox" style="display: none; margin-top: 20px;">
+                <div class="form-group">
+                    <label>مدت زمان قرارداد:</label>
+                    <select class="form-select" id="storeDuration" onchange="calculateStore()">
+                        <option value="1">۱ ماهه</option>
+                        <option value="3">۳ ماهه (تخفیف ویژه)</option>
+                        <option value="konkur">تا روز کنکور (محاسبه دقیق روزشمار)</option>
+                    </select>
                 </div>
 
-            <div class="form-group" style="margin-top: 20px;">
-                <label class="form-label">مدت زمان تمدید / خرید</label>
-                <select class="form-select" id="renewDuration" onchange="calculateRenew()">
-                    <option value="1">یک ماهه</option>
-                    <option value="3">سه ماهه</option>
-                    <option value="konkur">تا روز کنکور (محاسبه روزشمار)</option>
-                </select>
-            </div>
+                <div class="invoice-box">
+                    <div class="promo-group">
+                        <input type="text" id="storePromoCode" placeholder="کد تخفیف (اختیاری)">
+                        <button class="promo-btn" onclick="applyPromo('store')">ثبت</button>
+                    </div>
+                    <div id="storePromoMsg" style="font-size:11px; font-weight:bold; margin-bottom:15px; min-height:16px;"></div>
 
-            <div class="promo-box">
-                <input type="text" class="form-input" id="renewPromo" placeholder="کد تخفیف (اختیاری)">
-                <button class="btn-apply" onclick="applyPromo('renew')">اعمال</button>
-            </div>
+                    <div class="pay-method-switch" id="storePaySwitch">
+                        <div class="pay-method-btn active" id="btnStoreCash" onclick="setPayMethod('store', 'cash')">💳 پرداخت نقدی</div>
+                        <div class="pay-method-btn" id="btnStoreInst" onclick="setPayMethod('store', 'installments')">📑 پرداخت اقساطی</div>
+                    </div>
 
-            <div class="checkout-box" id="renewCheckoutBox" style="display:none;">
-                <div class="chk-row"><span>مبلغ طرح:</span><span id="rnwBasePrice">0 تومان</span></div>
-                <div class="chk-row" style="color:var(--success)"><span>کسر از کیف پول:</span><span id="rnwWallet">0 تومان</span></div>
-                <div class="chk-row" style="color:var(--danger)" id="rnwPromoRow" style="display:none;"><span>تخفیف ویژه:</span><span id="rnwPromoAmount">0 تومان</span></div>
-                <div class="chk-row total"><span>قابل پرداخت:</span><span id="rnwFinalPrice">0 تومان</span></div>
-                
-                <input type="file" id="renewReceipt" accept="image/*" style="display:none;" onchange="handleReceipt(this, 'rnwBtnText')">
-                <button class="btn-submit" style="background:transparent; border:2px dashed var(--primary); color:var(--primary);" onclick="document.getElementById('renewReceipt').click()">📎 ۱. انتخاب تصویر فیش واریزی</button>
-                <button class="btn-submit" id="rnwBtnText" onclick="submitRequest('renew')" disabled>🚀 ۲. ارسال درخواست و فیش</button>
+                    <div class="invoice-row"><span>قیمت پایه سرویس:</span><span id="stBasePrice">0 تومان</span></div>
+                    <div class="invoice-row highlight" id="stRowCombo" style="display:none;"><span>💎 تخفیف مکمل الماس (مشاوره):</span><span id="stComboDisc">- 0 تومان</span></div>
+                    <div class="invoice-row highlight" id="stRowPromo" style="display:none;"><span>🎟️ تخفیف کد:</span><span id="stPromoDisc">- 0 تومان</span></div>
+                    <div class="invoice-row highlight" id="stRowTime" style="display:none;"><span id="lblStTime">⏳ تخفیف زمانی:</span><span id="stTimeDisc">- 0 تومان</span></div>
+                    <div class="invoice-row wallet" id="stRowWallet" style="display:none;"><span>🎁 کسر از کیف پول:</span><span id="stWalletUsed">- 0 تومان</span></div>
+                    
+                    <div class="invoice-total"><span>مبلغ نهایی پرداخت:</span><span id="stFinalPrice">0 تومان</span></div>
+                    <ul class="installment-details" id="stInstallments"></ul>
+                </div>
+
+                <div class="file-upload" id="boxStFile">
+                    <div style="font-size: 30px; margin-bottom: 5px;">📥</div>
+                    <div id="lblStFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی</div>
+                    <input type="file" id="stReceipt" accept="image/*" onchange="handleFile(this, 'lblStFileName', 'boxStFile', 'store')">
+                </div>
+                <button class="btn-submit" id="btnSubmitStore" onclick="submitStoreRequest()">🚀 تایید نهایی و ارسال</button>
             </div>
         </div>
 
-        <div id="tab-swap" class="tab-content">
-            <div style="background: rgba(245, 158, 11, 0.1); color: var(--warning); padding: 12px; border-radius: 12px; font-size: 12px; margin-bottom: 20px;">
-                ⚠️ در صورت تعویض طرح (ارتقا/تنزیل)، قرارداد فعلی شما با <b>قیمت پایه یک‌ماهه</b> تسویه شده و مابقی وجه به کیف پول شما بازمی‌گردد. سپس طرح جدید از کیف پول کسر می‌شود.
-            </div>
+        <!-- ==============================================
+             ۲. تب تعویض طرح
+             ============================================== -->
+        <div class="tab-content" id="tab-swap">
+            <div class="panel-box">
+                <div style="background: rgba(245, 158, 11, 0.1); color: var(--warning); padding: 12px; border-radius: 12px; font-size: 12px; margin-bottom: 20px; font-weight:bold; line-height: 1.8;">
+                    ⚠️ در صورت تعویض، قرارداد فعلی شما با کسر ۲۰٪ جریمه لغو زودهنگام محاسبه شده و باقیمانده به کیف پول واریز می‌شود. سپس طرح جدید از کیف پول کسر می‌گردد.
+                </div>
 
-            <div class="form-group">
-                <label class="form-label">انتخاب طرح جدید (مخصوص پایه و رشته شما)</label>
-                <select class="form-select" id="swapTargetPlan" onchange="calculateSwap()">
-                    <option value="">-- انتخاب کنید --</option>
+                <div class="form-group">
+                    <label>کدام اشتراک فعلی را می‌خواهید تعویض کنید؟</label>
+                    <select class="form-select" id="swapOldSub" onchange="resetSwapNewPlan()">
+                        <option value="">-- انتخاب کنید --</option>
                     </select>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">مدت زمان طرح جدید</label>
-                <select class="form-select" id="swapDuration" onchange="calculateSwap()">
-                    <option value="1">یک ماهه</option>
-                    <option value="3">سه ماهه</option>
-                    <option value="konkur">تا روز کنکور (محاسبه روزشمار)</option>
-                </select>
-            </div>
+                </div>
 
-            <div class="checkout-box" id="swapCheckoutBox" style="display:none;">
-                <div class="chk-row"><span>تسویه طرح قبلی و عودت به کیف پول:</span><span id="swpRefund" style="color:var(--success); font-weight:bold;">0 تومان</span></div>
-                <div class="chk-row"><span>هزینه طرح جدید:</span><span id="swpNewCost">0 تومان</span></div>
-                <div class="chk-row total"><span>مبلغ قابل پرداخت شما:</span><span id="swpFinalPrice">0 تومان</span></div>
-                
-                <input type="file" id="swapReceipt" accept="image/*" style="display:none;" onchange="handleReceipt(this, 'swpBtnText')">
-                <button class="btn-submit" style="background:transparent; border:2px dashed var(--primary); color:var(--primary);" onclick="document.getElementById('swapReceipt').click()" id="swpUploadBtn">📎 ۱. انتخاب تصویر فیش</button>
-                <button class="btn-submit" id="swpBtnText" onclick="submitRequest('swap')" disabled>🚀 ۲. تایید و ارسال درخواست</button>
+                <div class="form-group">
+                    <label>طرح جدید جایگزین:</label>
+                    <select class="form-select" id="swapNewPlan" onchange="calculateSwap()" disabled>
+                        <option value="">-- ابتدا اشتراک بالا را انتخاب کنید --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>مدت زمان طرح جدید:</label>
+                    <select class="form-select" id="swapDuration" onchange="calculateSwap()">
+                        <option value="1">۱ ماهه</option>
+                        <option value="3">۳ ماهه</option>
+                        <option value="konkur">تا روز کنکور (روزشمار)</option>
+                    </select>
+                </div>
+
+                <div class="invoice-box" id="swapInvoiceArea" style="display:none;">
+                    <div class="invoice-title">🧾 صورت‌حساب تعویض</div>
+                    
+                    <div class="pay-method-switch" id="swapPaySwitch">
+                        <div class="pay-method-btn active" id="btnSwapCash" onclick="setPayMethod('swap', 'cash')">💳 پرداخت نقدی</div>
+                        <div class="pay-method-btn" id="btnSwapInst" onclick="setPayMethod('swap', 'installments')">📑 پرداخت اقساطی</div>
+                    </div>
+
+                    <div class="invoice-row highlight"><span>🔄 ارزش بازگردانده شده به کیف پول:</span><span id="swpRefund">0 تومان</span></div>
+                    <div class="invoice-row"><span>هزینه طرح جدید (با تخفیف زمانی):</span><span id="swpNewCost">0 تومان</span></div>
+                    <div class="invoice-row wallet" id="swpRowWallet" style="display:none;"><span>🎁 کسر نهایی از کیف پول:</span><span id="swpWalletUsed">- 0 تومان</span></div>
+                    
+                    <div class="invoice-total"><span>مبلغ قابل پرداخت شما:</span><span id="swpFinalPrice">0 تومان</span></div>
+                    <ul class="installment-details" id="swpInstallments"></ul>
+                    
+                    <div id="swpCreditAlert" style="font-size: 11px; color: var(--success); text-align: center; margin-top: 15px; display: none;">
+                        * مبلغی برای پرداخت نماند. مبلغ اضافه در کیف پول شما ذخیره شد!
+                    </div>
+                </div>
+
+                <div class="file-upload" id="boxSwpFile" style="display:none;">
+                    <div style="font-size: 30px; margin-bottom: 5px;">📥</div>
+                    <div id="lblSwpFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی</div>
+                    <input type="file" id="swpReceipt" accept="image/*" onchange="handleFile(this, 'lblSwpFileName', 'boxSwpFile', 'swap')">
+                </div>
+                <button class="btn-submit" id="btnSubmitSwap" style="display:none;" onclick="submitSwapRequest()">تایید و اعمال تعویض 🔀</button>
             </div>
         </div>
 
-        <div id="tab-cancel" class="tab-content">
-            <div class="form-group">
-                <label class="form-label">کدام اشتراک خود را می‌خواهید لغو کنید؟</label>
-                <select class="form-select" id="cancelPlanSelect" onchange="calculateCancellation()">
+        <!-- ==============================================
+             ۳. لغو قرارداد
+             ============================================== -->
+        <div class="tab-content" id="tab-cancel">
+            <div class="panel-box" style="border-color: rgba(239, 68, 68, 0.3);">
+                <div class="form-group">
+                    <label>کدام اشتراک خود را می‌خواهید لغو کنید؟</label>
+                    <select class="form-select" id="cancelSubSelect" onchange="calculateCancellation()">
+                        <option value="">-- انتخاب کنید --</option>
                     </select>
-            </div>
-
-            <div class="cancel-calc" id="cancelCalcBox" style="display:none;">
-                <h3>🧾 فاکتور تسویه و ابطال</h3>
-                <div class="c-row"><span>تاریخ شروع قرارداد:</span><span id="cStartDate">-</span></div>
-                <div class="c-row"><span>روزهای استفاده شده:</span><span id="cUsedDays">-</span></div>
-                <div class="c-row"><span>محاسبه با قیمت پایه:</span><span id="cBaseCost">-</span></div>
-                <div class="c-row" style="border-top:1px dashed var(--danger); padding-top:10px; margin-top:10px; font-weight:bold;">
-                    <span>وضعیت نهایی:</span><span id="cFinalStatus" style="color:var(--danger)">-</span>
                 </div>
-                
+
+                <div id="cancelCalcBox" style="display:none; background: rgba(239, 68, 68, 0.05); border: 1px solid var(--danger); border-radius: 16px; padding: 20px; margin-top: 20px;">
+                    <h3 style="color: var(--danger); font-size: 15px; margin-bottom: 15px; font-weight: 900;">🧾 محاسبه‌گر انصراف</h3>
+                    <div class="invoice-row"><span>روزهای استفاده شده:</span><span id="canUsedDays">-</span></div>
+                    <div class="invoice-row"><span>جریمه لغو زودهنگام:</span><span id="canPenalty">-</span></div>
+                    <div class="invoice-row" style="border-top:1px dashed var(--danger); padding-top:10px; margin-top:10px; font-weight:bold;">
+                        <span>وضعیت نهایی:</span><span id="canFinalStatus" style="color:var(--danger)">-</span>
+                    </div>
+                </div>
+
                 <div class="form-group" style="margin-top:20px;">
-                    <label class="form-label">دلیل انصراف (الزامی):</label>
-                    <textarea class="form-input" id="cancelReason" rows="3" placeholder="لطفاً دلیل خود را بنویسید..."></textarea>
+                    <label>شماره شبای بانکی شما (جهت عودت وجه):</label>
+                    <div style="position: relative;">
+                        <input type="number" class="form-input" id="canShaba" placeholder="مثلاً: 020550000000000123456789" style="padding-left: 45px; direction: ltr;">
+                        <span style="position: absolute; left: 15px; top: 14px; color: var(--text-muted); font-weight: bold;">IR</span>
+                    </div>
                 </div>
-                
-                <button class="btn-submit" style="background:var(--danger);" onclick="submitCancellation()">🚨 ثبت درخواست ابطال و بررسی مدیریت</button>
+                <div class="form-group">
+                    <label>دلیل انصراف (الزامی):</label>
+                    <textarea class="form-input" id="canReason" rows="3" placeholder="لطفاً دلیل خود را بنویسید..."></textarea>
+                </div>
+                <button class="btn-submit danger" id="btnSubmitCan" onclick="submitCancellation()">🚨 ثبت درخواست ابطال و بررسی</button>
             </div>
         </div>
 
@@ -212,261 +303,484 @@
 
     <script>
         // ==========================================
-        // 🔗 تنظیمات و اتصال به دیتابیس
+        // 🔗 تنظیمات پایه
         // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
-
+        
         const userId = localStorage.getItem('qotbnama_user_id');
         if (!userId) window.location.href = 'index.html';
 
-        let dbData = { student: null, subs: [], services: [], settings: null };
-        let daysToKonkur = 30; // پیش‌فرض تا لود شدن از دیتابیس
-        let selectedRenewPlanId = null;
-        let uploadedReceiptBase64 = null;
-        let uploadedReceiptMime = null;
+        let db = { student: null, subs: [], services: [], promos: [], settings: null };
+        let daysToKonkur = 30; 
+        let filesData = { store: null, swap: null };
+        
+        // متغیرهای تب فروشگاه
+        let selectedStoreService = null;
+        let storePayMethod = 'cash';
+        let storePromoRate = 0;
+        let finalStorePrice = 0;
+        let storeNewWallet = 0;
 
-        window.onload = async function() { await fetchStoreData(); };
+        // متغیرهای تب تعویض
+        let swapPayMethod = 'cash';
+        let finalSwapPrice = 0;
+        let swapNewWallet = 0;
+
+        window.onload = async function() { 
+            applyStoredTheme();
+            await fetchStoreData(); 
+        };
 
         function formatMoney(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
-        function copyText(id) { navigator.clipboard.writeText(document.getElementById(id).innerText); alert('✅ کپی شد.'); }
-
+        function roundDown100k(amount) { return Math.floor(amount / 100000) * 100000; }
+        function copyText(id) { navigator.clipboard.writeText(document.getElementById(id).innerText).then(()=>alert("✅ کپی شد.")); }
+        
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active'); btn.classList.add('active');
         }
 
         // ==========================================
-        // 📥 دریافت اطلاعات یکپارچه (با تاریخ کنکور)
+        // 🌓 سیستم دارک مود (اصلاح شده)
+        // ==========================================
+        function applyStoredTheme() {
+            if ((localStorage.getItem('theme') || 'light') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                if(document.getElementById('themeBtn')) document.getElementById('themeBtn').innerText = '☀️';
+            }
+        }
+        function toggleTheme() {
+            if (document.documentElement.getAttribute('data-theme') === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                document.getElementById('themeBtn').innerText = '🌙';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                document.getElementById('themeBtn').innerText = '☀️';
+            }
+        }
+
+        // ==========================================
+        // 📥 دریافت اطلاعات دیتابیس
         // ==========================================
         async function fetchStoreData() {
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
                 const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
 
-                const [stRes, subRes, srvRes, sysRes] = await Promise.all([
+                const [stRes, subRes, srvRes, proRes, sysRes] = await Promise.all([
                     fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/subscriptions?student_nid=eq.${userId}&status=eq.active`, { headers }),
-                    fetch(`${cleanUrl}/rest/v1/services?is_active=eq.true`, { headers }),
-                    fetch(`${cleanUrl}/rest/v1/system_settings?select=konkur_date`, { headers }) // 👈 دریافت تاریخ کنکور
+                    fetch(`${cleanUrl}/rest/v1/pricing_tiers`, { headers }), // در دیتابیس شما pricing_tiers است
+                    fetch(`${cleanUrl}/rest/v1/promo_codes?is_active=eq.true`, { headers }),
+                    fetch(`${cleanUrl}/rest/v1/system_settings?select=konkur_date`, { headers })
                 ]);
 
-                let stJson = await stRes.json();
-                dbData.student = stJson[0];
-                dbData.subs = await subRes.json() || [];
-                dbData.services = await srvRes.json() || [];
-                let sysJson = await sysRes.json();
-                if(sysJson && sysJson.length > 0) dbData.settings = sysJson[0];
+                let stJson = await stRes.json(); db.student = stJson[0] || {};
+                db.subs = await subRes.json() || [];
+                db.services = await srvRes.json() || [];
+                db.promos = await proRes.json() || [];
+                let sysJson = await sysRes.json(); if(sysJson && sysJson.length > 0) db.settings = sysJson[0];
 
-                // 🧮 محاسبه دقیق و روزشمار "تا کنکور"
-                if (dbData.settings && dbData.settings.konkur_date) {
-                    let kDate = new Date(dbData.settings.konkur_date);
-                    let today = new Date();
-                    daysToKonkur = Math.ceil((kDate - today) / (1000 * 60 * 60 * 24));
-                    if(daysToKonkur <= 0) daysToKonkur = 1; // برای جلوگیری از باگ اگر کنکور رد شده بود
+                document.getElementById('uiWalletBalance').innerText = formatMoney(db.student.wallet_balance || 0);
+
+                // محاسبه روزشمار کنکور
+                if (db.settings && db.settings.konkur_date) {
+                    let kDate = new Date(db.settings.konkur_date);
+                    daysToKonkur = Math.ceil((kDate - new Date()) / (1000 * 3600 * 24));
+                    if(daysToKonkur <= 0) daysToKonkur = 1;
                 }
 
-                renderRenewTab();
-                renderSwapAndCancelTabs();
+                renderStoreCards();
+                renderSwapAndCancelDropdowns();
 
                 document.getElementById('mainLoader').style.display = 'none';
                 document.getElementById('appContent').style.display = 'block';
-            } catch (e) {
-                alert("خطا در ارتباط با سرور فروشگاه.");
-            }
+            } catch (e) { alert("خطا در برقراری ارتباط با سرور فروشگاه."); }
         }
 
         // ==========================================
-        // 🛒 تب ۱: منطق تمدید و افزودن
+        // 🛒 تب ۱: رندر کارت‌های فروشگاه
         // ==========================================
-        function renderRenewTab() {
-            let container = document.getElementById('renewPlansList');
+        function renderStoreCards() {
+            let container = document.getElementById('storeCardsGrid');
             let html = '';
             
-            let hasConsult = dbData.subs.find(s => s.service_category === 'consult');
-            let hasPansion = dbData.subs.find(s => s.service_category === 'pansion');
+            let stGrade = ['دهم', 'یازدهم'].includes(db.student.grade) ? db.student.grade : 'دوازدهم';
+            
+            // نمایش سرویس‌ها به تفکیک پایه کاربر
+            db.services.forEach(srv => {
+                if (srv.target_grade !== 'all' && srv.target_grade !== stGrade) return;
 
-            // فیلتر سرویس‌ها بر اساس پایه و رشته دانش‌آموز
-            let stGrade = ['دهم', 'یازدهم'].includes(dbData.student.grade) ? dbData.student.grade : 'دوازدهم';
-            let stMajor = dbData.student.major || 'all';
+                let isSubbed = db.subs.some(s => s.service_category === srv.service_category && s.service_type === srv.service_type);
+                let badge = isSubbed ? '<div class="plan-badge" style="color:var(--success); background:rgba(16, 185, 129, 0.1);">🔄 تمدید اشتراک فعلی</div>' : '<div class="plan-badge">✨ افزودن به پلن</div>';
+                let catName = srv.service_category === 'pansion' ? 'پانسیون' : 'مشاوره';
 
-            let availableServices = dbData.services.filter(s => 
-                (s.target_grade === stGrade || s.target_grade === 'all') &&
-                (s.target_major === stMajor || s.target_major === 'all')
-            );
-
-            // ۱. اگر مشاوره دارد -> دکمه تمدید همون مشاوره. اگر ندارد -> پیشنهاد یک مشاوره
-            if (hasConsult) {
-                let srv = availableServices.find(s => s.category === 'consult' && s.type === hasConsult.service_type);
-                if(srv) html += createPlanCard(srv, '🔄 تمدید اشتراک فعلی شما');
-            } else {
-                let srv = availableServices.find(s => s.category === 'consult'); // اولین مشاوره‌ای که بهش می‌خوره
-                if(srv) html += createPlanCard(srv, '✨ افزودن مربی و مشاوره به اکانت');
-            }
-
-            // ۲. برای پانسیون به همین شکل
-            if (hasPansion) {
-                let srv = availableServices.find(s => s.category === 'pansion' && s.type === hasPansion.service_type);
-                if(srv) html += createPlanCard(srv, '🔄 تمدید میز پانسیون شما');
-            } else {
-                let srv = availableServices.find(s => s.category === 'pansion'); 
-                if(srv) html += createPlanCard(srv, '✨ افزودن پانسیون مطالعاتی');
-            }
+                html += `
+                    <div class="plan-card" id="card_${srv.id}" onclick='selectStorePlan(${JSON.stringify(srv)})'>
+                        ${badge}
+                        <div class="plan-title">${catName} ${srv.service_type}</div>
+                        <div class="plan-price">${formatMoney(srv.monthly_price)} تومان / ماه</div>
+                    </div>
+                `;
+            });
 
             container.innerHTML = html;
         }
 
-        function createPlanCard(srv, customTitle) {
-            let priceTxt = formatMoney(srv.base_price) + " تومان / ماه";
-            return `
-                <div class="plan-card" id="card_${srv.id}" onclick="selectRenewPlan('${srv.id}', ${srv.base_price})">
-                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:5px;">${customTitle}</div>
-                    <div class="p-title">طرح ${srv.title}</div>
-                    <div class="p-desc">${srv.description || ''}</div>
-                    <div class="p-price">${priceTxt}</div>
-                </div>
-            `;
+        function selectStorePlan(srv) {
+            document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('card_' + srv.id).classList.add('selected');
+            selectedStoreService = srv;
+            document.getElementById('storeCheckoutBox').style.display = 'block';
+            calculateStore();
         }
 
-        let currentRenewBasePrice = 0;
-        function selectRenewPlan(id, basePrice) {
-            document.querySelectorAll('#renewPlansList .plan-card').forEach(c => c.classList.remove('selected'));
-            document.getElementById('card_' + id).classList.add('selected');
-            selectedRenewPlanId = id;
-            currentRenewBasePrice = basePrice;
-            document.getElementById('renewCheckoutBox').style.display = 'block';
-            calculateRenew();
+        function setPayMethod(tab, method) {
+            if (tab === 'store') {
+                storePayMethod = method;
+                document.getElementById('btnStoreCash').classList.toggle('active', method === 'cash');
+                document.getElementById('btnStoreInst').classList.toggle('active', method === 'installments');
+                calculateStore();
+            } else {
+                swapPayMethod = method;
+                document.getElementById('btnSwapCash').classList.toggle('active', method === 'cash');
+                document.getElementById('btnSwapInst').classList.toggle('active', method === 'installments');
+                calculateSwap();
+            }
         }
 
-        function calculateRenew() {
-            if(!selectedRenewPlanId) return;
-            let durVal = document.getElementById('renewDuration').value;
-            let multiplier = 1;
+        function applyPromo(tab) {
+            if (tab === 'store') {
+                const code = document.getElementById('storePromoCode').value.trim().toUpperCase();
+                const msg = document.getElementById('storePromoMsg');
+                const promo = db.promos.find(p => p.code.toUpperCase() === code);
+                
+                if (promo) {
+                    storePromoRate = promo.discount_percent / 100;
+                    msg.innerText = `✅ کد تایید شد: ${promo.discount_percent}٪ تخفیف اعمال شد.`;
+                    msg.style.color = "var(--success)";
+                } else {
+                    storePromoRate = 0; msg.innerText = "❌ کد تخفیف نامعتبر است."; msg.style.color = "var(--danger)";
+                }
+                calculateStore();
+            }
+        }
 
-            if (durVal === '3') multiplier = 3;
-            else if (durVal === 'konkur') multiplier = (daysToKonkur / 30); // 👈 جادوی محاسبه تا کنکور
-
-            let totalBase = currentRenewBasePrice * multiplier;
-            let wallet = dbData.student.wallet_balance || 0;
+        // ==========================================
+        // 🧮 ماشین‌حساب تب فروشگاه
+        // ==========================================
+        function calculateStore() {
+            if(!selectedStoreService) return;
             
+            let durVal = document.getElementById('storeDuration').value;
+            let months = durVal === 'konkur' ? (daysToKonkur / 30) : parseInt(durVal);
+            
+            let basePrice = selectedStoreService.monthly_price * months;
+            let subTotal = basePrice;
+            
+            document.getElementById('stBasePrice').innerText = formatMoney(basePrice) + ' تومان';
+
+            // تخفیف الماس (۶۰٪ روی مشاوره)
+            let hasConsult = db.subs.some(s => s.service_category === 'consult');
+            let hasPansion = db.subs.some(s => s.service_category === 'pansion');
+            let comboDisc = 0;
+
+            if (selectedStoreService.service_category === 'consult' && hasPansion) {
+                comboDisc = basePrice * 0.60;
+                document.getElementById('stRowCombo').style.display = 'flex';
+                document.getElementById('stComboDisc').innerText = '- ' + formatMoney(comboDisc) + ' تومان';
+                subTotal -= comboDisc;
+                
+                document.getElementById('storePromoCode').disabled = true;
+                storePromoRate = 0; document.getElementById('storePromoMsg').innerText = "💎 به دلیل فعال شدن طرح الماس، کدهای دیگر اعمال نمی‌شوند.";
+            } else {
+                document.getElementById('stRowCombo').style.display = 'none';
+                document.getElementById('storePromoCode').disabled = false;
+            }
+
+            // تخفیف کد
+            let promoDisc = 0;
+            if (comboDisc === 0 && storePromoRate > 0) {
+                promoDisc = basePrice * storePromoRate;
+                subTotal -= promoDisc;
+                document.getElementById('stRowPromo').style.display = 'flex';
+                document.getElementById('stPromoDisc').innerText = '- ' + formatMoney(promoDisc) + ' تومان';
+            } else { document.getElementById('stRowPromo').style.display = 'none'; }
+
+            // کنترل دکمه اقساط
+            let swBox = document.getElementById('storePaySwitch');
+            if (durVal === '1' || subTotal < 3000000) { swBox.style.display = 'none'; storePayMethod = 'cash'; } 
+            else { swBox.style.display = 'flex'; }
+
+            // تخفیف زمانی بلندمدت
+            let timeDiscRate = 0;
+            if (durVal === '3') timeDiscRate = (storePayMethod === 'cash') ? 0.05 : 0.02;
+            if (durVal === 'konkur') timeDiscRate = (storePayMethod === 'cash') ? 0.15 : 0.08;
+            
+            let timeDisc = subTotal * timeDiscRate;
+            subTotal -= timeDisc;
+            if (timeDisc > 0) {
+                document.getElementById('stRowTime').style.display = 'flex';
+                document.getElementById('lblStTime').innerText = `⏳ تخفیف ${storePayMethod === 'cash' ? 'نقدی' : 'اقساط'} (${timeDiscRate*100}٪):`;
+                document.getElementById('stTimeDisc').innerText = '- ' + formatMoney(timeDisc) + ' تومان';
+            } else { document.getElementById('stRowTime').style.display = 'none'; }
+
             // کسر از کیف پول
-            let finalPay = totalBase - wallet;
-            if (finalPay < 0) finalPay = 0;
+            let curWallet = db.student.wallet_balance || 0;
+            let walletUsed = Math.min(curWallet, subTotal);
+            subTotal -= walletUsed;
+            storeNewWallet = curWallet - walletUsed;
 
-            document.getElementById('rnwBasePrice').innerText = formatMoney(totalBase) + " تومان";
-            document.getElementById('rnwWallet').innerText = formatMoney(Math.min(wallet, totalBase)) + " تومان";
-            document.getElementById('rnwFinalPrice').innerText = formatMoney(finalPay) + " تومان";
+            if (walletUsed > 0) {
+                document.getElementById('stRowWallet').style.display = 'flex';
+                document.getElementById('stWalletUsed').innerText = '- ' + formatMoney(walletUsed) + ' تومان';
+            } else { document.getElementById('stRowWallet').style.display = 'none'; }
+
+            finalStorePrice = subTotal;
+            document.getElementById('stFinalPrice').innerText = formatMoney(finalStorePrice) + ' تومان';
+
+            // نمایش اقساط
+            renderInstallmentsDetails('stInstallments', storePayMethod, finalStorePrice, durVal);
+            document.getElementById('boxStFile').style.display = finalStorePrice > 0 ? 'block' : 'none';
         }
 
         // ==========================================
-        // 🛑 تب ۳: ماشین حساب بی‌رحم انصراف
+        // 🔀 تب ۲: تعویض طرح
         // ==========================================
-        function renderSwapAndCancelTabs() {
-            let cancelSelect = document.getElementById('cancelPlanSelect');
-            cancelSelect.innerHTML = '<option value="">-- انتخاب کنید --</option>';
+        function renderSwapAndCancelDropdowns() {
+            let swapOld = document.getElementById('swapOldSub');
+            let canSub = document.getElementById('cancelSubSelect');
+            swapOld.innerHTML = '<option value="">-- انتخاب کنید --</option>';
+            canSub.innerHTML = '<option value="">-- انتخاب کنید --</option>';
             
-            dbData.subs.forEach(sub => {
-                let name = sub.service_category === 'pansion' ? 'پانسیون مطالعاتی' : 'مشاوره و برنامه';
-                cancelSelect.innerHTML += `<option value="${sub.id}">${name} (طرح ${sub.service_type})</option>`;
+            db.subs.forEach(sub => {
+                let name = sub.service_category === 'pansion' ? 'پانسیون' : 'مشاوره';
+                let opt = `<option value="${sub.id}">${name} ${sub.service_type}</option>`;
+                swapOld.innerHTML += opt; canSub.innerHTML += opt;
             });
         }
 
+        function resetSwapNewPlan() {
+            let oldId = document.getElementById('swapOldSub').value;
+            let newSelect = document.getElementById('swapNewPlan');
+            
+            if(!oldId) { newSelect.innerHTML = '<option value="">-- ابتدا اشتراک بالا را انتخاب کنید --</option>'; newSelect.disabled = true; document.getElementById('swapInvoiceArea').style.display = 'none'; document.getElementById('btnSubmitSwap').style.display = 'none'; return; }
+            
+            let oldSub = db.subs.find(s => s.id === oldId);
+            newSelect.disabled = false;
+            newSelect.innerHTML = '<option value="">-- انتخاب طرح جایگزین --</option>';
+            
+            let stGrade = ['دهم', 'یازدهم'].includes(db.student.grade) ? db.student.grade : 'دوازدهم';
+            
+            db.services.forEach(srv => {
+                if (srv.service_category === oldSub.service_category && srv.service_type !== oldSub.service_type && (srv.target_grade === 'all' || srv.target_grade === stGrade)) {
+                    newSelect.innerHTML += `<option value="${srv.id}">طرح ${srv.service_type} (${formatMoney(srv.monthly_price)} تومان)</option>`;
+                }
+            });
+            calculateSwap();
+        }
+
+        function calculateSwap() {
+            let oldId = document.getElementById('swapOldSub').value;
+            let newId = document.getElementById('swapNewPlan').value;
+            
+            let area = document.getElementById('swapInvoiceArea');
+            let btnSubmit = document.getElementById('btnSubmitSwap');
+            let fileBox = document.getElementById('boxSwpFile');
+
+            if(!oldId || !newId) { area.style.display = 'none'; btnSubmit.style.display = 'none'; fileBox.style.display = 'none'; return; }
+
+            // محاسبه دقیق ارزش باقیمانده قرارداد قدیم (Strict Refund)
+            let oldSub = db.subs.find(s => s.id === oldId);
+            let oldSrv = db.services.find(s => s.service_category === oldSub.service_category && s.service_type === oldSub.service_type && (s.target_grade === 'all' || s.target_grade === db.student.grade || s.target_grade === 'دوازدهم'));
+            
+            let eDate = new Date(oldSub.end_date);
+            let today = new Date();
+            let remainingDays = Math.ceil((eDate - today) / (1000 * 3600 * 24));
+            let refund = 0;
+            
+            if (remainingDays > 0 && oldSrv) {
+                // کسر ۲۰٪ جریمه انصراف از ارزش باقیمانده
+                refund = (remainingDays / 30) * oldSrv.monthly_price * 0.8;
+                refund = roundDown100k(refund);
+            }
+            document.getElementById('swpRefund').innerText = formatMoney(refund) + ' تومان';
+
+            // محاسبه هزینه طرح جدید
+            let newSrv = db.services.find(s => s.id == newId);
+            let durVal = document.getElementById('swapDuration').value;
+            let months = durVal === 'konkur' ? (daysToKonkur / 30) : parseInt(durVal);
+            
+            let subTotal = newSrv.monthly_price * months;
+            
+            // تخفیف زمانی طرح جدید
+            let timeDiscRate = 0;
+            if (durVal === '3') timeDiscRate = (swapPayMethod === 'cash') ? 0.05 : 0.02;
+            if (durVal === 'konkur') timeDiscRate = (swapPayMethod === 'cash') ? 0.15 : 0.08;
+            subTotal -= (subTotal * timeDiscRate);
+
+            document.getElementById('swpNewCost').innerText = formatMoney(subTotal) + ' تومان';
+
+            // اعمال اعتبار به کیف پول
+            let curWallet = (db.student.wallet_balance || 0) + refund; // شارژ با پول باقیمانده
+            
+            let walletUsed = Math.min(curWallet, subTotal);
+            subTotal -= walletUsed;
+            swapNewWallet = curWallet - walletUsed;
+
+            document.getElementById('swpRowWallet').style.display = walletUsed > 0 ? 'flex' : 'none';
+            document.getElementById('swpWalletUsed').innerText = '- ' + formatMoney(walletUsed) + ' تومان';
+
+            finalSwapPrice = subTotal;
+            document.getElementById('swpFinalPrice').innerText = formatMoney(finalSwapPrice) + ' تومان';
+
+            let swBox = document.getElementById('swapPaySwitch');
+            if (durVal === '1' || finalSwapPrice < 3000000) { swBox.style.display = 'none'; swapPayMethod = 'cash'; } 
+            else { swBox.style.display = 'flex'; }
+
+            renderInstallmentsDetails('swpInstallments', swapPayMethod, finalSwapPrice, durVal);
+            
+            if (finalSwapPrice === 0) {
+                document.getElementById('swpCreditAlert').style.display = 'block';
+                fileBox.style.display = 'none';
+            } else {
+                document.getElementById('swpCreditAlert').style.display = 'none';
+                fileBox.style.display = 'block';
+            }
+
+            area.style.display = 'block'; btnSubmit.style.display = 'block';
+        }
+
+        // ==========================================
+        // 🛑 تب ۳: ماشین‌حساب ابطال
+        // ==========================================
         function calculateCancellation() {
-            let subId = document.getElementById('cancelPlanSelect').value;
+            let subId = document.getElementById('cancelSubSelect').value;
             let box = document.getElementById('cancelCalcBox');
             if(!subId) { box.style.display = 'none'; return; }
 
-            let sub = dbData.subs.find(s => s.id === subId);
-            let srv = dbData.services.find(s => s.category === sub.service_category && s.type === sub.service_type);
-            if(!sub || !srv) return;
-
+            let sub = db.subs.find(s => s.id === subId);
+            let srv = db.services.find(s => s.service_category === sub.service_category && s.service_type === sub.service_type);
+            
             let sDate = new Date(sub.start_date);
             let today = new Date();
-            
-            // محاسبه سخت‌گیرانه زمان (گرد کردن به بالا)
-            let passedDays = Math.ceil((today - sDate) / (1000 * 60 * 60 * 24));
-            if(passedDays <= 0) passedDays = 1;
-            let usedMonths = Math.ceil(passedDays / 30); // هر ۱ روز اضافه‌تر = ۱ ماه کامل
+            let usedDays = Math.ceil((today - sDate) / (1000 * 3600 * 24));
+            if(usedDays <= 0) usedDays = 1;
+            let usedMonths = Math.ceil(usedDays / 30); // گرد کردن سخت‌گیرانه به بالا
+            let penaltyCost = usedMonths * (srv ? srv.monthly_price : 0);
 
-            // محاسبه با قیمت پایه خط‌نخورده
-            let penaltyCost = usedMonths * srv.base_price;
-
-            document.getElementById('cStartDate').innerText = sDate.toLocaleDateString('fa-IR');
-            document.getElementById('cUsedDays').innerText = `${passedDays} روز (معادل ${usedMonths} ماه محاسبه)`;
-            document.getElementById('cBaseCost').innerText = formatMoney(penaltyCost) + " تومان";
-            document.getElementById('cFinalStatus').innerText = `طی تسویه نهایی، مبلغ ${formatMoney(penaltyCost)} تومان بابت کارکرد شما کسر خواهد شد.`;
+            document.getElementById('canUsedDays').innerText = `${usedDays} روز (محاسبه: ${usedMonths} ماه کامل)`;
+            document.getElementById('canPenalty').innerText = formatMoney(penaltyCost) + " تومان";
+            document.getElementById('canFinalStatus').innerText = `طی تسویه نهایی، مبلغ ${formatMoney(penaltyCost)} تومان بابت کارکرد بدون تخفیف شما کسر خواهد شد.`;
             
             box.style.display = 'block';
         }
 
         async function submitCancellation() {
-            let subId = document.getElementById('cancelPlanSelect').value;
-            let reason = document.getElementById('cancelReason').value;
-            if(!reason) return alert("لطفاً دلیل انصراف خود را بنویسید.");
-
+            let shaba = document.getElementById('canShaba').value.trim();
+            if(!shaba || shaba.length < 24) return alert("❌ لطفاً شماره شبای معتبر ۲۴ رقمی وارد کنید.");
+            
             if(!confirm("آیا از ثبت این درخواست اطمینان دارید؟ مدیریت پس از بررسی با شما تماس خواهد گرفت.")) return;
 
             document.getElementById('mainLoader').style.display = 'flex';
-            
-            // ارسال پیام به صندوق پیام‌های مدیریت (از طریق جدول messages)
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
-                let sub = dbData.subs.find(s => s.id === subId);
                 
+                // پیام اضطراری به صندوق مدیر
                 await fetch(`${cleanUrl}/rest/v1/messages`, {
-                    method: 'POST',
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        student_nid: userId, // پیام رو میذاریم تو صندوق خودش ولی عنوانش رو میذاریم درخواست انصراف که ادمین ببینه
-                        title: `⚠️ درخواست انصراف: ${sub.service_category}`,
-                        body: `دلیل اعلام شده: ${reason}\n\nمنتظر تماس مدیریت باشید.`
+                        student_nid: userId, 
+                        title: `⚠️ درخواست انصراف و تسویه`,
+                        body: `شماره شبا: IR${shaba}\nدلیل اعلام شده: ${document.getElementById('canReason').value}\n\nمنتظر تماس مدیریت باشید.`
                     })
                 });
-
-                alert("✅ درخواست شما ثبت شد. جهت تسویه حساب نهایی با شما تماس گرفته خواهد شد.");
+                alert("✅ درخواست انصراف ثبت شد. جهت تسویه حساب نهایی با شما تماس گرفته خواهد شد.");
                 window.location.reload();
-            } catch(e) {
-                alert("خطا در ثبت درخواست.");
-                document.getElementById('mainLoader').style.display = 'none';
+            } catch(e) { alert("خطا در ثبت درخواست."); document.getElementById('mainLoader').style.display = 'none'; }
+        }
+
+        // ==========================================
+        // 🛠️ توابع کمکی مشترک
+        // ==========================================
+        function renderInstallmentsDetails(elementId, method, price, durVal) {
+            const instBox = document.getElementById(elementId);
+            instBox.innerHTML = '';
+            if (method === 'installments' && price > 0) {
+                instBox.style.display = 'block';
+                let upfront = durVal === '3' ? price * 0.50 : price * 0.40;
+                let upfrontRounded = roundDown100k(Math.min(upfront, 15000000)); 
+                let remaining = price - upfrontRounded;
+                const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
+                let today = new Date();
+                
+                if (durVal === '3') {
+                    let d1 = new Date(); d1.setDate(today.getDate() + 45); 
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>چک صیادی (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
+                } else if (durVal === 'konkur') {
+                    let checkAmt = roundDown100k(remaining / 3);
+                    let lastCheckAmt = remaining - (checkAmt * 2);
+                    let d1 = new Date(); d1.setMonth(today.getMonth() + 2); let d2 = new Date(); d2.setMonth(today.getMonth() + 4); let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>چک اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>چک دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>چک سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
+                }
+            } else { instBox.style.display = 'none'; }
+        }
+
+        function handleFile(input, labelId, boxId, key) {
+            if (input.files && input.files[0]) {
+                if(input.files[0].size > 5 * 1024 * 1024) { alert("حجم عکس نباید بیشتر از ۵ مگابایت باشد."); input.value = ''; return; }
+                document.getElementById(labelId).innerText = `✅ فیش ضمیمه شد: ${input.files[0].name}`;
+                document.getElementById(boxId).classList.add('has-file');
+                const reader = new FileReader();
+                reader.onload = function(e) { filesData[key] = { base64: e.target.result.split(',')[1], mime: input.files[0].type }; };
+                reader.readAsDataURL(input.files[0]);
             }
         }
 
-        // ==========================================
-        // 📎 مدیریت آپلود فیش
-        // ==========================================
-        function handleReceipt(input, btnId) {
-            if (!input.files || !input.files[0]) return;
-            let file = input.files[0];
+        async function submitStoreRequest() {
+            if(finalStorePrice > 0 && !filesData.store) return alert("❌ لطفاً تصویر فیش واریزی را آپلود کنید.");
+            const btn = document.getElementById('btnSubmitStore'); btn.disabled = true; btn.innerText = "در حال ارسال... ⏳";
             
-            const reader = new FileReader();
-            reader.onload = function(e) { 
-                uploadedReceiptBase64 = e.target.result.split(',')[1];
-                uploadedReceiptMime = file.type;
-                
-                let btn = document.getElementById(btnId);
-                btn.disabled = false;
-                btn.style.background = 'var(--success)';
-                btn.innerText = '🚀 ۲. تایید و ارسال فیش';
-            };
-            reader.readAsDataURL(file);
+            let dur = document.getElementById('storeDuration').value;
+            let catName = selectedStoreService.service_category === 'pansion' ? 'پانسیون' : 'مشاوره';
+            let invDetails = `درخواست خرید/تمدید: ${catName} ${selectedStoreService.service_type}\nمبلغ: ${formatMoney(finalStorePrice)} تومان\nمدت: ${dur === 'konkur' ? 'تا روز کنکور' : dur + ' ماه'}`;
+
+            let updateData = { status: 'pending', invoice_details: invDetails, wallet_balance: storeNewWallet };
+            if (filesData.store) { updateData.receipt_base64 = filesData.store.base64; updateData.file_type = filesData.store.mime; }
+            
+            await patchDatabase(updateData, btn);
         }
 
-        // ==========================================
-        // 🌓 سیستم دارک مود
-        // ==========================================
-        const themeBtn = document.getElementById('themeBtn');
-        if ((localStorage.getItem('theme') || 'light') === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            if(themeBtn) themeBtn.innerText = '☀️';
+        async function submitSwapRequest() {
+            if(finalSwapPrice > 0 && !filesData.swap) return alert("❌ لطفاً تصویر فیش واریزی را آپلود کنید.");
+            const btn = document.getElementById('btnSubmitSwap'); btn.disabled = true; btn.innerText = "در حال ارسال... ⏳";
+            
+            let dur = document.getElementById('swapDuration').value;
+            let newSrv = db.services.find(s => s.id == document.getElementById('swapNewPlan').value);
+            let catName = newSrv.service_category === 'pansion' ? 'پانسیون' : 'مشاوره';
+            let invDetails = `درخواست تعویض طرح به: ${catName} ${newSrv.service_type}\n⚠️ نیازمند لغو قرارداد قبلی و ثبت جدید\nمبلغ واریزی جدید: ${formatMoney(finalSwapPrice)} تومان\nمدت: ${dur === 'konkur' ? 'تا روز کنکور' : dur + ' ماه'}`;
+
+            let updateData = { status: 'pending', invoice_details: invDetails, wallet_balance: swapNewWallet };
+            if (filesData.swap) { updateData.receipt_base64 = filesData.swap.base64; updateData.file_type = filesData.swap.mime; }
+            
+            await patchDatabase(updateData, btn);
         }
-        function toggleTheme() {
-            let isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
-            if(themeBtn) themeBtn.innerText = isDark ? '🌙' : '☀️';
-            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+
+        async function patchDatabase(updateData, btnEl) {
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                const response = await fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, {
+                    method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+                if (response.ok) {
+                    alert("🎉 فاکتور و فیش شما با موفقیت ثبت شد.\nبه زودی توسط مدیریت بررسی و اعمال می‌گردد."); window.location.href = 'profile.html';
+                } else throw new Error();
+            } catch (e) { alert("⚠️ خطا در ارسال."); btnEl.disabled = false; btnEl.innerText = "تلاش مجدد"; }
         }
     </script>
 </body>
