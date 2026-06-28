@@ -18,7 +18,8 @@
         }
 
         [data-theme="dark"] {
-            --primary: #3b82f6; --accent: #f59e0b; --bg-color: #0f172a; --surface: #1e293b;
+            --primary: #3b82f6; 
+            --accent: #f59e0b; --bg-color: #0f172a; --surface: #1e293b;
             --text-main: #f8fafc; --text-muted: #94a3b8;
             --border: #334155; --shadow: 0 10px 25px rgba(0,0,0,0.4);
         }
@@ -32,7 +33,7 @@
         /* 🎩 هدر */
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .back-btn { background: var(--surface); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; box-shadow: var(--shadow); cursor: pointer; transition: 0.2s; }
-        
+        .back-btn:hover { transform: scale(1.05); border-color: var(--primary); }
         .page-title { font-size: 18px; font-weight: 900; color: var(--primary); }
 
         /* 💳 کارت‌های دوقلوی اشتراک */
@@ -41,6 +42,7 @@
         .sub-card.pansion { background: linear-gradient(135deg, var(--primary), #312e81); }
         .sub-card.consult { background: linear-gradient(135deg, #b45309, #d97706); }
         .sub-card.inactive { background: var(--surface); border: 2px dashed var(--border); color: var(--text-muted); box-shadow: none; display: flex; justify-content: center; align-items: center; min-height: 100px; cursor: pointer; }
+        .sub-card.inactive:hover { border-color: var(--primary); color: var(--primary); background: rgba(59, 130, 246, 0.05); }
 
         .sub-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
         .plan-cat { font-size: 11px; opacity: 0.8; margin-bottom: 2px; }
@@ -53,15 +55,7 @@
         .progress-fill { height: 100%; background: var(--success); transition: 1s ease-out; }
 
         .btn-upgrade-main { background: var(--primary-light); color: white; width: 100%; padding: 14px; border-radius: 16px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: var(--shadow); transition: 0.2s; margin-bottom: 25px; }
-
-        /* 🏦 باکس شماره حساب */
-        .bank-box { background: linear-gradient(135deg, var(--surface), rgba(217, 119, 6, 0.05)); border: 1px solid var(--accent); border-radius: 16px; padding: 20px; margin-bottom: 25px; box-shadow: var(--shadow); }
-        .bank-title { font-size: 14px; font-weight: 900; color: var(--accent); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-        .bank-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed var(--border); font-size: 13px; }
-        .bank-row:last-child { border-bottom: none; padding-bottom: 0; }
-        .bank-val { font-weight: bold; color: var(--text-main); font-family: monospace; font-size: 15px; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
-        .btn-icon-copy { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); border-radius: 8px; padding: 4px 8px; font-size: 12px; cursor: pointer; transition: 0.2s; }
-        .btn-icon-copy:hover { background: var(--accent); color: white; }
+        .btn-upgrade-main:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
         /* ⏳ تایم‌لاین اقساط تعاملی */
         .installments-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: var(--shadow); }
@@ -86,16 +80,16 @@
         .t-date { font-size: 12px; color: var(--text-muted); }
         .t-amount { font-size: 16px; font-weight: 900; color: var(--primary); margin-bottom: 10px; }
         
-        .btn-select-file { background: var(--bg-color); border: 1px dashed var(--accent); color: var(--accent); width: 100%; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 5px; }
-        .btn-select-file:hover { background: rgba(217,119,6,0.1); }
-        .btn-send-file { background: var(--success); color: white; border: none; width: 100%; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; animation: fadeIn 0.3s; }
+        .btn-upload-inst { background: var(--bg-color); border: 1px dashed var(--accent); color: var(--accent); width: 100%; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 5px; }
+        .btn-upload-inst:hover { background: var(--accent); color: white; }
 
-        /* 🎁 سیستم معرفی */
+        /* 🎁 کیف پول و سیستم معرفی */
         .wallet-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: var(--shadow); text-align: center; }
         .wallet-balance { font-size: 32px; font-weight: 900; color: var(--success); margin: 5px 0; }
         .share-container { background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--primary); padding: 15px; border-radius: 16px; margin-top: 20px; text-align: right; }
+        .share-text { font-size: 12px; color: var(--text-muted); line-height: 1.8; margin-bottom: 15px; }
         .ref-code-box { background: var(--surface); border: 1px solid var(--border); padding: 10px; border-radius: 10px; text-align: center; font-size: 20px; font-weight: 900; color: var(--primary); letter-spacing: 3px; margin-bottom: 15px; }
-        .btn-copy { background: var(--primary); color: white; width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-copy { background: var(--primary); color: white; width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
 
         /* ⚙️ تنظیمات حساب */
         .settings-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); }
@@ -103,9 +97,10 @@
         .form-group label { display: block; font-size: 12px; font-weight: bold; color: var(--text-muted); margin-bottom: 5px; }
         .form-input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 13px; outline: none; font-family: inherit; }
         .form-input:focus { border-color: var(--primary); }
-        .form-input:disabled { opacity: 0.8; cursor: not-allowed; background: rgba(0,0,0,0.05); color: var(--text-muted); border-style: dashed; }
+        .form-input:disabled { opacity: 0.6; cursor: not-allowed; }
         
-        .btn-save { background: var(--text-main); color: var(--bg-color); width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-save { background: var(--text-main); color: var(--bg-color); width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn-save:hover { opacity: 0.9; }
 
         .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
         .spinner { font-size: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
@@ -121,308 +116,381 @@
 
     <div class="app-container" id="appContent" style="display: none;">
         
-        <!-- هدر -->
         <div class="nav-header">
             <a href="menu.html" class="back-btn">🔙</a>
             <div class="page-title">پروفایل و اشتراک من</div>
             <button class="back-btn" onclick="toggleTheme()" id="themeBtn">☀️</button>
         </div>
 
-        <!-- 💳 بخش اشتراک‌های من -->
         <h3 style="font-size: 15px; color: var(--text-muted); margin-bottom: 15px;">💎 اشتراک‌های فعال شما</h3>
-        <div class="sub-grid" id="subscriptionsContainer"></div>
+        <div class="sub-grid" id="subscriptionsContainer">
+            </div>
 
         <button class="btn-upgrade-main" onclick="window.location.href='upgrade.html'">
             🛒 ورود به فروشگاه (تمدید و خرید طرح جدید)
         </button>
 
-        <!-- ⏳ رادار اقساط -->
         <div class="installments-box" id="installmentsBox" style="display: none;">
-            <div class="inst-title">💳 مدیریت اقساط پرداختی</div>
-            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 20px;">لطفاً مبلغ قسط را به حساب زیر واریز و رسید آن را ثبت کنید.</p>
+            <div class="inst-title">💳 اقساط و فیش‌های پرداختی شما</div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 20px;">تصویر فیش واریزی هر قسط را در موعد مقرر از همین بخش آپلود کنید.</p>
             
-            <!-- باکس اطلاعات حساب -->
-            <div class="bank-box">
-                <div class="bank-title">🏦 اطلاعات حساب آموزشگاه</div>
-                <div class="bank-row">
-                    <span>شماره کارت:</span>
-                    <div class="bank-val"><span id="txtCard">۶۰۳۷۹۹۱۹۱۲۳۴۵۶۷۸</span> <button class="btn-icon-copy" onclick="copyText('txtCard')">📋</button></div>
+            <div class="timeline" id="installmentsTimeline">
                 </div>
-                <div class="bank-row">
-                    <span>شماره شبا:</span>
-                    <div class="bank-val"><span id="txtSheba">IR120140000000000000000000</span> <button class="btn-icon-copy" onclick="copyText('txtSheba')">📋</button></div>
-                </div>
-                <div class="bank-row" style="border:none;">
-                    <span>به نام:</span>
-                    <span style="font-weight:bold; color:var(--text-main);">قطب‌نمای راهینو</span>
-                </div>
-            </div>
-
-            <div class="timeline" id="installmentsTimeline"></div>
-            <input type="file" id="hiddenReceiptInput" accept="image/*" style="display: none;" onchange="handleFileSelection(this)">
+            
+            <input type="file" id="hiddenReceiptInput" accept="image/*" style="display: none;" onchange="handleInstallmentUpload(this)">
         </div>
 
-        <!-- 🎁 کیف پول -->
-        <h3 style="font-size: 15px; color: var(--text-muted); margin-bottom: 15px;">💰 سیستم پاداش و معرفی</h3>
+        <h3 style="font-size: 15px; color: var(--text-muted); margin-bottom: 15px;">💰 سیستم پاداش و کیف پول</h3>
         <div class="wallet-box">
             <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">موجودی قابل استفاده:</div>
             <div class="wallet-balance"><span id="uiWalletBalance">0</span> <span style="font-size: 14px; color: var(--text-muted);">تومان</span></div>
+
             <div class="share-container">
+                <div style="font-size: 14px; font-weight: bold; color: var(--primary); text-align: center; margin-bottom: 10px;">کد دعوت اختصاصی شما</div>
                 <div class="ref-code-box" id="uiRefCode">RHN-0000</div>
-                <div style="font-size: 11px; color: var(--text-muted); margin-bottom:15px; line-height: 1.8;">ثبت‌نام دوستان با این کد = ۱۰۰ هزار تومان تخفیف برای آن‌ها و <b>۲۰۰ هزار تومان شارژ کیف پول برای شما!</b></div>
-                <button class="btn-copy" onclick="copyReferralText()">📋 کپی متن معرفی برای دوستان</button>
+                
+                <div class="share-text">
+                    سلام! ✋ من تو قطب‌نمای راهینو ثبت‌نام کردم.<br><br>
+                    اگر موقع ثبت‌نام از کد معرف من استفاده کنی، همون اول <b style="color:var(--danger)">۱۰۰ هزار تومن تخفیف</b> می‌گیری!<br>
+                    و کیف پول من هم <b style="color:var(--success)">۲۰۰ هزار تومن</b> شارژ میشه! 😍
+                    <br><br>
+                    کد معرف من: <b id="previewCode">...</b><br>
+                    لینک: <a href="https://rahino-edu.ir" style="color:var(--primary); text-decoration:none;">rahino-edu.ir</a>
+                </div>
+
+                <button class="btn-copy" onclick="copyReferralText()">📋 کپی متن و ارسال برای دوستان</button>
             </div>
         </div>
 
-        <!-- ⚙️ تنظیمات حساب -->
-        <h3 style="font-size: 15px; color: var(--text-muted); margin-bottom: 15px;">⚙️ پرونده آموزشی و ارتباطی</h3>
+        <h3 style="font-size: 15px; color: var(--text-muted); margin-bottom: 15px;">⚙️ تنظیمات پایه‌ای</h3>
         <div class="settings-box">
             <div class="form-group">
-                <label>نام و نام خانوادگی</label>
+                <label>نام و نام خانوادگی (ثابت)</label>
                 <input type="text" class="form-input" id="inpName" disabled>
             </div>
-            
-            <div style="display: flex; gap: 10px;">
-                <div class="form-group" style="flex:1;">
-                    <label>پایه تحصیلی (ثبت شده)</label>
-                    <input type="text" class="form-input" id="inpGrade" disabled>
-                </div>
-                <div class="form-group" style="flex:1;">
-                    <label>رشته تحصیلی (ثبت شده)</label>
-                    <input type="text" class="form-input" id="inpMajor" disabled>
-                </div>
-            </div>
-
             <div class="form-group">
-                <label>شماره موبایل ارتباطی (دانش‌آموز)</label>
-                <input type="tel" class="form-input" id="inpPhone">
+                <label>شماره موبایل ارتباطی</label>
+                <input type="tel" class="form-input" id="inpPhone" placeholder="09...">
             </div>
             <div class="form-group">
-                <label>شماره موبایل پدر 👨</label>
-                <input type="tel" class="form-input" id="inpFather" placeholder="ضروری جهت اطلاع‌رسانی">
-            </div>
-            <div class="form-group">
-                <label>شماره موبایل مادر 👩</label>
-                <input type="tel" class="form-input" id="inpMother" placeholder="ضروری جهت اطلاع‌رسانی">
-            </div>
-            <div class="form-group">
-                <label>رمز عبور ورود به پنل</label>
+                <label>رمز عبور</label>
                 <input type="text" class="form-input" id="inpPass">
             </div>
 
-            <button class="btn-save" id="btnSave" onclick="saveSettings()">💾 بروزرسانی پرونده</button>
+            <div style="background: rgba(245,158,11,0.1); padding: 10px; border-radius: 8px; font-size: 11px; color: var(--warning); margin-bottom: 15px;">
+                ⚠️ پایه و رشته مبنای دریافت برنامه‌های درسی است و <b>فقط یک‌بار</b> قابل ویرایش است.
+            </div>
+
+            <div class="form-group">
+                <label>پایه تحصیلی</label>
+                <select class="form-input" id="inpGrade">
+                    <option value="دهم">دهم</option><option value="یازدهم">یازدهم</option>
+                    <option value="دوازدهم">دوازدهم</option><option value="پشت کنکوری">فارغ التحصیل</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>رشته تحصیلی</label>
+                <select class="form-input" id="inpMajor">
+                    <option value="تجربی">تجربی</option><option value="ریاضی">ریاضی</option><option value="انسانی">انسانی</option>
+                </select>
+            </div>
+
+            <button class="btn-save" id="btnSave" onclick="saveSettings()">💾 ذخیره تغییرات</button>
         </div>
 
     </div>
 
     <script>
         // ==========================================
-        // 🔗 تنظیمات پایه
+        // 🔗 اتصال به دیتابیس (جداول سه‌گانه)
         // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
-        
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         const userId = localStorage.getItem('qotbnama_user_id');
         if (!userId) window.location.href = 'index.html';
 
-        let studentData = null; let subscriptions = []; let installments = [];
-        let currentUploadingInstId = null; let selectedReceiptBase64 = null; let selectedReceiptMime = null;
+        let studentData = null;
+        let subscriptions = [];
+        let installments = [];
+        let currentUploadingInstId = null; // برای ردیابی قسطی که قرار است فیش برایش آپلود شود
 
         window.onload = async function() { await fetchProfileData(); };
+
         function formatMoney(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
-        function copyText(elId) { navigator.clipboard.writeText(document.getElementById(elId).innerText).then(() => alert('✅ کپی شد.')); }
 
         // ==========================================
-        // 📥 واکشی اطلاعات
+        // 📥 واکشی اطلاعات یکپارچه
         // ==========================================
         async function fetchProfileData() {
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                
+                // دریافت همزمان اطلاعات دانش‌آموز، اشتراک‌های فعال، و اقساط
                 const [stRes, subRes, instRes] = await Promise.all([
                     fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
                     fetch(`${cleanUrl}/rest/v1/subscriptions?student_nid=eq.${userId}&status=eq.active`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
                     fetch(`${cleanUrl}/rest/v1/installments?student_nid=eq.${userId}&order=due_date.asc`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
                 ]);
-                let stJson = await stRes.json();
-                studentData = stJson[0]; subscriptions = await subRes.json() || []; installments = await instRes.json() || [];
 
-                renderSettings(); renderSubscriptions(); renderInstallments();
-                document.getElementById('mainLoader').style.display = 'none'; document.getElementById('appContent').style.display = 'block';
+                let stJson = await stRes.json();
+                if (!stJson || stJson.length === 0) { alert("حساب یافت نشد."); window.location.href = 'index.html'; return; }
+                
+                studentData = stJson[0];
+                subscriptions = await subRes.json() || [];
+                installments = await instRes.json() || [];
+
+                renderSettingsAndWallet();
+                renderSubscriptions();
+                renderInstallments();
+
+                document.getElementById('mainLoader').style.opacity = '0';
+                setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 300);
+                document.getElementById('appContent').style.display = 'block';
             } catch (e) { alert("خطا در ارتباط با سرور."); }
         }
 
         // ==========================================
-        // 🪪 رندر کارت‌های اشتراک
+        // 🪪 رندر کارت‌های دوقلوی اشتراک
         // ==========================================
         function renderSubscriptions() {
             const container = document.getElementById('subscriptionsContainer');
-            let html = ''; let hasPansion = false; let hasConsult = false;
+            let html = '';
+
+            let hasPansion = false; let hasConsult = false;
 
             subscriptions.forEach(sub => {
                 if (sub.service_category === 'pansion') hasPansion = true;
                 if (sub.service_category === 'consult') hasConsult = true;
 
-                let sDate = new Date(sub.start_date); let eDate = new Date(sub.end_date); let today = new Date();
+                let sDate = new Date(sub.start_date);
+                let eDate = new Date(sub.end_date);
+                let today = new Date();
+                
                 let totalDays = Math.ceil((eDate - sDate) / (1000 * 60 * 60 * 24));
                 let passedDays = Math.ceil((today - sDate) / (1000 * 60 * 60 * 24));
                 let remainDays = totalDays - passedDays;
-                let pct = 100 - Math.min((passedDays / totalDays) * 100, 100); if (pct < 0) pct = 0;
+                
+                let pct = 100 - Math.min((passedDays / totalDays) * 100, 100);
+                if (pct < 0) pct = 0;
+
+                let shamsiEnd = eDate.toLocaleDateString('fa-IR', { year: 'numeric', month: 'short', day: 'numeric' });
                 
                 let isPan = sub.service_category === 'pansion';
+                let catName = isPan ? 'پانسیون مطالعاتی' : 'برنامه و مشاوره';
+                let className = isPan ? 'pansion' : 'consult';
+
                 html += `
-                    <div class="sub-card ${isPan ? 'pansion' : 'consult'}">
+                    <div class="sub-card ${className}">
                         <div class="sub-header">
-                            <div><div class="plan-cat">${isPan ? 'پانسیون مطالعاتی' : 'برنامه و مشاوره'}</div><div class="plan-name">طرح ${sub.service_type}</div></div>
+                            <div>
+                                <div class="plan-cat">${catName}</div>
+                                <div class="plan-name">طرح ${sub.service_type}</div>
+                            </div>
                             <div class="sub-badge">فعال ✅</div>
                         </div>
                         <div class="progress-container">
-                            <div class="progress-text"><span><b>${remainDays > 0 ? remainDays : 0} روز</b> مانده</span><span style="opacity:0.8;">تا ${eDate.toLocaleDateString('fa-IR', {month:'short', day:'numeric'})}</span></div>
-                            <div class="progress-bar"><div class="progress-fill" style="width: ${pct}%; background: ${pct < 15 ? 'var(--danger)' : 'var(--success)'};"></div></div>
+                            <div class="progress-text">
+                                <span><b>${remainDays > 0 ? remainDays : 0} روز</b> مانده</span>
+                                <span style="opacity:0.8;">تا ${shamsiEnd}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${pct}%; background: ${pct < 15 ? 'var(--danger)' : 'var(--success)'};"></div>
+                            </div>
                         </div>
-                    </div>`;
+                    </div>
+                `;
             });
-            if (subscriptions.length === 0) html = `<div class="sub-card inactive" onclick="window.location.href='upgrade.html'"><div>شما در حال حاضر اشتراک فعالی ندارید. <br><b style="color:var(--primary);">جهت ثبت‌نام کلیک کنید.</b></div></div>`;
+
+            // اگر هیچ اشتراکی نداشت
+            if (subscriptions.length === 0) {
+                html = `
+                    <div class="sub-card inactive" onclick="window.location.href='upgrade.html'">
+                        <div>شما در حال حاضر اشتراک فعالی ندارید. <br><b style="color:var(--primary);">جهت ثبت‌نام کلیک کنید.</b></div>
+                    </div>`;
+            } else {
+                // نمایش کارت غیرفعال برای سرویسی که ندارد (Up-sell هوشمند)
+                if (!hasPansion) {
+                    html += `<div class="sub-card inactive" onclick="window.location.href='upgrade.html'">➕ افزودن طرح پانسیون به اکانت</div>`;
+                }
+                if (!hasConsult) {
+                    html += `<div class="sub-card inactive" onclick="window.location.href='upgrade.html'">➕ افزودن مربی و مشاوره به اکانت</div>`;
+                }
+            }
+
             container.innerHTML = html;
         }
 
         // ==========================================
-        // ⏳ رادار اقساط و آپلود دو مرحله‌ای
+        // ⏳ رادار اقساط و آپلود فیش
         // ==========================================
         function renderInstallments() {
             const container = document.getElementById('installmentsBox');
             if (installments.length === 0) { container.style.display = 'none'; return; }
+            
             container.style.display = 'block';
-            let html = ''; let today = new Date(); const fmt = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' });
+            let html = '';
+            let today = new Date();
+            const formatter = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' });
 
             installments.forEach(inst => {
-                let diffDays = Math.ceil((new Date(inst.due_date) - today) / (1000 * 60 * 60 * 24));
-                let stateClass = ''; let actionHtml = '';
+                let dueDate = new Date(inst.due_date);
+                let diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                
+                let stateClass = '';
+                let actionHtml = '';
 
                 if (inst.status === 'paid') {
-                    stateClass = 'paid'; actionHtml = `<div style="font-size:12px; color:var(--success); font-weight:bold;">✅ وصول شده</div>`;
-                } else if (inst.status === 'pending_approval') {
-                    stateClass = 'pending'; actionHtml = `<div style="font-size:12px; color:var(--warning); font-weight:bold;">⏳ در انتظار تایید مدیر</div>`;
-                } else {
-                    stateClass = diffDays <= 7 ? 'danger' : 'pending';
+                    stateClass = 'paid';
+                    actionHtml = `<div style="font-size:12px; color:var(--success); font-weight:bold;">✅ وصول شده</div>`;
+                } 
+                else if (inst.status === 'pending_approval') {
+                    stateClass = 'pending';
+                    actionHtml = `<div style="font-size:12px; color:var(--warning); font-weight:bold;">⏳ فیش ارسال شده (در انتظار تایید مدیر)</div>`;
+                }
+                else {
+                    // pending_upload (منتظر پرداخت)
+                    if (diffDays <= 7) stateClass = 'danger';
+                    else stateClass = 'pending';
+                    
                     let dayText = diffDays < 0 ? `❌ ${Math.abs(diffDays)} روز تاخیر` : (diffDays === 0 ? 'امروز' : `${diffDays} روز مانده`);
+                    
                     actionHtml = `
-                        <div style="font-size:11px; color:var(--danger); margin-bottom:8px; font-weight:bold;">موعد پرداخت: ${dayText}</div>
-                        <div id="action_box_${inst.id}">
-                            <button class="btn-select-file" onclick="triggerSelect('${inst.id}')">📎 ۱. انتخاب تصویر رسید</button>
-                        </div>`;
+                        <div style="font-size:11px; color:var(--danger); margin-bottom:8px; font-weight:bold;">موعد: ${dayText}</div>
+                        <button class="btn-upload-inst" onclick="triggerUpload('${inst.id}')">📥 آپلود فیش پرداختی</button>
+                    `;
                 }
 
                 html += `
                     <div class="timeline-item ${stateClass}">
-                        <div class="t-header"><span class="t-num">قسط #${inst.installment_number}</span><span class="t-date">${fmt.format(new Date(inst.due_date))}</span></div>
+                        <div class="t-header">
+                            <span class="t-num">قسط #${inst.installment_number}</span>
+                            <span class="t-date">${formatter.format(dueDate)}</span>
+                        </div>
                         <div class="t-amount">${formatMoney(inst.amount)} تومان</div>
                         ${actionHtml}
-                    </div>`;
+                    </div>
+                `;
             });
+
             document.getElementById('installmentsTimeline').innerHTML = html;
         }
 
-        function triggerSelect(instId) {
-            currentUploadingInstId = instId; document.getElementById('hiddenReceiptInput').click();
+        // توابع مربوط به آپلود فیش قسط در دیتابیس
+        function triggerUpload(instId) {
+            currentUploadingInstId = instId;
+            document.getElementById('hiddenReceiptInput').click();
         }
 
-        function handleFileSelection(input) {
+        async function handleInstallmentUpload(input) {
             if (!input.files || !input.files[0] || !currentUploadingInstId) return;
             let file = input.files[0];
             if(file.size > 5 * 1024 * 1024) return alert("حجم عکس نباید بیشتر از ۵ مگابایت باشد.");
-            
+
+            // آپلود و دریافت Base64
             const reader = new FileReader();
-            reader.onload = function(e) { 
-                selectedReceiptBase64 = e.target.result.split(',')[1]; selectedReceiptMime = file.type;
-                
-                let instObj = installments.find(i => i.id === currentUploadingInstId);
-                
-                document.getElementById('action_box_' + currentUploadingInstId).innerHTML = `
-                    <div style="font-size:11px; color:var(--success); font-weight:bold; margin-bottom:8px; display:flex; align-items:center; gap:5px;">✅ تصویر رسید ضمیمه شد</div>
-                    <button class="btn-send-file" onclick="submitReceiptToWebhook('${instObj.id}', '${instObj.installment_number}', ${instObj.amount})">🚀 ۲. ارسال رسید برای مدیریت</button>
-                    <button style="background:transparent; border:none; color:var(--text-muted); font-size:11px; margin-top:5px; cursor:pointer;" onclick="renderInstallments()">انصراف</button>
-                `;
+            reader.onload = async function(e) { 
+                let base64 = e.target.result.split(',')[1];
+                let mime = file.type;
+
+                // نمایش لودینگ
+                document.getElementById('mainLoader').style.display = 'flex';
+                document.getElementById('mainLoader').innerHTML = '<div class="spinner">⏳</div><h3 style="color:var(--primary); font-size:14px;">در حال ارسال فیش...</h3>';
+
+                try {
+                    let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                    await fetch(`${cleanUrl}/rest/v1/installments?id=eq.${currentUploadingInstId}`, {
+                        method: 'PATCH',
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            status: 'pending_approval',
+                            receipt_base64: base64,
+                            mime_type: mime
+                        })
+                    });
+                    
+                    alert("✅ فیش با موفقیت ارسال شد و پس از تایید مدیریت در سیستم ثبت می‌گردد.");
+                    window.location.reload();
+                } catch (err) {
+                    alert("خطا در ارسال فیش.");
+                    document.getElementById('mainLoader').style.display = 'none';
+                }
             };
             reader.readAsDataURL(file);
         }
 
-        // ارسال به وب‌هوک گوگل برای آپلود تو دیتابیس و ارسال به بله
-        async function submitReceiptToWebhook(instId, instNum, amount) {
-            document.getElementById('mainLoader').style.display = 'flex';
-            document.getElementById('mainLoader').innerHTML = '<div class="spinner">🚀</div><h3 style="color:var(--primary); font-size:14px;">در حال ارسال فیش به مدیریت...</h3>';
-
-            const payload = {
-                action: 'web_auth', 
-                sub_action: 'upload_installment',
-                national_id: userId,
-                student_name: studentData.full_name,
-                installment_id: instId,
-                inst_number: instNum,
-                amount: amount,
-                receipt_base64: selectedReceiptBase64,
-                mime_type: selectedReceiptMime
-            };
-
-            try {
-                const response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-                const result = await response.json();
-                if(result.success) {
-                    alert("✅ رسید شما با موفقیت به صورت مستقیم برای مدیریت ارسال شد.");
-                    window.location.reload();
-                } else throw new Error();
-            } catch (err) {
-                alert("❌ خطا در ارسال اطلاعات. لطفاً دوباره تلاش کنید.");
-                document.getElementById('mainLoader').style.display = 'none';
-            }
-        }
-
         // ==========================================
-        // ⚙️ تنظیمات و اطلاعات
+        // ⚙️ کیف پول و تنظیمات
         // ==========================================
-        function renderSettings() {
-            document.getElementById('uiWalletBalance').innerText = formatMoney(studentData.wallet_balance || 0);
-            let refCode = studentData.referral_code || `RHN-${userId.slice(-4)}`;
-            document.getElementById('uiRefCode').innerText = refCode; document.getElementById('previewCode').innerText = refCode;
+        function renderSettingsAndWallet() {
+            let balance = studentData.wallet_balance || 0;
+            document.getElementById('uiWalletBalance').innerText = formatMoney(balance);
+            
+            let refCode = studentData.referral_code || `RH-${studentData.national_id.slice(-4)}`;
+            document.getElementById('uiRefCode').innerText = refCode;
+            document.getElementById('previewCode').innerText = refCode;
 
             document.getElementById('inpName').value = studentData.full_name || '';
-            document.getElementById('inpGrade').value = studentData.grade || 'نامشخص';
-            document.getElementById('inpMajor').value = studentData.major || 'نامشخص';
             document.getElementById('inpPhone').value = studentData.phone_number || '';
-            document.getElementById('inpFather').value = studentData.father_phone || '';
-            document.getElementById('inpMother').value = studentData.mother_phone || '';
             document.getElementById('inpPass').value = studentData.password || '';
+            if (studentData.grade) document.getElementById('inpGrade').value = studentData.grade;
+            if (studentData.major) document.getElementById('inpMajor').value = studentData.major;
+
+            if (studentData.has_edited_profile === true) {
+                document.getElementById('inpGrade').disabled = true;
+                document.getElementById('inpMajor').disabled = true;
+            }
         }
 
         function copyReferralText() {
             let refCode = document.getElementById('uiRefCode').innerText;
-            navigator.clipboard.writeText(`سلام! ✋ من تو قطب‌نمای راهینو ثبت‌نام کردم.\nبا این کد معرف ۱۰۰ هزار تومن تخفیف می‌گیری: ${refCode}\nلینک: https://rahino-edu.ir`).then(() => alert("✅ متن کپی شد."));
+            let textToCopy = `سلام! ✋ من تو قطب‌نمای راهینو ثبت‌نام کردم.\n\nاگر موقع ثبت‌نام از کد معرف من استفاده کنی، همون اول ۱۰۰ هزار تومن تخفیف می‌گیری!\n\nکد معرف من: ${refCode}\nلینک: https://rahino-edu.ir`;
+            navigator.clipboard.writeText(textToCopy).then(() => alert("✅ متن کپی شد."));
         }
 
         async function saveSettings() {
-            const btn = document.getElementById('btnSave'); btn.innerText = "در حال ذخیره... ⏳"; btn.disabled = true;
+            const btn = document.getElementById('btnSave');
+            btn.innerText = "در حال ذخیره... ⏳"; btn.disabled = true;
+            const updateData = { phone_number: document.getElementById('inpPhone').value, password: document.getElementById('inpPass').value };
+
+            if (studentData.has_edited_profile !== true) {
+                updateData.grade = document.getElementById('inpGrade').value;
+                updateData.major = document.getElementById('inpMajor').value;
+                updateData.has_edited_profile = true; 
+            }
+
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
                 await fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, {
                     method: 'PATCH',
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        phone_number: document.getElementById('inpPhone').value,
-                        father_phone: document.getElementById('inpFather').value,
-                        mother_phone: document.getElementById('inpMother').value,
-                        password: document.getElementById('inpPass').value
-                    })
+                    body: JSON.stringify(updateData)
                 });
-                alert("✅ اطلاعات پرونده بروزرسانی شد."); window.location.reload();
-            } catch (e) { alert("⚠️ خطا در ذخیره."); btn.disabled = false; btn.innerText = "💾 بروزرسانی پرونده"; }
+                alert("✅ اطلاعات حساب با موفقیت بروزرسانی شد.");
+                window.location.reload();
+            } catch (e) { alert("⚠️ خطا در ذخیره اطلاعات."); btn.disabled = false; btn.innerText = "💾 ذخیره تغییرات"; }
+        }
+
+        // ==========================================
+        // 🌓 سیستم دارک مود
+        // ==========================================
+        const themeBtn = document.getElementById('themeBtn');
+        if ((localStorage.getItem('theme') || 'dark') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            if(themeBtn) themeBtn.innerText = '☀️';
         }
 
         function toggleTheme() {
-            let isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
-            document.getElementById('themeBtn').innerText = isDark ? '🌙' : '☀️';
-            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+            if (document.documentElement.getAttribute('data-theme') === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                if(themeBtn) themeBtn.innerText = '🌙';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                if(themeBtn) themeBtn.innerText = '☀️';
+            }
         }
     </script>
 </body>
