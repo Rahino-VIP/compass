@@ -397,6 +397,22 @@
             document.getElementById('hiddenReceiptInput').click();
         }
 
+        // ==========================================
+        // 🔄 توابع آپلود دو مرحله‌ای اقساط
+        // ==========================================
+        function triggerUpload(instId) {
+            currentUploadingInstId = instId;
+            document.getElementById('hiddenReceiptInput').click();
+        }
+
+// ==========================================
+        // 🔄 توابع آپلود دو مرحله‌ای اقساط
+        // ==========================================
+        function triggerUpload(instId) {
+            currentUploadingInstId = instId;
+            document.getElementById('hiddenReceiptInput').click();
+        }
+
         function handleInstallmentUpload(input) {
             if (!input.files || !input.files[0] || !currentUploadingInstId) return;
             let file = input.files[0];
@@ -462,7 +478,36 @@
             
             document.getElementById('inpPhone').value = studentData.phone_number || '';
             document.getElementById('inpFather').value = studentData.father_phone || '';
-            document.getEleme
+            document.getElementById('inpMother').value = studentData.mother_phone || '';
+            document.getElementById('inpPass').value = studentData.password || '';
+        }
+
+        async function saveSettings() {
+            const btn = document.getElementById('btnSave');
+            btn.innerText = "در حال ذخیره... ⏳"; btn.disabled = true;
+            
+            // فقط فیلدهای مجاز ذخیره می‌شوند (پایه و رشته قفل است)
+            const updateData = { 
+                phone_number: document.getElementById('inpPhone').value, 
+                father_phone: document.getElementById('inpFather').value,
+                mother_phone: document.getElementById('inpMother').value,
+                password: document.getElementById('inpPass').value 
+            };
+
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                await fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, {
+                    method: 'PATCH',
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+                alert("✅ اطلاعات حساب با موفقیت بروزرسانی شد.");
+                window.location.reload();
+            } catch (e) { 
+                alert("⚠️ خطا در ذخیره اطلاعات."); 
+                btn.disabled = false; btn.innerText = "💾 بروزرسانی پرونده"; 
+            }
+        }
             
         function copyReferralText() {
             let refCode = document.getElementById('uiRefCode').innerText;
