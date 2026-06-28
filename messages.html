@@ -67,7 +67,7 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body data-theme="dark">
+<body="dark">
 
     <div class="loader-overlay" id="mainLoader">
         <div class="spinner">📨</div>
@@ -212,18 +212,23 @@
         // 🌓 سیستم دارک مود
         // ==========================================
         const themeBtn = document.getElementById('themeBtn');
-        if ((localStorage.getItem('theme') || 'light') === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            if(themeBtn) themeBtn.innerText = '☀️';
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        
+        if (currentTheme === 'dark') { 
+            document.body.setAttribute('data-theme', 'dark'); 
+            if(themeBtn) themeBtn.innerText = '☀️'; 
+        } else { 
+            document.body.removeAttribute('data-theme'); 
+            if(themeBtn) themeBtn.innerText = '🌙'; 
         }
 
         function toggleTheme() {
-            if (document.documentElement.getAttribute('data-theme') === 'dark') {
-                document.documentElement.removeAttribute('data-theme');
+            if (document.body.getAttribute('data-theme') === 'dark') {
+                document.body.removeAttribute('data-theme');
                 localStorage.setItem('theme', 'light');
                 if(themeBtn) themeBtn.innerText = '🌙';
             } else {
-                document.documentElement.setAttribute('data-theme', 'dark');
+                document.body.setAttribute('data-theme', 'dark');
                 localStorage.setItem('theme', 'dark');
                 if(themeBtn) themeBtn.innerText = '☀️';
             }
