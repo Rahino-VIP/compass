@@ -110,6 +110,31 @@
         }
         .card.vip-locked:hover { border-color: var(--accent); }
 
+        /* 🔴 نشانگر پیام نخوانده برای کارت‌ها */
+        .badge-notify {
+            position: absolute;
+            top: 10px;
+            right: 10px; /* قرارگیری در گوشه بالا-راست کارت */
+            background-color: var(--danger);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: none; /* در حالت پیش‌فرض مخفی است */
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+            animation: pulseNotify 2s infinite;
+        }
+
+        @keyframes pulseNotify {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
         /* 🪟 مدال هشدار ارتقا (Upsell) */
         .modal-overlay { 
             position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
@@ -200,11 +225,12 @@
         </div>
 
         <!-- بخش 4: تنظیمات -->
-        <div class="section-title">تنظیمات و ارتباطات</div>
+       <div class="section-title">تنظیمات و ارتباطات</div>
         <div class="menu-grid">
             <a href="#" class="card" onclick="navigate('messages')">
                 <span class="card-icon">📨</span>
                 <span class="card-title">صندوق پیام‌ها</span>
+                <span class="badge-notify" id="msgBadge">0</span> 
             </a>
             <a href="#" class="card" onclick="navigate('profile')">
                 <span class="card-icon">👤</span>
@@ -308,6 +334,36 @@
 
         // اجرای موتور تشخیص به محض باز شدن داشبورد
         fetchUserSubscriptions();
+        // ==========================================
+        // 📨 رادار بررسی پیام‌های نخوانده
+        // ==========================================
+        async function checkUnreadMessages() {
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                
+                // درخواست به دیتابیس: فقط آیدی پیام‌هایی که is_read آن‌ها false است رو بده
+                let res = await fetch(`${cleanUrl}/rest/v1/messages?student_nid=eq.${userId}&is_read=eq.false&select=id`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                
+                if (res.ok) {
+                    let unreadData = await res.json();
+                    if (unreadData && unreadData.length > 0) {
+                        // اگر پیام نخونده داشت، دایره قرمز رو روشن کن و تعداد رو بنویس
+                        const badge = document.getElementById('msgBadge');
+                        if (badge) {
+                            badge.innerText = unreadData.length;
+                            badge.style.display = 'flex'; 
+                        }
+                    }
+                }
+            } catch (err) {
+                console.log("خطا در دریافت نوتیفیکیشن پیام‌ها:", err);
+            }
+        }
+
+        // روشن کردن رادار پیام‌ها
+        checkUnreadMessages();
         // ==========================================
         // 🧭 سیستم هدایت (Navigation)
         // ==========================================
