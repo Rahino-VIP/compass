@@ -180,7 +180,7 @@
             <div class="invoice-row" id="row_con_base" style="display:none;"><span>هزینه مشاوره:</span><span id="inv_con_base">۰ تومان</span></div>
             
             <div class="invoice-row discount" id="row_combo_disc" style="display: none;">
-                <span>💎 تخفیف طرح الماس (۶۰٪ روی مشاوره):</span><span id="inv_combo_disc">- ۰ تومان</span>
+                <span>💎 تخفیف طرح الماس (۶۰٪ روی مشترک):</span><span id="inv_combo_disc">- ۰ تومان</span>
             </div>
             <div class="invoice-row discount" id="row_promo_disc" style="display: none;">
                 <span>🎟️ تخفیف کُد:</span><span id="inv_promo_disc">- ۰ تومان</span>
@@ -300,13 +300,16 @@
         };
 
         // ==========================================
-        // 🧠 موتور پردازش ظرفیت
+        // 🧠 موتور پردازش ظرفیت (آپدیت شده)
         // ==========================================
         function processServiceCapacities() {
             dbData.services.forEach(srv => {
                 let activeInSrv = dbData.allActiveSubs.filter(s => s.service_category === srv.category && s.service_type === srv.type);
                 srv.current_count = activeInSrv.length;
-                srv.empty_seats = parseInt(srv.capacity) - srv.current_count;
+                
+                // در نظر گرفتن Null به عنوان ظرفیت نامحدود (999)
+                let cap = (srv.capacity !== null && srv.capacity !== undefined) ? parseInt(srv.capacity) : 999;
+                srv.empty_seats = cap - srv.current_count;
                 
                 let nonRenewers = activeInSrv.filter(s => s.will_not_renew === true);
                 if (nonRenewers.length > 0) {
@@ -331,17 +334,17 @@
             let normGrade = ['دهم', 'یازدهم'].includes(studentData.grade) ? studentData.grade : 'دوازدهم';
             let normMajor = studentData.major || 'all';
 
-            // فیلتر جادویی (حل باگ): پلن‌هایی که به پایه و رشته می‌خورن، پلاس پلن‌هایی که کاربر همین الان داره استفاده می‌کنه!
+            // فیلتر جادویی: پلن‌هایی که به پایه و رشته می‌خورن، پلاس پلن‌هایی که کاربر همین الان داره!
             let allowedPlans = dbData.services.filter(x => 
-                (x.target_grade === normGrade || x.target_grade === 'all') &&
-                (x.target_major === normMajor || x.target_major === 'all') ||
+                ((x.target_grade === normGrade || x.target_grade === 'all') &&
+                (x.target_major === normMajor || x.target_major === 'all')) ||
                 dbData.userSubs.some(s => s.service_category === x.category && s.service_type === x.type)
             );
 
             allowedPlans.forEach(plan => {
                 let isMyActivePlan = dbData.userSubs.some(s => s.service_category === plan.category && s.service_type === plan.type);
                 
-                // اگه تو اون دسته طرح فعال داره، فقط همونو نشون بده برای تمدید (تعویض تو یه تب دیگه است)
+                // اگه تو اون دسته طرح فعال داره، فقط همونو نشون بده برای تمدید
                 if (plan.category === 'pansion' && state.hasPansionActive && !isMyActivePlan) return;
                 if (plan.category === 'consult' && state.hasConsultActive && !isMyActivePlan) return;
 
@@ -393,7 +396,7 @@
         }
 
         // ==========================================
-        // 🎛️ کنترلرها و موتور محاسبات 
+        // 🎛️ کنترلرها 
         // ==========================================
         function selectPlan(category, type, startDate) {
             state[category] = type;
@@ -431,8 +434,7 @@
             
             if (promoObj) {
                 state.promoRate = promoObj.discount_percent / 100;
-                msg.innerText = `✅ کد تایید شد: ${promoObj.discount_percent}٪ تخفیف روی مشاوره اعمال شد.`;
-                msg.style.color = "var(--success)";
+                // 메시지 آپدیت میشه تو بخش ماشین‌حساب پایین
             } else {
                 state.promoRate = 0;
                 msg.innerText = "❌ کد تخفیف نامعتبر است.";
@@ -445,6 +447,9 @@
         function roundDown100k(amount) { return Math.floor(amount / 100000) * 100000; }
         function copyText(id) { navigator.clipboard.writeText(document.getElementById(id).innerText).then(()=>alert("✅ کپی شد.")); }
 
+        // ==========================================
+        // 🧮 موتور محاسبات (حل باگ طرح الماس)
+        // ==========================================
         function calculateInvoice() {
             let pVal = document.getElementById('panDuration').value;
             let cVal = document.getElementById('conDuration').value;
@@ -468,33 +473,52 @@
 
             let comboDisc = 0; let promoDisc = 0;
 
-            // حل باگ طرح الماس: تخفیف فقط در صورتی اعمال میشه که یا هر دو رو الان بخره، یا یکی رو از قبل داشته باشه و دومی رو الان بخره!
-            if (state.pansion !== 'none' && state.consult !== 'none') {
-                comboDisc = totalCon * 0.60;
-                document.getElementById('promoMsg').innerText = "💎 به دلیل فعال شدن تخفیف ۶۰٪ طرح الماس، کدهای دیگر اعمال نمی‌شوند.";
-                document.getElementById('promoMsg').style.color = "var(--primary)";
-                document.getElementById('promoCode').disabled = true;
-                state.promoRate = 0;
-            } else if (state.hasPansionActive && state.consult !== 'none') {
-                comboDisc = totalCon * 0.60;
-                document.getElementById('promoMsg').innerText = "💎 به دلیل داشتن پانسیون فعال، تخفیف الماس برای مشاوره اعمال شد.";
-                document.getElementById('promoMsg').style.color = "var(--primary)";
-                document.getElementById('promoCode').disabled = true;
-                state.promoRate = 0;
+            // محاسبه دقیق ماه‌های هم‌پوشانی (Overlap)
+            if (state.consult !== 'none') {
+                // محاسبه کل ماه‌های پانسیون که کاربر خواهد داشت
+                let totalPanMonths = state.pansion !== 'none' ? state.panDuration : 0;
+                
+                if (state.hasPansionActive) {
+                    let myPan = dbData.userSubs.find(s => s.service_category === 'pansion');
+                    if (myPan) {
+                        let remainDays = (new Date(myPan.end_date) - new Date()) / (1000 * 3600 * 24);
+                        if (remainDays > 0) totalPanMonths += (remainDays / 30);
+                    }
+                }
+
+                // مقایسه ماه‌های مشاوره خریده شده با ماه‌های پانسیون
+                let overlapMonths = Math.min(state.conDuration, totalPanMonths);
+                let nonOverlapMonths = Math.max(0, state.conDuration - overlapMonths);
+                
+                let msgEl = document.getElementById('promoMsg');
+
+                if (overlapMonths > 0) {
+                    comboDisc = (baseConMonthly * overlapMonths) * 0.60;
+                    msgEl.innerHTML = `💎 طرح الماس فعال شد: ۶۰٪ تخفیف برای ${overlapMonths.toFixed(1)} ماه مشترک.`;
+                    if (nonOverlapMonths > 0) msgEl.innerHTML += `<br>🎟️ کدهای تخفیف رو می‌تونی روی ${nonOverlapMonths.toFixed(1)} ماه باقیمانده اعمال کنی.`;
+                    msgEl.style.color = "var(--primary)";
+                } else {
+                    if (msgEl.innerText.includes('الماس')) msgEl.innerText = '';
+                }
+
+                if (state.promoRate > 0) {
+                    if (nonOverlapMonths > 0) {
+                        promoDisc = (baseConMonthly * nonOverlapMonths) * state.promoRate;
+                        msgEl.innerHTML += `<br>✅ کد تخفیف شما هم برای اون ماه‌های غیرمشترک اعمال شد.`;
+                    } else {
+                        msgEl.innerHTML += `<br>❌ کد تخفیف بی‌اثر (تمام ماه‌های مشاوره تحت پوشش طرح الماس هستند).`;
+                    }
+                }
             } else {
-                document.getElementById('promoCode').disabled = false;
                 if(document.getElementById('promoMsg').innerText.includes('الماس')) document.getElementById('promoMsg').innerText = '';
             }
 
-            if (state.promoRate > 0 && comboDisc === 0 && totalCon > 0) promoDisc = totalCon * state.promoRate; 
-            
             let subTotal = totalBase - comboDisc - promoDisc;
             
             let isPanLong = pVal === '3' || pVal === 'konkur';
             let isConLong = cVal === '3' || cVal === 'konkur';
             const switchCont = document.getElementById('paySwitchContainer');
             
-            // اگه ۱ ماهه زیر ۳ میلیون بود، فقط نقدی
             if ((!isPanLong && !isConLong) && subTotal < 3000000) { 
                 switchCont.style.display = 'none'; state.paymentMethod = 'cash'; 
                 document.getElementById('btnPayCash').classList.add('active');
@@ -580,7 +604,7 @@
         }
 
         // ==========================================
-        // 📤 آپلود فیش و ذخیره در دیتابیس (بدون قفل کردن اکانت)
+        // 📤 آپلود فیش و ارسال به بک‌اند (حل مشکل ادمین و بله)
         // ==========================================
         let receiptBase64 = null; let receiptMimeType = null;
         function handleReceiptSelect(input) {
@@ -612,62 +636,46 @@
             invoiceText += `مبلغ نهایی فاکتور: ${document.getElementById('inv_total').innerText}\nروش پرداخت: ${state.paymentMethod === 'cash' ? 'نقدی' : 'اقساط'}\n`;
             if(state.paymentMethod === 'installments') invoiceText += `زمان‌بندی اقساط:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
 
+            // ارسال پِی‌لود دقیقاً با همون اکشنی که بله بهش حساسه
+            const payload = {
+                action: 'web_auth', sub_action: 'register_step2', 
+                national_id: userId,
+                receipt_base64: receiptBase64, mime_type: receiptMimeType,
+                invoice_data: {
+                    plan_summary: `خرید از فروشگاه داخلی`,
+                    invoice_text: invoiceText,
+                    total_amount: financeData.total,
+                    discount_amount: financeData.discount,
+                    final_amount: financeData.final,
+                    payment_method: state.paymentMethod,
+                    paid_upfront: financeData.upfront,
+                    pansion_tier: state.pansion,       
+                    pan_duration: state.panDuration,
+                    pan_start: state.panStartDate, 
+                    consult_tier: state.consult,       
+                    con_duration: state.conDuration,
+                    con_start: state.conStartDate 
+                },
+                installments: financeData.installments
+            };
+
             try {
+                // ۱. شلیک درخواست به گوگل اسکریپت (برای ارسال پیام به بله)
+                fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+
+                // ۲. ثبت مستقیم در جدول Students تا در پنل ادمین تو لیست فاکتورهای منتظر تایید بیاد
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
-
-                // ۱. ثبت فاکتور به صورت مستقیم در جدول invoices (برای نمایش در پنل ادمین)
-                const invPayload = {
-                    student_nid: userId,
-                    student_name: studentData.full_name,
-                    amount: financeData.final,
-                    status: 'pending',
-                    receipt_base64: receiptBase64,
-                    mime_type: receiptMimeType,
-                    description: invoiceText
-                };
-                
-                const invRes = await fetch(`${cleanUrl}/rest/v1/invoices`, {
-                    method: 'POST',
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-                    body: JSON.stringify(invPayload)
-                });
-                
-                const invData = await invRes.json();
-                
-                // ۲. ثبت اقساط در صورت وجود
-                if (financeData.installments.length > 0 && invData && invData.length > 0) {
-                    const instPayload = financeData.installments.map(inst => ({
-                        student_nid: userId,
-                        student_name: studentData.full_name,
-                        invoice_id: invData[0].id,
-                        amount: inst.amount,
-                        due_date: inst.due_date,
-                        installment_number: inst.installment_number,
-                        status: 'pending_upload'
-                    }));
-                    
-                    await fetch(`${cleanUrl}/rest/v1/installments`, {
-                        method: 'POST',
-                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify(instPayload)
-                    });
-                }
-
-                // ۳. آپدیت موجودی کیف پول کاربر
                 await fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, {
                     method: 'PATCH',
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ wallet_balance: financeData.newWalletBalance })
+                    body: JSON.stringify({ 
+                        status: 'pending', // این خط باعث میشه مستقیم بره تو لیست ادمین
+                        invoice_details: invoiceText,
+                        receipt_base64: receiptBase64,
+                        file_type: receiptMimeType,
+                        wallet_balance: financeData.newWalletBalance 
+                    })
                 });
-
-                // ۴. ارسال پیام نوتیفیکیشن به پیام‌رسان بله (توسط اسکریپت)
-                // اینجا به جای ثبت نام مجدد، فقط برای ارسال پیام به بله اسکریپت رو صدا میزنیم
-                const scriptPayload = {
-                    action: 'web_auth', sub_action: 'store_purchase',
-                    national_id: userId, receipt_base64: receiptBase64, mime_type: receiptMimeType,
-                    invoice_data: { invoice_text: invoiceText }
-                };
-                fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(scriptPayload) }); // نیازی به await نیست
 
                 alert("🎉 فاکتور شما با موفقیت ثبت شد.\nشما می‌توانید این فاکتور را در پنل ادمین مشاهده کنید.");
                 window.location.href = 'profile.html';
