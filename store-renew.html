@@ -39,6 +39,17 @@
         .back-btn { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); padding: 8px 15px; border-radius: 12px; text-decoration: none; font-size: 13px; font-weight: bold; transition: 0.2s; }
         .back-btn:hover { border-color: var(--primary); }
 
+        /* 💳 کارت بانکی */
+        .payment-card { background: linear-gradient(135deg, #0f172a, #1e3a8a); border-radius: 20px; padding: 25px; color: white; position: relative; overflow: hidden; box-shadow: 0 15px 30px rgba(30, 58, 138, 0.3); margin-bottom: 20px; }
+        .payment-card::after { content: '🏦'; position: absolute; left: -10px; top: -10px; font-size: 120px; opacity: 0.05; transform: rotate(-20deg); pointer-events: none; }
+        .pc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; opacity: 0.9; font-size: 13px; }
+        .pc-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; backdrop-filter: blur(5px); }
+        .pc-label { font-size: 11px; opacity: 0.8; margin-bottom: 3px; display: block; }
+        .pc-value { font-size: 18px; font-weight: 900; letter-spacing: 2px; direction: ltr; text-align: left; }
+        .pc-value.shaba { font-size: 14px; letter-spacing: 1px; }
+        .btn-copy-mini { background: var(--accent); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-copy-mini:hover { background: rgba(255,255,255,0.3); }
+
         .wallet-banner { background: rgba(217, 119, 6, 0.1); border: 1px dashed var(--accent); padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 25px; }
 
         .section-title { font-size: 15px; font-weight: bold; color: var(--accent); margin: 25px 0 15px 0; border-bottom: 1px solid var(--border); padding-bottom: 5px; display: flex; align-items: center; gap: 8px; }
@@ -104,7 +115,23 @@
 
         <div class="header-title">
             <h1>فروشگاه و تمدید اشتراک</h1>
-            <a href="menu.html" class="back-btn">🔙 بازگشت به داشبورد</a>
+            <a href="profile.html" class="back-btn">🔙 بازگشت به پروفایل</a>
+        </div>
+
+        <!-- کارت بانکی مدیریت -->
+        <div class="payment-card">
+            <div class="pc-header">
+                <div>صاحب حساب: <b>ارشاد شفیعی فرد</b></div>
+                <div>بانک سامان</div>
+            </div>
+            <div class="pc-row">
+                <div><span class="pc-label">شماره کارت:</span><div class="pc-value" id="txtCard">6219861810380484</div></div>
+                <button class="btn-copy-mini" onclick="copyText('txtCard')">کپی</button>
+            </div>
+            <div class="pc-row" style="margin-bottom: 0;">
+                <div><span class="pc-label">شماره شبا:</span><div class="pc-value shaba" id="txtSheba">IR200560611828006108618001</div></div>
+                <button class="btn-copy-mini" onclick="copyText('txtSheba')">کپی</button>
+            </div>
         </div>
 
         <div class="wallet-banner">
@@ -223,7 +250,7 @@
         let financeData = { total: 0, discount: 0, walletUsed: 0, newWalletBalance: 0, final: 0, upfront: 0, installments: [] };
 
         // ==========================================
-        // 🚀 راه‌اندازی و دریافت دیتا (شامل ظرفیت‌ها)
+        // 🚀 راه‌اندازی و دریافت دیتا
         // ==========================================
         window.onload = async function() {
             try {
@@ -235,7 +262,6 @@
                     fetch(`${cleanUrl}/rest/v1/services?is_active=eq.true`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/promo_codes?is_active=eq.true`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/subscriptions?student_nid=eq.${userId}&status=eq.active`, { headers }),
-                    // دریافت تمامی اشتراک‌های فعال برای محاسبه دقیق ظرفیت و رزرو
                     fetch(`${cleanUrl}/rest/v1/subscriptions?status=eq.active&select=service_category,service_type,end_date,will_not_renew`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/system_settings?select=konkur_date`, { headers })
                 ]);
@@ -264,10 +290,9 @@
                 if(activePan) state.hasPansionActive = true;
                 if(activeCon) state.hasConsultActive = true;
 
-                // محاسبه ظرفیت و تاریخ‌های رزرو برای تک تک سرویس‌ها
                 processServiceCapacities();
-
                 renderCards();
+                
                 document.getElementById('loaderOverlay').style.opacity = '0';
                 setTimeout(() => document.getElementById('loaderOverlay').style.display = 'none', 300);
 
@@ -275,19 +300,16 @@
         };
 
         // ==========================================
-        // 🧠 موتور پردازش ظرفیت و پیش‌فروش (Idea 2)
+        // 🧠 موتور پردازش ظرفیت
         // ==========================================
         function processServiceCapacities() {
             dbData.services.forEach(srv => {
-                // پیدا کردن تمام افرادی که الان تو این طرح هستن
                 let activeInSrv = dbData.allActiveSubs.filter(s => s.service_category === srv.category && s.service_type === srv.type);
                 srv.current_count = activeInSrv.length;
                 srv.empty_seats = parseInt(srv.capacity) - srv.current_count;
                 
-                // پیدا کردن تاریخ‌های خالی شدن (کسانی که will_not_renew زدن)
                 let nonRenewers = activeInSrv.filter(s => s.will_not_renew === true);
                 if (nonRenewers.length > 0) {
-                    // مرتب‌سازی بر اساس نزدیک‌ترین تاریخ پایان
                     let dates = nonRenewers.map(s => new Date(s.end_date)).sort((a, b) => a - b);
                     srv.next_available_date = dates[0];
                 } else {
@@ -303,22 +325,23 @@
             const panGrid = document.getElementById('pansionGrid');
             const conGrid = document.getElementById('consultGrid');
 
-            panGrid.innerHTML = `<div class="option-card ${state.pansion === 'none' ? 'selected' : ''}" onclick="selectPlan('pansion', 'none', null)"><div class="opt-title">فعلاً پانسیون نمی‌خوام</div><div class="opt-desc">بدون رزرو میز مطالعه</div><div class="opt-price">۰ تومان</div></div>`;
-            conGrid.innerHTML = `<div class="option-card ${state.consult === 'none' ? 'selected' : ''}" onclick="selectPlan('consult', 'none', null)"><div class="opt-title">فعلاً مشاوره نمی‌خوام</div><div class="opt-desc">بدون دریافت برنامه تحصیلی</div><div class="opt-price">۰ تومان</div></div>`;
+            panGrid.innerHTML = `<div class="option-card ${state.pansion === 'none' ? 'selected' : ''}" onclick="selectPlan('pansion', 'none', null)"><div class="opt-title">فعلاً پانسیون نمی‌خوام / تمدید نمی‌کنم</div><div class="opt-desc">بدون رزرو میز مطالعه</div><div class="opt-price">۰ تومان</div></div>`;
+            conGrid.innerHTML = `<div class="option-card ${state.consult === 'none' ? 'selected' : ''}" onclick="selectPlan('consult', 'none', null)"><div class="opt-title">فعلاً مشاوره نمی‌خوام / تمدید نمی‌کنم</div><div class="opt-desc">بدون دریافت برنامه تحصیلی</div><div class="opt-price">۰ تومان</div></div>`;
 
             let normGrade = ['دهم', 'یازدهم'].includes(studentData.grade) ? studentData.grade : 'دوازدهم';
             let normMajor = studentData.major || 'all';
 
-            // فیلتر بر اساس رشته و پایه
+            // فیلتر جادویی (حل باگ): پلن‌هایی که به پایه و رشته می‌خورن، پلاس پلن‌هایی که کاربر همین الان داره استفاده می‌کنه!
             let allowedPlans = dbData.services.filter(x => 
                 (x.target_grade === normGrade || x.target_grade === 'all') &&
-                (x.target_major === normMajor || x.target_major === 'all')
+                (x.target_major === normMajor || x.target_major === 'all') ||
+                dbData.userSubs.some(s => s.service_category === x.category && s.service_type === x.type)
             );
 
             allowedPlans.forEach(plan => {
                 let isMyActivePlan = dbData.userSubs.some(s => s.service_category === plan.category && s.service_type === plan.type);
                 
-                // اگر کاربر تو این دسته‌بندی طرح داره، فقط حق داره همون طرح خودش رو "تمدید" کنه (ارتقا میره تو تب تعویض)
+                // اگه تو اون دسته طرح فعال داره، فقط همونو نشون بده برای تمدید (تعویض تو یه تب دیگه است)
                 if (plan.category === 'pansion' && state.hasPansionActive && !isMyActivePlan) return;
                 if (plan.category === 'consult' && state.hasConsultActive && !isMyActivePlan) return;
 
@@ -327,16 +350,15 @@
                 
                 let capHtml = '';
                 let isSelectable = true;
-                let startDateToPass = null; // نال یعنی از امروز
+                let startDateToPass = null; 
 
-                // اگر تمدید خودش باشه، کاری به ظرفیت نداریم
+                // منطق ظرفیت و رزرو
                 if (isMyActivePlan) {
                     capHtml = `<div class="cap-status cap-available">🔄 تمدید اشتراک فعلی شما</div>`;
                     let mySub = dbData.userSubs.find(s => s.service_category === plan.category);
-                    startDateToPass = mySub.end_date; // تاریخ شروع قرارداد جدید میشه روز پایان قرارداد قبلیش
+                    startDateToPass = mySub.end_date; // تمدید از روز پایان قرارداد قبلی شروع میشه
                 } 
                 else {
-                    // خرید جدید -> چک کردن ظرفیت و رزرو
                     if (plan.empty_seats > 0) {
                         capHtml = `<div class="cap-status cap-available">✨ افزودن به پلن (موجود: ${plan.empty_seats} نفر)</div>`;
                     } 
@@ -382,7 +404,6 @@
                 state.conStartDate = startDate;
                 document.getElementById('conDurationBox').style.display = type === 'none' ? 'none' : 'block';
             }
-            // ریست کد تخفیف با تغییر طرح
             document.getElementById('promoCode').value = '';
             document.getElementById('promoMsg').innerText = '';
             state.promoRate = 0;
@@ -421,7 +442,8 @@
         }
 
         function formatMoney(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
-        function roundDown100k(amount) { return Math.floor(amount / 10000) * 10000; }
+        function roundDown100k(amount) { return Math.floor(amount / 100000) * 100000; }
+        function copyText(id) { navigator.clipboard.writeText(document.getElementById(id).innerText).then(()=>alert("✅ کپی شد.")); }
 
         function calculateInvoice() {
             let pVal = document.getElementById('panDuration').value;
@@ -435,7 +457,6 @@
             
             document.getElementById('invoiceArea').style.display = 'block'; document.getElementById('checkoutBox').style.display = 'block';
 
-            // پیدا کردن قیمت پایه طرح‌های انتخابی
             let panSrv = dbData.services.find(s => s.category === 'pansion' && s.type === state.pansion);
             let conSrv = dbData.services.find(s => s.category === 'consult' && s.type === state.consult);
             let basePanMonthly = panSrv ? parseInt(panSrv.base_price) : 0;
@@ -446,13 +467,17 @@
             let totalBase = totalPan + totalCon;
 
             let comboDisc = 0; let promoDisc = 0;
-            let hasPanActiveOrNew = state.hasPansionActive || state.pansion !== 'none';
-            let hasConActiveOrNew = state.hasConsultActive || state.consult !== 'none';
 
-            // تخفیف الماس: در صورت داشتن هر دو (یا خرید هر دو)
-            if (hasPanActiveOrNew && hasConActiveOrNew && state.consult !== 'none') {
+            // حل باگ طرح الماس: تخفیف فقط در صورتی اعمال میشه که یا هر دو رو الان بخره، یا یکی رو از قبل داشته باشه و دومی رو الان بخره!
+            if (state.pansion !== 'none' && state.consult !== 'none') {
                 comboDisc = totalCon * 0.60;
                 document.getElementById('promoMsg').innerText = "💎 به دلیل فعال شدن تخفیف ۶۰٪ طرح الماس، کدهای دیگر اعمال نمی‌شوند.";
+                document.getElementById('promoMsg').style.color = "var(--primary)";
+                document.getElementById('promoCode').disabled = true;
+                state.promoRate = 0;
+            } else if (state.hasPansionActive && state.consult !== 'none') {
+                comboDisc = totalCon * 0.60;
+                document.getElementById('promoMsg').innerText = "💎 به دلیل داشتن پانسیون فعال، تخفیف الماس برای مشاوره اعمال شد.";
                 document.getElementById('promoMsg').style.color = "var(--primary)";
                 document.getElementById('promoCode').disabled = true;
                 state.promoRate = 0;
@@ -465,25 +490,23 @@
             
             let subTotal = totalBase - comboDisc - promoDisc;
             
-            // کنترل دکمه اقساط (۱ ماهه بالای ۳ میلیون هم قسطی میشه)
             let isPanLong = pVal === '3' || pVal === 'konkur';
             let isConLong = cVal === '3' || cVal === 'konkur';
             const switchCont = document.getElementById('paySwitchContainer');
             
+            // اگه ۱ ماهه زیر ۳ میلیون بود، فقط نقدی
             if ((!isPanLong && !isConLong) && subTotal < 3000000) { 
                 switchCont.style.display = 'none'; state.paymentMethod = 'cash'; 
                 document.getElementById('btnPayCash').classList.add('active');
                 document.getElementById('btnPayInst').classList.remove('active');
             } else { switchCont.style.display = 'flex'; } 
 
-            // تخفیف زمانی نقدی/قسطی
             let panTimeRate = pVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (pVal === 'konkur' ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
             let conTimeRate = cVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (cVal === 'konkur' ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
             
             let timeDisc = (totalPan * panTimeRate) + ((totalCon - comboDisc - promoDisc) * conTimeRate); 
             subTotal -= timeDisc;
 
-            // کسر از کیف پول
             let curWallet = studentData.wallet_balance || 0;
             let walletUsed = Math.min(curWallet, subTotal);
             subTotal -= walletUsed;
@@ -504,7 +527,7 @@
             document.getElementById('row_wallet_disc').style.display = walletUsed > 0 ? 'flex' : 'none'; document.getElementById('inv_wallet_disc').innerText = '- ' + formatMoney(walletUsed) + ' تومان';
             document.getElementById('inv_total').innerText = formatMoney(financeData.final) + ' تومان';
 
-            // سیستم اقساط
+            // سیستم اقساط (تغییر کلمه چک به قسط)
             const instBox = document.getElementById('installmentDetails');
             instBox.innerHTML = '';
             
@@ -514,14 +537,14 @@
                 let today = new Date();
                 let maxDur = Math.max(state.pansion !== 'none' ? state.panDuration : 0, state.consult !== 'none' ? state.conDuration : 0);
 
-                if (maxDur <= 1) { // قانون ۱ ماهه بالای ۳ میلیون
+                if (maxDur <= 1) { 
                     let upfrontRounded = roundDown100k(financeData.final * 0.50);
                     let remaining = financeData.final - upfrontRounded;
                     financeData.upfront = upfrontRounded;
                     
                     let d1 = new Date(); d1.setDate(today.getDate() + 10); 
                     financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
-                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (آپلود فیش):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>چک تضمین (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b> (۱۰ روز دیگر)</li>`;
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b> (۱۰ روز دیگر)</li>`;
                 } 
                 else if (maxDur <= 3) {
                     let upfrontRounded = roundDown100k(financeData.final * 0.50);
@@ -530,9 +553,9 @@
 
                     let d1 = new Date(); d1.setDate(today.getDate() + 45); 
                     financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
-                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (آپلود فیش):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد چک صیادی (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
                 } 
-                else { // تا کنکور
+                else { 
                     let upfrontRounded = roundDown100k(Math.min(financeData.final * 0.40, 15000000));
                     let remaining = financeData.final - upfrontRounded;
                     financeData.upfront = upfrontRounded;
@@ -548,7 +571,7 @@
                     financeData.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: 2 });
                     financeData.installments.push({ due_date: d3.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: 3 });
                     
-                    instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (آپلود فیش):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>قسط اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>قسط دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>قسط سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>قسط اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>قسط دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>قسط سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
                 }
             } else { 
                 instBox.style.display = 'none'; 
@@ -557,7 +580,7 @@
         }
 
         // ==========================================
-        // 📤 آپلود فیش و ارسال به بک‌اند
+        // 📤 آپلود فیش و ذخیره در دیتابیس (بدون قفل کردن اکانت)
         // ==========================================
         let receiptBase64 = null; let receiptMimeType = null;
         function handleReceiptSelect(input) {
@@ -573,9 +596,8 @@
         async function submitFinalStep() {
             if(financeData.final > 0 && !receiptBase64) return alert("❌ آپلود تصویر فیش واریزی الزامی است.");
             
-            const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = "در حال صدور قرارداد... ⏳";
+            const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = "در حال صدور قرارداد و فاکتور... ⏳";
 
-            // تشخیص تاریخ شروع برای پیام ادمین
             let panStatusTxt = state.pansion !== 'none' ? (state.panStartDate ? `(شروع از: ${new Date(state.panStartDate).toLocaleDateString('fa-IR')})` : '(تمدید)') : '';
             let conStatusTxt = state.consult !== 'none' ? (state.conStartDate ? `(شروع از: ${new Date(state.conStartDate).toLocaleDateString('fa-IR')})` : '(تمدید)') : '';
 
@@ -590,45 +612,70 @@
             invoiceText += `مبلغ نهایی فاکتور: ${document.getElementById('inv_total').innerText}\nروش پرداخت: ${state.paymentMethod === 'cash' ? 'نقدی' : 'اقساط'}\n`;
             if(state.paymentMethod === 'installments') invoiceText += `زمان‌بندی اقساط:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
 
-            // اینجا به جای ثبت نام مجدد، فقط آپدیت می‌کنیم (بدون تغییر status به pending که اکانتش قفل نشه)
-            const payload = {
-                action: 'web_auth', sub_action: 'store_purchase', // 👈 ساب‌اکشن جدید برای مدیریت اسکریپت
-                national_id: userId,
-                receipt_base64: receiptBase64, mime_type: receiptMimeType,
-                invoice_data: {
-                    plan_summary: `خرید از فروشگاه داخلی`,
-                    invoice_text: invoiceText,
-                    total_amount: financeData.total,
-                    discount_amount: financeData.discount,
-                    final_amount: financeData.final,
-                    payment_method: state.paymentMethod,
-                    paid_upfront: financeData.upfront,
-                    pansion_tier: state.pansion,       
-                    pan_duration: state.panDuration,
-                    pan_start: state.panStartDate, // ارسال تاریخ شروع رزرو شده
-                    consult_tier: state.consult,       
-                    con_duration: state.conDuration,
-                    con_start: state.conStartDate // ارسال تاریخ شروع رزرو شده
-                },
-                installments: financeData.installments,
-                new_wallet_balance: financeData.newWalletBalance
-            };
-
             try {
-                // ارسال به سرور گوگل اسکریپت
-                const response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-                const result = await response.json();
-                
-                // در صورت نیاز به آپدیت مستقیم موجودی کیف پول از سمت کلاینت (اگه اسکریپت هندل نکنه)
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+
+                // ۱. ثبت فاکتور به صورت مستقیم در جدول invoices (برای نمایش در پنل ادمین)
+                const invPayload = {
+                    student_nid: userId,
+                    student_name: studentData.full_name,
+                    amount: financeData.final,
+                    status: 'pending',
+                    receipt_base64: receiptBase64,
+                    mime_type: receiptMimeType,
+                    description: invoiceText
+                };
+                
+                const invRes = await fetch(`${cleanUrl}/rest/v1/invoices`, {
+                    method: 'POST',
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+                    body: JSON.stringify(invPayload)
+                });
+                
+                const invData = await invRes.json();
+                
+                // ۲. ثبت اقساط در صورت وجود
+                if (financeData.installments.length > 0 && invData && invData.length > 0) {
+                    const instPayload = financeData.installments.map(inst => ({
+                        student_nid: userId,
+                        student_name: studentData.full_name,
+                        invoice_id: invData[0].id,
+                        amount: inst.amount,
+                        due_date: inst.due_date,
+                        installment_number: inst.installment_number,
+                        status: 'pending_upload'
+                    }));
+                    
+                    await fetch(`${cleanUrl}/rest/v1/installments`, {
+                        method: 'POST',
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify(instPayload)
+                    });
+                }
+
+                // ۳. آپدیت موجودی کیف پول کاربر
                 await fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, {
-                    method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                    method: 'PATCH',
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ wallet_balance: financeData.newWalletBalance })
                 });
 
-                alert("🎉 درخواست خرید/تمدید شما ثبت شد.\nپس از تایید ادمین، زمانبندی‌ها در اکانت شما اعمال خواهد شد.");
+                // ۴. ارسال پیام نوتیفیکیشن به پیام‌رسان بله (توسط اسکریپت)
+                // اینجا به جای ثبت نام مجدد، فقط برای ارسال پیام به بله اسکریپت رو صدا میزنیم
+                const scriptPayload = {
+                    action: 'web_auth', sub_action: 'store_purchase',
+                    national_id: userId, receipt_base64: receiptBase64, mime_type: receiptMimeType,
+                    invoice_data: { invoice_text: invoiceText }
+                };
+                fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(scriptPayload) }); // نیازی به await نیست
+
+                alert("🎉 فاکتور شما با موفقیت ثبت شد.\nشما می‌توانید این فاکتور را در پنل ادمین مشاهده کنید.");
                 window.location.href = 'profile.html';
-            } catch(err) { alert("خطا: " + err.message); btn.disabled = false; btn.innerText = "تلاش مجدد"; }
+
+            } catch(err) { 
+                alert("خطا در ثبت اطلاعات در دیتابیس."); 
+                btn.disabled = false; btn.innerText = "تلاش مجدد"; 
+            }
         }
     </script>
 </body>
