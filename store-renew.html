@@ -500,12 +500,11 @@
             let overlapBefore = Math.min(p_current, c_current);
             let overlapAfter = Math.min(p_current + p_buy, c_current + c_buy);
             let newlyOverlappedMonths = Math.max(0, overlapAfter - overlapBefore);
-            let nonOverlapNewConsult = Math.max(0, c_buy - newlyOverlappedMonths); // ماه‌های مشاوره‌ای که تنها موندن و شامل الماس نمیشن
+            let nonOverlapNewConsult = Math.max(0, c_buy - newlyOverlappedMonths);
 
             let msgEl = document.getElementById('promoMsg');
 
             if (newlyOverlappedMonths > 0) {
-                // پیدا کردن قیمت پایه مشاوره برای اعمال ۶۰٪ تخفیف
                 let consultBaseForDiscount = 0;
                 if (c_buy > 0) consultBaseForDiscount = baseConMonthly;
                 else if (state.hasConsultActive) {
@@ -522,7 +521,6 @@
                 if (msgEl.innerText.includes('الماس')) msgEl.innerText = '';
             }
 
-            // اعمال کد تخفیف فقط روی ماه‌های مشاوره‌ای که طرح الماس نگرفتن
             if (state.promoRate > 0) {
                 if (nonOverlapNewConsult > 0) {
                     promoDisc = (baseConMonthly * nonOverlapNewConsult) * state.promoRate;
@@ -561,7 +559,6 @@
             financeData.final = subTotal;
             financeData.installments = [];
 
-            // نمایش در فاکتور
             document.getElementById('row_pan_base').style.display = totalPan > 0 ? 'flex' : 'none'; document.getElementById('inv_pan_base').innerText = formatMoney(totalPan) + ' تومان';
             document.getElementById('row_con_base').style.display = totalCon > 0 ? 'flex' : 'none'; document.getElementById('inv_con_base').innerText = formatMoney(totalCon) + ' تومان';
             document.getElementById('row_combo_disc').style.display = comboDisc > 0 ? 'flex' : 'none'; document.getElementById('inv_combo_disc').innerText = '- ' + formatMoney(comboDisc) + ' تومان';
@@ -570,8 +567,6 @@
             document.getElementById('row_wallet_disc').style.display = walletUsed > 0 ? 'flex' : 'none'; document.getElementById('inv_wallet_disc').innerText = '- ' + formatMoney(walletUsed) + ' تومان';
             document.getElementById('inv_total').innerText = formatMoney(financeData.final) + ' تومان';
 
-            // سیستم اقساط (تغییر کلمه چک به قسط)
-            // سیستم اقساط
             const instBox = document.getElementById('installmentDetails');
             instBox.innerHTML = '';
             
@@ -629,6 +624,7 @@
                 instBox.style.display = 'none'; 
                 financeData.upfront = financeData.final; 
             }
+        }
         // ==========================================
         // 📤 آپلود فیش و ارسال به بک‌اند (حل مشکل ادمین و بله)
         // ==========================================
