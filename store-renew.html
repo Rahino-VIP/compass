@@ -267,9 +267,16 @@
                 ]);
 
                 let sData = await studentRes.json();
-                if (sData && sData.length > 0) studentData = sData[0];
+                if (sData && sData.length > 0) {
+                    studentData = sData[0];
+                    // استانداردسازی رشته برای فیلتر دقیق
+                    let m = studentData.major || '';
+                    if (m.includes('ریاضی')) studentData.normMajor = 'ریاضی';
+                    else if (m.includes('تجربی')) studentData.normMajor = 'تجربی';
+                    else if (m.includes('انسانی')) studentData.normMajor = 'انسانی';
+                    else studentData.normMajor = 'all';
+                }
                 else { alert("حساب یافت نشد."); window.location.href='index.html'; return; }
-
                 dbData.services = await servicesRes.json() || [];
                 dbData.promos = await promosRes.json() || [];
                 dbData.userSubs = await mySubsRes.json() || [];
@@ -332,7 +339,7 @@
             conGrid.innerHTML = `<div class="option-card ${state.consult === 'none' ? 'selected' : ''}" onclick="selectPlan('consult', 'none', null)"><div class="opt-title">فعلاً مشاوره نمی‌خوام / تمدید نمی‌کنم</div><div class="opt-desc">بدون دریافت برنامه تحصیلی</div><div class="opt-price">۰ تومان</div></div>`;
 
             let normGrade = ['دهم', 'یازدهم'].includes(studentData.grade) ? studentData.grade : 'دوازدهم';
-            let normMajor = studentData.major || 'all';
+            let normMajor = studentData.normMajor || 'all';
 
             // فیلتر جادویی: پلن‌هایی که به پایه و رشته می‌خورن، پلاس پلن‌هایی که کاربر همین الان داره!
             let allowedPlans = dbData.services.filter(x => 
@@ -473,44 +480,56 @@
 
             let comboDisc = 0; let promoDisc = 0;
 
-            // محاسبه دقیق ماه‌های هم‌پوشانی (Overlap)
-            if (state.consult !== 'none') {
-                // محاسبه کل ماه‌های پانسیون که کاربر خواهد داشت
-                let totalPanMonths = state.pansion !== 'none' ? state.panDuration : 0;
-                
-                if (state.hasPansionActive) {
-                    let myPan = dbData.userSubs.find(s => s.service_category === 'pansion');
-                    if (myPan) {
-                        let remainDays = (new Date(myPan.end_date) - new Date()) / (1000 * 3600 * 24);
-                        if (remainDays > 0) totalPanMonths += (remainDays / 30);
-                    }
+            // 🧠 موتور هوشمند محاسبه هم‌پوشانی (برای طرح الماس)
+            let p_current = 0, c_current = 0;
+            let todayTime = new Date().getTime();
+            
+            if (state.hasPansionActive) {
+                let endP = new Date(dbData.userSubs.find(s => s.service_category === 'pansion').end_date).getTime();
+                p_current = Math.max(0, (endP - todayTime) / (1000 * 3600 * 24 * 30));
+            }
+            if (state.hasConsultActive) {
+                let endC = new Date(dbData.userSubs.find(s => s.service_category === 'consult').end_date).getTime();
+                c_current = Math.max(0, (endC - todayTime) / (1000 * 3600 * 24 * 30));
+            }
+
+            let p_buy = state.pansion !== 'none' ? state.panDuration : 0;
+            let c_buy = state.consult !== 'none' ? state.conDuration : 0;
+
+            // محاسبه تعداد ماه‌هایی که تازه الان با هم تلاقی پیدا کردن
+            let overlapBefore = Math.min(p_current, c_current);
+            let overlapAfter = Math.min(p_current + p_buy, c_current + c_buy);
+            let newlyOverlappedMonths = Math.max(0, overlapAfter - overlapBefore);
+            let nonOverlapNewConsult = Math.max(0, c_buy - newlyOverlappedMonths); // ماه‌های مشاوره‌ای که تنها موندن و شامل الماس نمیشن
+
+            let msgEl = document.getElementById('promoMsg');
+
+            if (newlyOverlappedMonths > 0) {
+                // پیدا کردن قیمت پایه مشاوره برای اعمال ۶۰٪ تخفیف
+                let consultBaseForDiscount = 0;
+                if (c_buy > 0) consultBaseForDiscount = baseConMonthly;
+                else if (state.hasConsultActive) {
+                    let myConType = dbData.userSubs.find(s => s.service_category === 'consult').service_type;
+                    let myConSrv = dbData.services.find(s => s.category === 'consult' && s.type === myConType);
+                    if (myConSrv) consultBaseForDiscount = parseInt(myConSrv.base_price);
                 }
 
-                // مقایسه ماه‌های مشاوره خریده شده با ماه‌های پانسیون
-                let overlapMonths = Math.min(state.conDuration, totalPanMonths);
-                let nonOverlapMonths = Math.max(0, state.conDuration - overlapMonths);
-                
-                let msgEl = document.getElementById('promoMsg');
-
-                if (overlapMonths > 0) {
-                    comboDisc = (baseConMonthly * overlapMonths) * 0.60;
-                    msgEl.innerHTML = `💎 طرح الماس فعال شد: ۶۰٪ تخفیف برای ${overlapMonths.toFixed(1)} ماه مشترک.`;
-                    if (nonOverlapMonths > 0) msgEl.innerHTML += `<br>🎟️ کدهای تخفیف رو می‌تونی روی ${nonOverlapMonths.toFixed(1)} ماه باقیمانده اعمال کنی.`;
-                    msgEl.style.color = "var(--primary)";
-                } else {
-                    if (msgEl.innerText.includes('الماس')) msgEl.innerText = '';
-                }
-
-                if (state.promoRate > 0) {
-                    if (nonOverlapMonths > 0) {
-                        promoDisc = (baseConMonthly * nonOverlapMonths) * state.promoRate;
-                        msgEl.innerHTML += `<br>✅ کد تخفیف شما هم برای اون ماه‌های غیرمشترک اعمال شد.`;
-                    } else {
-                        msgEl.innerHTML += `<br>❌ کد تخفیف بی‌اثر (تمام ماه‌های مشاوره تحت پوشش طرح الماس هستند).`;
-                    }
-                }
+                comboDisc = (consultBaseForDiscount * newlyOverlappedMonths) * 0.60;
+                msgEl.innerHTML = `💎 طرح الماس: ۶۰٪ تخفیف روی ${newlyOverlappedMonths.toFixed(1)} ماه اشتراکِ مشترک اعمال شد.`;
+                if (nonOverlapNewConsult > 0) msgEl.innerHTML += `<br>🎟️ کدهای تخفیف را می‌توانید روی ${nonOverlapNewConsult.toFixed(1)} ماه باقیمانده مشاوره اعمال کنید.`;
+                msgEl.style.color = "var(--primary)";
             } else {
-                if(document.getElementById('promoMsg').innerText.includes('الماس')) document.getElementById('promoMsg').innerText = '';
+                if (msgEl.innerText.includes('الماس')) msgEl.innerText = '';
+            }
+
+            // اعمال کد تخفیف فقط روی ماه‌های مشاوره‌ای که طرح الماس نگرفتن
+            if (state.promoRate > 0) {
+                if (nonOverlapNewConsult > 0) {
+                    promoDisc = (baseConMonthly * nonOverlapNewConsult) * state.promoRate;
+                    msgEl.innerHTML += `<br>✅ کد تخفیف با موفقیت اعمال شد.`;
+                } else if (newlyOverlappedMonths > 0) {
+                    msgEl.innerHTML += `<br>❌ کد تخفیف بی‌اثر (تمام ماه‌های مشاوره تحت پوشش طرح الماس هستند).`;
+                }
             }
 
             let subTotal = totalBase - comboDisc - promoDisc;
@@ -552,13 +571,22 @@
             document.getElementById('inv_total').innerText = formatMoney(financeData.final) + ' تومان';
 
             // سیستم اقساط (تغییر کلمه چک به قسط)
+            // سیستم اقساط
             const instBox = document.getElementById('installmentDetails');
             instBox.innerHTML = '';
             
             if (state.paymentMethod === 'installments' && financeData.final > 0) {
                 instBox.style.display = 'block';
                 const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
-                let today = new Date();
+                
+                // ⏱️ تعیین مبنای شروع اقساط (تاریخ پایان قرارداد قبلی یا امروز)
+                let baseInstDate = new Date();
+                if (state.panStartDate && state.conStartDate) {
+                    let d1 = new Date(state.panStartDate); let d2 = new Date(state.conStartDate);
+                    baseInstDate = d1 < d2 ? d1 : d2; 
+                } else if (state.panStartDate) { baseInstDate = new Date(state.panStartDate); } 
+                else if (state.conStartDate) { baseInstDate = new Date(state.conStartDate); }
+
                 let maxDur = Math.max(state.pansion !== 'none' ? state.panDuration : 0, state.consult !== 'none' ? state.conDuration : 0);
 
                 if (maxDur <= 1) { 
@@ -566,16 +594,16 @@
                     let remaining = financeData.final - upfrontRounded;
                     financeData.upfront = upfrontRounded;
                     
-                    let d1 = new Date(); d1.setDate(today.getDate() + 10); 
+                    let d1 = new Date(baseInstDate); d1.setDate(baseInstDate.getDate() + 10); 
                     financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
-                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b> (۱۰ روز دیگر)</li>`;
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
                 } 
                 else if (maxDur <= 3) {
                     let upfrontRounded = roundDown100k(financeData.final * 0.50);
                     let remaining = financeData.final - upfrontRounded;
                     financeData.upfront = upfrontRounded;
 
-                    let d1 = new Date(); d1.setDate(today.getDate() + 45); 
+                    let d1 = new Date(baseInstDate); d1.setDate(baseInstDate.getDate() + 45); 
                     financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
                     instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
                 } 
@@ -587,9 +615,9 @@
                     let checkAmt = roundDown100k(remaining / 3);
                     let lastCheckAmt = remaining - (checkAmt * 2);
                     
-                    let d1 = new Date(); d1.setMonth(today.getMonth() + 2);
-                    let d2 = new Date(); d2.setMonth(today.getMonth() + 4);
-                    let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
+                    let d1 = new Date(baseInstDate); d1.setMonth(baseInstDate.getMonth() + 2);
+                    let d2 = new Date(baseInstDate); d2.setMonth(baseInstDate.getMonth() + 4);
+                    let d3 = new Date(baseInstDate); d3.setMonth(baseInstDate.getMonth() + 6);
                     
                     financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: checkAmt, installment_number: 1 });
                     financeData.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: 2 });
@@ -601,8 +629,6 @@
                 instBox.style.display = 'none'; 
                 financeData.upfront = financeData.final; 
             }
-        }
-
         // ==========================================
         // 📤 آپلود فیش و ارسال به بک‌اند (حل مشکل ادمین و بله)
         // ==========================================
@@ -622,9 +648,8 @@
             
             const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = "در حال صدور قرارداد و فاکتور... ⏳";
 
-            let panStatusTxt = state.pansion !== 'none' ? (state.panStartDate ? `(شروع از: ${new Date(state.panStartDate).toLocaleDateString('fa-IR')})` : '(تمدید)') : '';
-            let conStatusTxt = state.consult !== 'none' ? (state.conStartDate ? `(شروع از: ${new Date(state.conStartDate).toLocaleDateString('fa-IR')})` : '(تمدید)') : '';
-
+            let panStatusTxt = state.pansion !== 'none' ? (state.panStartDate ? `(تمدید: شروع محاسبه از ${new Date(state.panStartDate).toLocaleDateString('fa-IR')})` : '(شروع از امروز)') : '';
+            let conStatusTxt = state.consult !== 'none' ? (state.conStartDate ? `(تمدید: شروع محاسبه از ${new Date(state.conStartDate).toLocaleDateString('fa-IR')})` : '(شروع از امروز)') : '';
             let pVal = document.getElementById('panDuration').value; let cVal = document.getElementById('conDuration').value;
             let pDur = pVal === 'konkur' ? 'تا روز کنکور' : pVal + ' ماهه';
             let cDur = cVal === 'konkur' ? 'تا روز کنکور' : cVal + ' ماهه';
