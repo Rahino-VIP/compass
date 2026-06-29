@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تمدید و فروشگاه | قطب‌نمای راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root { 
+            --primary: #1e3a8a; --primary-light: #3b82f6; --primary-fade: rgba(30, 58, 138, 0.05);
+            --accent: #d97706; --bg-color: #f8fafc; --surface: #ffffff;
+            --text-main: #0f172a; --text-muted: #64748b;
+            --border: #e2e8f0; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+            --shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        [data-theme="dark"] {
+            --primary: #3b82f6; --primary-fade: rgba(59, 130, 246, 0.1); --accent: #f59e0b; 
+            --bg-color: #0f172a; --surface: #1e293b;
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+            --border: #334155; --shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 50px; transition: background-color 0.3s, color 0.3s; }
+        .app-container { max-width: 600px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 🎩 هدر */
+        .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .back-btn { background: var(--surface); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; box-shadow: var(--shadow); cursor: pointer; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--primary); }
+        .page-title { font-size: 18px; font-weight: 900; color: var(--primary); }
+
+        /* 💳 کارت بانکی */
+        .payment-card { background: linear-gradient(135deg, #0f172a, #1e3a8a); border-radius: 20px; padding: 25px; color: white; position: relative; overflow: hidden; box-shadow: 0 15px 30px rgba(30, 58, 138, 0.3); margin-bottom: 20px; }
+        .payment-card::after { content: '🏦'; position: absolute; left: -10px; top: -10px; font-size: 120px; opacity: 0.05; transform: rotate(-20deg); pointer-events: none; }
+        .pc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; opacity: 0.9; font-size: 13px; }
+        .pc-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; backdrop-filter: blur(5px); }
+        .pc-label { font-size: 11px; opacity: 0.8; margin-bottom: 3px; display: block; }
+        .pc-value { font-size: 18px; font-weight: 900; letter-spacing: 2px; direction: ltr; text-align: left; }
+        .pc-value.shaba { font-size: 14px; letter-spacing: 1px; }
+        .btn-copy-mini { background: var(--accent); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+
+        /* نمایش موجودی */
+        .wallet-banner { background: rgba(217, 119, 6, 0.1); border: 1px dashed var(--accent); padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 25px; }
+
+        /* 🃏 کارت‌های طرح (Grid) */
+        .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
+        .plan-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 15px; text-align: center; cursor: pointer; transition: 0.3s; position: relative; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between; }
+        .plan-card:hover { border-color: var(--primary-light); transform: translateY(-3px); }
+        .plan-card.selected { border: 2px solid var(--primary); background: var(--primary-fade); }
+        .plan-badge { font-size: 10px; padding: 4px 8px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; display: inline-block; }
+        .plan-title { font-size: 14px; font-weight: 900; margin-bottom: 5px; color: var(--text-main); }
+        .plan-price { font-size: 13px; color: var(--success); font-weight: bold; margin-bottom: 10px; }
+        .pre-reserve-notice { font-size: 9px; color: var(--warning); background: rgba(245, 158, 11, 0.1); padding: 4px; border-radius: 6px; margin-top: auto; }
+
+        /* فرم‌ها و باکس‌ها */
+        .panel-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 25px; box-shadow: var(--shadow); margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; }
+        .form-select, .form-input { width: 100%; padding: 14px 15px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 14px; outline: none; transition: 0.3s; font-family: inherit; }
+        .form-select:focus, .form-input:focus { border-color: var(--primary); }
+
+        /* 🧾 فاکتور زنده و کد تخفیف */
+        .promo-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        .promo-group input { flex: 1; padding: 12px 15px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); outline: none; font-size: 13px; }
+        .promo-btn { padding: 10px 20px; background: var(--primary); border: none; border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: bold; color: white; transition: 0.2s; }
+        
+        .invoice-box { background: rgba(0,0,0,0.02); border: 1px dashed var(--border); border-radius: 16px; padding: 20px; margin-top: 20px; }
+        .invoice-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; color: var(--text-muted); align-items: center; }
+        .invoice-row.highlight { color: var(--success); font-weight: bold; }
+        .invoice-row.wallet { color: var(--accent); font-weight: bold; }
+        .invoice-total { display: flex; justify-content: space-between; border-top: 2px dashed var(--border); padding-top: 15px; margin-top: 10px; font-size: 18px; font-weight: 900; color: var(--primary); }
+
+        /* 💳 اقساط */
+        .pay-method-switch { display: flex; gap: 10px; margin-bottom: 20px; background: var(--bg-color); padding: 5px; border-radius: 12px; border: 1px solid var(--border); }
+        .pay-method-btn { flex: 1; text-align: center; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; color: var(--text-muted); }
+        .pay-method-btn.active { background: var(--primary); color: white; box-shadow: var(--shadow); }
+        .installment-details { background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); padding: 15px; border-radius: 12px; font-size: 12px; margin-top: 15px; display: none; }
+        .installment-details li { margin-right: 15px; margin-bottom: 8px; color: var(--text-main); }
+
+        /* آپلود و دکمه‌ها */
+        .file-upload { border: 2px dashed var(--border); padding: 25px 20px; border-radius: 16px; text-align: center; cursor: pointer; position: relative; background: var(--bg-color); margin-bottom: 20px; transition: 0.2s; }
+        .file-upload.has-file { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
+        .file-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+        .btn-submit { background: linear-gradient(135deg, var(--primary), #312e81); color: white; width: 100%; padding: 16px; border-radius: 14px; border: none; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 10px 25px rgba(30, 58, 138, 0.2); transition: 0.2s; }
+        .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
+        .spinner { font-size: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="loader-overlay" id="mainLoader">
+        <div class="spinner">🛒</div>
+        <h3 style="color: var(--primary); font-size: 15px;">در حال بارگذاری فروشگاه...</h3>
+    </div>
+
+    <div class="app-container" id="appContent" style="display: none;">
+        
+        <div class="nav-header">
+            <!-- لینک بازگشت به داشبورد مرکزی یا منو -->
+            <a href="menu.html" class="back-btn">🔙</a>
+            <div class="page-title">تمدید و افزودن سرویس</div>
+            <button class="back-btn" onclick="toggleTheme()" id="themeBtn">☀️</button>
+        </div>
+
+        <div class="payment-card">
+            <div class="pc-header">
+                <div>صاحب حساب: <b>ارشاد شفیعی فرد</b></div>
+                <div>بانک سامان</div>
+            </div>
+            <div class="pc-row">
+                <div><span class="pc-label">شماره کارت:</span><div class="pc-value" id="txtCard">6219861810380484</div></div>
+                <button class="btn-copy-mini" onclick="copyText('txtCard')">کپی</button>
+            </div>
+            <div class="pc-row" style="margin-bottom: 0;">
+                <div><span class="pc-label">شماره شبا:</span><div class="pc-value shaba" id="txtSheba">IR200560611828006108618001</div></div>
+                <button class="btn-copy-mini" onclick="copyText('txtSheba')">کپی</button>
+            </div>
+        </div>
+
+        <div class="wallet-banner">
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: bold;">موجودی قابل استفاده کیف پول:</span>
+            <span id="uiWalletBalance" style="font-size: 16px; font-weight: 900; color: var(--accent); margin-right: 5px;">0</span>
+            <span style="font-size: 11px; color: var(--accent);">تومان</span>
+        </div>
+
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:15px; text-align:justify;">
+            طرح فعلی خود را تمدید کنید یا سرویس جدیدی به پرونده خود اضافه نمایید. (طرح‌های نمایش داده شده مختص رشته و پایه شماست).
+        </div>
+        
+        <div class="cards-grid" id="storeCardsGrid">
+            <!-- کارت‌ها توسط JS لود می‌شوند -->
+        </div>
+
+        <!-- سبد خرید تمدید/خرید -->
+        <div class="panel-box" id="storeCheckoutBox" style="display: none; margin-top: 20px;">
+            <div class="form-group">
+                <label>مدت زمان قرارداد:</label>
+                <select class="form-select" id="storeDuration" onchange="calculateStore()">
+                    <option value="1">۱ ماهه</option>
+                    <option value="3">۳ ماهه (تخفیف ویژه)</option>
+                    <option value="konkur">تا روز کنکور (محاسبه دقیق روزشمار)</option>
+                </select>
+            </div>
+
+            <div class="invoice-box">
+                <div class="promo-group">
+                    <input type="text" id="storePromoCode" placeholder="کد تخفیف (ویژه مشاوره)">
+                    <button class="promo-btn" onclick="applyPromo()">ثبت</button>
+                </div>
+                <div id="storePromoMsg" style="font-size:11px; font-weight:bold; margin-bottom:15px; min-height:16px;"></div>
+
+                <div class="pay-method-switch" id="storePaySwitch" style="display:none;">
+                    <div class="pay-method-btn active" id="btnStoreCash" onclick="setPayMethod('cash')">💳 پرداخت نقدی</div>
+                    <div class="pay-method-btn" id="btnStoreInst" onclick="setPayMethod('installments')">📑 پرداخت اقساطی</div>
+                </div>
+
+                <div class="invoice-row"><span>قیمت پایه سرویس:</span><span id="stBasePrice">0 تومان</span></div>
+                <div class="invoice-row highlight" id="stRowCombo" style="display:none;"><span>💎 تخفیف طرح جامع الماس:</span><span id="stComboDisc">- 0 تومان</span></div>
+                <div class="invoice-row highlight" id="stRowPromo" style="display:none;"><span>🎟️ تخفیف کد:</span><span id="stPromoDisc">- 0 تومان</span></div>
+                <div class="invoice-row highlight" id="stRowTime" style="display:none;"><span id="lblStTime">⏳ تخفیف زمانی:</span><span id="stTimeDisc">- 0 تومان</span></div>
+                <div class="invoice-row wallet" id="stRowWallet" style="display:none;"><span>🎁 کسر از کیف پول:</span><span id="stWalletUsed">- 0 تومان</span></div>
+                
+                <div class="invoice-total"><span>مبلغ نهایی پرداخت:</span><span id="stFinalPrice">0 تومان</span></div>
+                <ul class="installment-details" id="stInstallments"></ul>
+            </div>
+
+            <div class="file-upload" id="boxStFile" style="display:none;">
+                <div style="font-size: 30px; margin-bottom: 5px;">📥</div>
+                <div id="lblStFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی</div>
+                <input type="file" id="stReceipt" accept="image/*" onchange="handleFile(this)">
+            </div>
+            <button class="btn-submit" id="btnSubmitStore" onclick="submitStoreRequest()">🚀 تایید نهایی و ارسال فیش</button>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // 🔗 تنظیمات پایه و اتصال دیتابیس
+        // ==========================================
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        
+        const userId = localStorage.getItem('qotbnama_user_id');
+        if (!userId) window.location.href = 'index.html';
+
+        let db = { student: null, subs: [], services: [], promos: [], settings: null };
+        let daysToKonkur = 30; 
+        
+        let selectedStoreService = null;
+        let storePayMethod = 'cash';
+        let storePromoRate = 0;
+        let finalStorePrice = 0;
+        let storeNewWallet = 0;
+        let uploadedFile = null;
+
+        window.onload = async function() { 
+            applyStoredTheme();
+            await fetchStoreData(); 
+        };
+
+        function formatMoney(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+        function roundDown100k(amount) { return Math.floor(amount / 10000) * 10000; }
+        function copyText(id) { navigator.clipboard.writeText(document.getElementById(id).innerText).then(()=>alert("✅ کپی شد.")); }
+
+        // ==========================================
+        // 🌓 سیستم دارک مود
+        // ==========================================
+        function applyStoredTheme() {
+            if ((localStorage.getItem('theme') || 'light') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                if(document.getElementById('themeBtn')) document.getElementById('themeBtn').innerText = '☀️';
+            }
+        }
+        function toggleTheme() {
+            if (document.documentElement.getAttribute('data-theme') === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                document.getElementById('themeBtn').innerText = '🌙';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                document.getElementById('themeBtn').innerText = '☀️';
+            }
+        }
+
+        // ==========================================
+        // 📥 دریافت اطلاعات دیتابیس
+        // ==========================================
+        async function fetchStoreData() {
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
+
+                const [userRes, subRes, srvRes, proRes, sysRes] = await Promise.all([
+                    fetch(`${cleanUrl}/rest/v1/students?or=(national_id.eq.${userId},chat_id.eq.${userId})`, { headers }),
+                    fetch(`${cleanUrl}/rest/v1/subscriptions?student_nid=eq.${userId}&status=eq.active`, { headers }),
+                    fetch(`${cleanUrl}/rest/v1/services?is_active=eq.true`, { headers }),
+                    fetch(`${cleanUrl}/rest/v1/promo_codes?is_active=eq.true`, { headers }),
+                    fetch(`${cleanUrl}/rest/v1/system_settings?select=konkur_date`, { headers })
+                ]);
+
+                let stJson = await userRes.json(); db.student = stJson[0] || {};
+                db.subs = await subRes.json() || [];
+                db.services = await srvRes.json() || [];
+                db.promos = await proRes.json() || [];
+                let sysJson = await sysRes.json(); if(sysJson && sysJson.length > 0) db.settings = sysJson[0];
+
+                document.getElementById('uiWalletBalance').innerText = formatMoney(db.student.wallet_balance || 0);
+
+                if (db.settings && db.settings.konkur_date) {
+                    let kDate = new Date(db.settings.konkur_date);
+                    daysToKonkur = Math.ceil((kDate - new Date()) / (1000 * 3600 * 24));
+                    if(daysToKonkur <= 0) daysToKonkur = 1;
+                }
+
+                renderStoreCards();
+
+                document.getElementById('mainLoader').style.display = 'none';
+                document.getElementById('appContent').style.display = 'block';
+            } catch (e) { alert("خطا در برقراری ارتباط با سرور فروشگاه."); }
+        }
+
+        // ==========================================
+        // 🛒 رندر کارت‌های فروشگاه
+        // ==========================================
+        function renderStoreCards() {
+            let container = document.getElementById('storeCardsGrid');
+            let html = '';
+            
+            let stGrade = ['دهم', 'یازدهم'].includes(db.student.grade) ? db.student.grade : 'دوازدهم';
+            let stMajor = db.student.major || 'all';
+            
+            let availableServices = db.services.filter(s => 
+                (s.target_grade === 'all' || s.target_grade === stGrade) &&
+                (s.target_major === 'all' || s.target_major === stMajor)
+            );
+
+            let activePan = db.subs.find(s => s.service_category === 'pansion');
+            let activeCon = db.subs.find(s => s.service_category === 'consult');
+
+            // پانسیون
+            if (activePan) {
+                let srv = availableServices.find(s => s.category === 'pansion' && s.type === activePan.service_type);
+                if (srv) html += createCardHtml(srv, '🔄 تمدید اشتراک فعلی');
+            } else {
+                availableServices.filter(s => s.category === 'pansion').forEach(srv => {
+                    html += createCardHtml(srv, '✨ افزودن به پلن');
+                });
+            }
+
+            // مشاوره
+            if (activeCon) {
+                let srv = availableServices.find(s => s.category === 'consult' && s.type === activeCon.service_type);
+                if (srv) html += createCardHtml(srv, '🔄 تمدید اشتراک فعلی');
+            } else {
+                availableServices.filter(s => s.category === 'consult').forEach(srv => {
+                    html += createCardHtml(srv, '✨ افزودن به پلن');
+                });
+            }
+
+            container.innerHTML = html || '<div style="grid-column: span 2; text-align: center; color: var(--text-muted); font-size: 13px;">طرحی یافت نشد.</div>';
+        }
+
+        function createCardHtml(srv, badgeText) {
+            let catName = srv.category === 'pansion' ? 'پانسیون' : 'مشاوره';
+            let isAdd = badgeText.includes('افزودن');
+            let color = isAdd ? 'var(--primary)' : 'var(--success)';
+            let bg = isAdd ? 'rgba(59, 130, 246, 0.1)' : 'rgba(16, 185, 129, 0.1)';
+            
+            let reserveNotice = isAdd ? `<div class="pre-reserve-notice">⏳ در صورت تکمیل ظرفیت، برای اولین جای خالی رزرو می‌شوید.</div>` : '';
+
+            return `
+                <div class="plan-card" id="card_${srv.id}" onclick='selectStorePlan(${JSON.stringify(srv)})'>
+                    <div class="plan-badge" style="color: ${color}; background: ${bg};">${badgeText}</div>
+                    <div class="plan-title">${catName} ${srv.type}</div>
+                    <div class="plan-price">${formatMoney(srv.base_price)} تومان / ماه</div>
+                    ${reserveNotice}
+                </div>
+            `;
+        }
+
+        function selectStorePlan(srv) {
+            document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('card_' + srv.id).classList.add('selected');
+            selectedStoreService = srv;
+            
+            // ریست کردن کد تخفیف با تغییر طرح
+            document.getElementById('storePromoCode').value = '';
+            document.getElementById('storePromoMsg').innerText = '';
+            storePromoRate = 0;
+
+            document.getElementById('storeCheckoutBox').style.display = 'block';
+            calculateStore();
+        }
+
+        function setPayMethod(method) {
+            storePayMethod = method;
+            document.getElementById('btnStoreCash').classList.toggle('active', method === 'cash');
+            document.getElementById('btnStoreInst').classList.toggle('active', method === 'installments');
+            calculateStore();
+        }
+
+        // ==========================================
+        // 🎟️ اعمال کد تخفیف (فقط مشاوره)
+        // ==========================================
+        function applyPromo() {
+            const msg = document.getElementById('storePromoMsg');
+            
+            if (selectedStoreService && selectedStoreService.category === 'pansion') {
+                msg.innerText = "❌ کدهای تخفیف فقط برای بخش مشاوره قابل استفاده هستند.";
+                msg.style.color = "var(--danger)";
+                storePromoRate = 0;
+                calculateStore();
+                return;
+            }
+
+            const code = document.getElementById('storePromoCode').value.trim().toUpperCase();
+            const promo = db.promos.find(p => p.code.toUpperCase() === code);
+            
+            if (promo) {
+                storePromoRate = promo.discount_percent / 100;
+                msg.innerText = `✅ کد تایید شد: ${promo.discount_percent}٪ تخفیف اعمال شد.`;
+                msg.style.color = "var(--success)";
+            } else {
+                storePromoRate = 0; 
+                msg.innerText = "❌ کد تخفیف نامعتبر است."; 
+                msg.style.color = "var(--danger)";
+            }
+            calculateStore();
+        }
+
+        // ==========================================
+        // 🧮 ماشین‌حساب مالی
+        // ==========================================
+        function calculateStore() {
+            if(!selectedStoreService) return;
+            
+            let durVal = document.getElementById('storeDuration').value;
+            let months = durVal === 'konkur' ? (daysToKonkur / 30) : parseInt(durVal);
+            
+            let basePrice = selectedStoreService.base_price * months;
+            let subTotal = basePrice;
+            
+            document.getElementById('stBasePrice').innerText = formatMoney(basePrice) + ' تومان';
+
+            // تخفیف مکمل الماس
+            let hasPan = db.subs.some(s => s.service_category === 'pansion') || selectedStoreService.category === 'pansion';
+            let hasCon = db.subs.some(s => s.service_category === 'consult') || selectedStoreService.category === 'consult';
+            let comboDisc = 0;
+
+            if (hasPan && hasCon && selectedStoreService.category === 'consult') {
+                comboDisc = basePrice * 0.60;
+                document.getElementById('stRowCombo').style.display = 'flex';
+                document.getElementById('stComboDisc').innerText = '- ' + formatMoney(comboDisc) + ' تومان';
+                subTotal -= comboDisc;
+                
+                document.getElementById('storePromoCode').disabled = true;
+                storePromoRate = 0; 
+                document.getElementById('storePromoMsg').innerText = "💎 به دلیل فعال شدن طرح الماس، کدهای دیگر اعمال نمی‌شوند.";
+                document.getElementById('storePromoMsg').style.color = "var(--primary)";
+            } else {
+                document.getElementById('stRowCombo').style.display = 'none';
+                document.getElementById('storePromoCode').disabled = false;
+            }
+
+            // تخفیف کد (فقط مشاوره)
+            let promoDisc = 0;
+            if (comboDisc === 0 && storePromoRate > 0 && selectedStoreService.category === 'consult') {
+                promoDisc = basePrice * storePromoRate;
+                subTotal -= promoDisc;
+                document.getElementById('stRowPromo').style.display = 'flex';
+                document.getElementById('stPromoDisc').innerText = '- ' + formatMoney(promoDisc) + ' تومان';
+            } else { document.getElementById('stRowPromo').style.display = 'none'; }
+
+            // کنترل دکمه اقساط (فعال شدن برای ۱ ماهه بالای ۳ میلیون)
+            let swBox = document.getElementById('storePaySwitch');
+            if (durVal === '3' || durVal === 'konkur' || (durVal === '1' && subTotal >= 3000000)) { 
+                swBox.style.display = 'flex'; 
+            } else { 
+                swBox.style.display = 'none'; 
+                storePayMethod = 'cash'; 
+                document.getElementById('btnStoreCash').classList.add('active');
+                document.getElementById('btnStoreInst').classList.remove('active');
+            }
+
+            // تخفیف زمانی بلندمدت
+            let timeDiscRate = 0;
+            if (durVal === '3') timeDiscRate = (storePayMethod === 'cash') ? 0.05 : 0.02;
+            if (durVal === 'konkur') timeDiscRate = (storePayMethod === 'cash') ? 0.15 : 0.08;
+            
+            let timeDisc = subTotal * timeDiscRate;
+            subTotal -= timeDisc;
+            if (timeDisc > 0) {
+                document.getElementById('stRowTime').style.display = 'flex';
+                document.getElementById('lblStTime').innerText = `⏳ تخفیف ${storePayMethod === 'cash' ? 'نقدی' : 'اقساط'} (${timeDiscRate*100}٪):`;
+                document.getElementById('stTimeDisc').innerText = '- ' + formatMoney(timeDisc) + ' تومان';
+            } else { document.getElementById('stRowTime').style.display = 'none'; }
+
+            // کسر از کیف پول
+            let curWallet = db.student.wallet_balance || 0;
+            let walletUsed = Math.min(curWallet, subTotal);
+            subTotal -= walletUsed;
+            storeNewWallet = curWallet - walletUsed;
+
+            if (walletUsed > 0) {
+                document.getElementById('stRowWallet').style.display = 'flex';
+                document.getElementById('stWalletUsed').innerText = '- ' + formatMoney(walletUsed) + ' تومان';
+            } else { document.getElementById('stRowWallet').style.display = 'none'; }
+
+            finalStorePrice = subTotal;
+            document.getElementById('stFinalPrice').innerText = formatMoney(finalStorePrice) + ' تومان';
+
+            // رندر اقساط
+            renderInstallmentsDetails();
+            document.getElementById('boxStFile').style.display = finalStorePrice > 0 ? 'block' : 'none';
+        }
+
+        // ==========================================
+        // 📑 جزییات اقساط (شامل قانون چک ۱۰ روزه)
+        // ==========================================
+        function renderInstallmentsDetails() {
+            const instBox = document.getElementById('stInstallments');
+            instBox.innerHTML = '';
+            
+            let durVal = document.getElementById('storeDuration').value;
+
+            if (storePayMethod === 'installments' && finalStorePrice > 0) {
+                instBox.style.display = 'block';
+                const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
+                let today = new Date();
+                
+                if (durVal === '1') {
+                    // قانون اقساط ۱ ماهه (۵۰٪ نقد، ۵۰٪ چک ۱۰ روزه)
+                    let upfront = roundDown100k(finalStorePrice * 0.50);
+                    let remaining = finalStorePrice - upfront;
+                    let d1 = new Date(); d1.setDate(today.getDate() + 10); 
+                    
+                    instBox.innerHTML = `
+                        <li><strong style="color:var(--danger)">پیش‌پرداخت نقدی:</strong> ${formatMoney(upfront)} تومان</li>
+                        <li>چک تضمین صیادی (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>
+                    `;
+                } 
+                else if (durVal === '3') {
+                    let upfront = roundDown100k(finalStorePrice * 0.50); 
+                    let remaining = finalStorePrice - upfront;
+                    let d1 = new Date(); d1.setDate(today.getDate() + 45); 
+                    
+                    instBox.innerHTML = `
+                        <li><strong style="color:var(--danger)">پیش‌پرداخت نقدی:</strong> ${formatMoney(upfront)} تومان</li>
+                        <li>چک صیادی (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>
+                    `;
+                } 
+                else if (durVal === 'konkur') {
+                    let upfront = roundDown100k(finalStorePrice * 0.40); 
+                    let remaining = finalStorePrice - upfront;
+                    let checkAmt = roundDown100k(remaining / 3);
+                    let lastCheckAmt = remaining - (checkAmt * 2);
+                    
+                    let d1 = new Date(); d1.setMonth(today.getMonth() + 2); 
+                    let d2 = new Date(); d2.setMonth(today.getMonth() + 4); 
+                    let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
+                    
+                    instBox.innerHTML = `
+                        <li><strong style="color:var(--danger)">پیش‌پرداخت نقدی:</strong> ${formatMoney(upfront)} تومان</li>
+                        <li>چک اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li>
+                        <li>چک دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li>
+                        <li>چک سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>
+                    `;
+                }
+            } else { 
+                instBox.style.display = 'none'; 
+            }
+        }
+
+        // ==========================================
+        // 📤 آپلود و ارسال فیش
+        // ==========================================
+        function handleFile(input) {
+            if (input.files && input.files[0]) {
+                if(input.files[0].size > 5 * 1024 * 1024) { alert("حجم عکس نباید بیشتر از ۵ مگابایت باشد."); input.value = ''; return; }
+                document.getElementById('lblStFileName').innerText = `✅ فیش ضمیمه شد: ${input.files[0].name}`;
+                document.getElementById('boxStFile').classList.add('has-file');
+                
+                const reader = new FileReader();
+                reader.onload = function(e) { 
+                    uploadedFile = { base64: e.target.result.split(',')[1], mime: input.files[0].type }; 
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function submitStoreRequest() {
+            if(finalStorePrice > 0 && !uploadedFile) return alert("❌ لطفاً تصویر فیش واریزی را آپلود کنید.");
+            const btn = document.getElementById('btnSubmitStore'); btn.disabled = true; btn.innerText = "در حال ارسال... ⏳";
+            
+            let dur = document.getElementById('storeDuration').value;
+            let catName = selectedStoreService.category === 'pansion' ? 'پانسیون' : 'مشاوره';
+            
+            // اگر طرح جدید باشه، یه یادداشت برای ادمین می‌ذاریم
+            let isNewService = !db.subs.some(s => s.service_category === selectedStoreService.category && s.service_type === selectedStoreService.type);
+            let reserveNote = isNewService ? "\n⚠️ رزرو: در صورت تکمیل ظرفیت، از اولین جای خالی محاسبه شود." : "";
+
+            let invDetails = `درخواست خرید/تمدید: ${catName} ${selectedStoreService.type}\nمبلغ نهایی: ${formatMoney(finalStorePrice)} تومان\nمدت: ${dur === 'konkur' ? 'تا روز کنکور' : dur + ' ماه'}${reserveNote}`;
+
+            let updateData = { status: 'pending', invoice_details: invDetails, wallet_balance: storeNewWallet };
+            if (uploadedFile) { updateData.receipt_base64 = uploadedFile.base64; updateData.file_type = uploadedFile.mime; }
+            
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                const response = await fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, {
+                    method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+                if (response.ok) {
+                    alert("🎉 فاکتور و فیش شما با موفقیت ثبت شد.\nبه زودی توسط مدیریت بررسی و اعمال می‌گردد."); 
+                    window.location.href = 'menu.html';
+                } else throw new Error();
+            } catch (e) { 
+                alert("⚠️ خطا در ارسال."); btn.disabled = false; btn.innerText = "🚀 تایید نهایی و ارسال فیش"; 
+            }
+        }
+    </script>
+</body>
+</html>
