@@ -201,6 +201,18 @@
         </div>
 
         <div class="checkout-box" id="checkoutBox">
+            <div class="rules-box" style="background: rgba(0,0,0,0.03); border-radius: 12px; border: 1px solid var(--border); padding: 15px; margin-bottom: 25px;">
+                <div style="font-size: 13px; font-weight: bold; color: var(--accent); margin-bottom: 10px;">📜 قوانین و مقررات تمدید/خرید:</div>
+                <ul id="dynamicRules" style="font-size: 11px; color: var(--text-main); line-height: 1.8; margin-right: 15px; margin-bottom: 15px;">
+                    <!-- با جاوااسکریپت پر میشه، یا یه متن ثابت بذار -->
+                    <li>من کلیه قوانین انضباطی و مالی آموزشگاه را می‌پذیرم.</li>
+                    <li>در صورت انصراف، هزینه طبق تعرفه آزاد کسر خواهد شد.</li>
+                </ul>
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="regRules" style="width: 18px; height: 18px;">
+                    <span style="font-size: 12px; font-weight: bold; color: var(--primary);">تمامی قوانین فوق را خواندم و می‌پذیرم.</span>
+                </label>
+            </div>
             <div class="file-upload" id="boxFile" onclick="document.getElementById('regReceipt').click()">
                 <div style="font-size: 30px; margin-bottom: 5px;">📥</div>
                 <div id="lblFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی (الزامی)</div>
@@ -237,7 +249,7 @@
         if (!userId) window.location.href = 'index.html';
 
         let studentData = {};
-        let dbData = { services: [], promos: [], userSubs: [], allActiveSubs: [] };
+        let dbData = { services: [], promos: [], userSubs: [], allActiveSubs: [], rules: [] };
         let daysToKonkur = 30;
         
         let state = {
@@ -260,15 +272,16 @@
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
                 const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
 
-                const [studentRes, servicesRes, promosRes, mySubsRes, allSubsRes, sysRes] = await Promise.all([
+                // اینجا rulesRes به متغیرها اضافه شد 👇
+                const [studentRes, servicesRes, promosRes, mySubsRes, allSubsRes, sysRes, rulesRes] = await Promise.all([
                     fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/services?is_active=eq.true`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/promo_codes?is_active=eq.true`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/subscriptions?student_nid=eq.${userId}&status=eq.active`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/subscriptions?status=eq.active&select=service_category,service_type,end_date,will_not_renew`, { headers }),
-                    fetch(`${cleanUrl}/rest/v1/system_settings?select=konkur_date`, { headers })
+                    fetch(`${cleanUrl}/rest/v1/system_settings?select=konkur_date`, { headers }),
+                    fetch(`${cleanUrl}/rest/v1/terms_and_rules`, { headers }) // 👈 این خط رو هم اضافه کن
                 ]);
-
                 let sData = await studentRes.json();
                 if (sData && sData.length > 0) {
                     studentData = sData[0];
@@ -279,12 +292,12 @@
                     else if (m.includes('انسانی')) studentData.normMajor = 'انسانی';
                     else studentData.normMajor = 'all'; // اگر رشته نداشت، همه رو نشون بده
 
-                    // استانداردسازی پایه
+                   // 💡 فیلتر هوشمند پایه (رفع باگ کلمات مشابه)
                     let g = studentData.grade || '';
-                    if (g.includes('دهم')) studentData.normGrade = 'دهم';
-                    else if (g.includes('یازدهم')) studentData.normGrade = 'یازدهم';
-                    else if (g.includes('دوازدهم')) studentData.normGrade = 'دوازدهم';
-                    else studentData.normGrade = 'all'; // اگر پایه نداشت، همه رو نشون بده
+                    if (g === 'دوازدهم' || g.includes('دوازدهم')) studentData.normGrade = 'دوازدهم';
+                    else if (g === 'یازدهم' || g.includes('یازدهم')) studentData.normGrade = 'یازدهم';
+                    else if (g === 'دهم' || g === 'دهم') studentData.normGrade = 'دهم';
+                    else studentData.normGrade = 'all';
                 }
                 else { alert("حساب یافت نشد."); window.location.href='index.html'; return; }
 
@@ -292,6 +305,7 @@
                 dbData.promos = await promosRes.json() || [];
                 dbData.userSubs = await mySubsRes.json() || [];
                 dbData.allActiveSubs = await allSubsRes.json() || [];
+                dbData.rules = await rulesRes.json() || [];
                 
                 let sysData = await sysRes.json();
                 if (sysData && sysData.length > 0 && sysData[0].konkur_date) {
@@ -581,6 +595,7 @@
             document.getElementById('row_wallet_disc').style.display = walletUsed > 0 ? 'flex' : 'none'; document.getElementById('inv_wallet_disc').innerText = '- ' + formatMoney(walletUsed) + ' تومان';
             document.getElementById('inv_total').innerText = formatMoney(financeData.final) + ' تومان';
 
+            // سیستم اقساط
             const instBox = document.getElementById('installmentDetails');
             instBox.innerHTML = '';
             
@@ -588,16 +603,13 @@
                 instBox.style.display = 'block';
                 const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
                 
-                // ⏱️ شروع اقساط بر مبنای تاریخ پایان قرارداد (تمدید) یا امروز
-                let baseInstDate = new Date();
-                if (state.panStartDate && state.conStartDate) {
-                    let d1 = new Date(state.panStartDate); let d2 = new Date(state.conStartDate);
-                    baseInstDate = d1 > d2 ? d1 : d2; 
-                } else if (state.panStartDate) { baseInstDate = new Date(state.panStartDate); } 
-                else if (state.conStartDate) { baseInstDate = new Date(state.conStartDate); }
+                // ⏱️ اصلاح: اقساط همیشه بر مبنای "امروز" (زمان خرید) محاسبه می‌شوند
+                let baseInstDate = new Date(); 
+                let today = new Date();
 
                 let maxDur = Math.max(state.pansion !== 'none' ? state.panDuration : 0, state.consult !== 'none' ? state.conDuration : 0);
-
+                
+                // ... ادامه کدهای قبلی اقساط (if maxDur <= 1 ...) بدون تغییر باقی بمونه
                 if (maxDur <= 1) { 
                     let upfrontRounded = roundDown100k(financeData.final * 0.50);
                     let remaining = financeData.final - upfrontRounded;
@@ -654,6 +666,7 @@
         }
 
         async function submitFinalStep() {
+            if(!document.getElementById('regRules').checked) return alert("❌ لطفاً ابتدا تعهدنامه را تایید کنید.");
             if(financeData.final > 0 && !receiptBase64) return alert("❌ آپلود تصویر فیش واریزی الزامی است.");
             
             const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = "در حال صدور قرارداد و فاکتور... ⏳";
