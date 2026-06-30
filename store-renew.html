@@ -252,6 +252,9 @@
         // ==========================================
         // 🚀 راه‌اندازی و دریافت دیتا
         // ==========================================
+        // ==========================================
+        // 🚀 راه‌اندازی و دریافت دیتا
+        // ==========================================
         window.onload = async function() {
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
@@ -269,19 +272,26 @@
                 let sData = await studentRes.json();
                 if (sData && sData.length > 0) {
                     studentData = sData[0];
-                    // استانداردسازی رشته و پایه برای فیلتر بی‌نقص
+                    // استانداردسازی رشته برای فیلتر بدون باگ
                     let m = studentData.major || '';
                     if (m.includes('ریاضی')) studentData.normMajor = 'ریاضی';
                     else if (m.includes('تجربی')) studentData.normMajor = 'تجربی';
                     else if (m.includes('انسانی')) studentData.normMajor = 'انسانی';
-                    else studentData.normMajor = 'all';
+                    else studentData.normMajor = 'all'; // اگر رشته نداشت، همه رو نشون بده
 
+                    // استانداردسازی پایه
                     let g = studentData.grade || '';
                     if (g.includes('دهم')) studentData.normGrade = 'دهم';
                     else if (g.includes('یازدهم')) studentData.normGrade = 'یازدهم';
-                    else studentData.normGrade = 'دوازدهم';
+                    else if (g.includes('دوازدهم')) studentData.normGrade = 'دوازدهم';
+                    else studentData.normGrade = 'all'; // اگر پایه نداشت، همه رو نشون بده
                 }
                 else { alert("حساب یافت نشد."); window.location.href='index.html'; return; }
+
+                dbData.services = await servicesRes.json() || [];
+                dbData.promos = await promosRes.json() || [];
+                dbData.userSubs = await mySubsRes.json() || [];
+                dbData.allActiveSubs = await allSubsRes.json() || [];
                 
                 let sysData = await sysRes.json();
                 if (sysData && sysData.length > 0 && sysData[0].konkur_date) {
@@ -292,7 +302,6 @@
 
                 document.getElementById('uiWalletBalance').innerText = formatMoney(studentData.wallet_balance || 0);
 
-                // استخراج طرح‌های فعلی کاربر
                 let activePan = dbData.userSubs.find(s => s.service_category === 'pansion');
                 let activeCon = dbData.userSubs.find(s => s.service_category === 'consult');
                 if(activePan) state.hasPansionActive = true;
@@ -306,7 +315,6 @@
 
             } catch (err) { alert("خطا در دریافت اطلاعات سرور."); }
         };
-
         // ==========================================
         // 🧠 موتور پردازش ظرفیت (بدون کسر مجدد)
         // ==========================================
@@ -330,6 +338,9 @@
         // ==========================================
         // 🃏 ساخت کارت‌های هوشمند
         // ==========================================
+        // ==========================================
+        // 🃏 ساخت کارت‌های هوشمند (فیلتر رفع باگ شده)
+        // ==========================================
         function renderCards() {
             const panGrid = document.getElementById('pansionGrid');
             const conGrid = document.getElementById('consultGrid');
@@ -337,12 +348,19 @@
             panGrid.innerHTML = `<div class="option-card ${state.pansion === 'none' ? 'selected' : ''}" onclick="selectPlan('pansion', 'none', null, 'none')"><div class="opt-title">فعلاً پانسیون نمی‌خوام / تمدید نمی‌کنم</div><div class="opt-desc">بدون رزرو میز مطالعه</div><div class="opt-price">۰ تومان</div></div>`;
             conGrid.innerHTML = `<div class="option-card ${state.consult === 'none' ? 'selected' : ''}" onclick="selectPlan('consult', 'none', null, 'none')"><div class="opt-title">فعلاً مشاوره نمی‌خوام / تمدید نمی‌کنم</div><div class="opt-desc">بدون دریافت برنامه تحصیلی</div><div class="opt-price">۰ تومان</div></div>`;
 
-            // استفاده از ستون‌های استاندارد شده برای فیلتر
-            let allowedPlans = dbData.services.filter(x => 
-                ((x.target_grade === studentData.normGrade || x.target_grade === 'all') &&
-                 (x.target_major === studentData.normMajor || x.target_major === 'all')) ||
-                dbData.userSubs.some(s => s.service_category === x.category && s.service_type === x.type)
-            );
+            // فیلتر منعطف و هوشمند (پشتیبانی از نام‌های مختلف ستون‌ها و عدم وجود رشته)
+            let allowedPlans = dbData.services.filter(x => {
+                let sMajor = x.target_major || x['target-major'] || 'all';
+                let sGrade = x.target_grade || x['target-grade'] || 'all';
+                
+                // اگر کاربر رشته/پایه نداشت، یا طرح برای همه بود، مچ میشه
+                let matchMajor = (studentData.normMajor === 'all' || sMajor === 'all' || sMajor === studentData.normMajor);
+                let matchGrade = (studentData.normGrade === 'all' || sGrade === 'all' || sGrade === studentData.normGrade);
+                
+                let isMyActivePlan = dbData.userSubs.some(s => s.service_category === x.category && s.service_type === x.type);
+
+                return (matchMajor && matchGrade) || isMyActivePlan;
+            });
 
             allowedPlans.forEach(plan => {
                 let isMyActivePlan = dbData.userSubs.some(s => s.service_category === plan.category && s.service_type === plan.type);
@@ -350,7 +368,7 @@
                 if (plan.category === 'pansion' && state.hasPansionActive && !isMyActivePlan) return;
                 if (plan.category === 'consult' && state.hasConsultActive && !isMyActivePlan) return;
 
-                let isSelected = state[plan.category] === plan.id; // مقایسه با ID
+                let isSelected = state[plan.category] === plan.id; 
                 let price = parseInt(plan.base_price);
                 
                 let capHtml = '';
@@ -367,7 +385,7 @@
                         capHtml = `<div class="cap-status cap-available">✨ افزودن به پلن (موجود: ${plan.empty_seats} نفر)</div>`;
                     } 
                     else if (plan.empty_seats <= 0 && plan.next_available_date) {
-                        let faDate = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' }).format(plan.next_available_date);
+                        let faDate = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' }).format(new Date(plan.next_available_date));
                         capHtml = `<div class="cap-status cap-reserved">⏳ پیش‌خرید (شروع از ${faDate})</div>`;
                         startDateToPass = plan.next_available_date.toISOString();
                     } 
@@ -378,7 +396,6 @@
                 }
 
                 let badge = isMyActivePlan ? `<div class="opt-badge">طرح فعلی شما</div>` : '';
-                // در اینجا ID و Type هر دو پاس داده می‌شوند
                 let onclickAttr = isSelectable ? `onclick="selectPlan('${plan.category}', '${plan.id}', '${startDateToPass}', '${plan.type}')"` : '';
                 let cardClass = isSelected ? 'selected' : ''; if (!isSelectable) cardClass += ' disabled';
 
