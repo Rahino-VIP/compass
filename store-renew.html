@@ -241,8 +241,8 @@
         let daysToKonkur = 30;
         
         let state = {
-            pansion: 'none', panDuration: 1, panStartDate: null,
-            consult: 'none', conDuration: 1, conStartDate: null,
+            pansion: 'none', panDuration: 1, panStartDate: null, panType: 'none',
+            consult: 'none', conDuration: 1, conStartDate: null, conType: 'none',
             paymentMethod: 'cash', promoRate: 0,
             hasPansionActive: false, hasConsultActive: false
         };
@@ -269,18 +269,19 @@
                 let sData = await studentRes.json();
                 if (sData && sData.length > 0) {
                     studentData = sData[0];
-                    // استانداردسازی رشته برای فیلتر دقیق
+                    // استانداردسازی رشته و پایه برای فیلتر بی‌نقص
                     let m = studentData.major || '';
                     if (m.includes('ریاضی')) studentData.normMajor = 'ریاضی';
                     else if (m.includes('تجربی')) studentData.normMajor = 'تجربی';
                     else if (m.includes('انسانی')) studentData.normMajor = 'انسانی';
                     else studentData.normMajor = 'all';
+
+                    let g = studentData.grade || '';
+                    if (g.includes('دهم')) studentData.normGrade = 'دهم';
+                    else if (g.includes('یازدهم')) studentData.normGrade = 'یازدهم';
+                    else studentData.normGrade = 'دوازدهم';
                 }
                 else { alert("حساب یافت نشد."); window.location.href='index.html'; return; }
-                dbData.services = await servicesRes.json() || [];
-                dbData.promos = await promosRes.json() || [];
-                dbData.userSubs = await mySubsRes.json() || [];
-                dbData.allActiveSubs = await allSubsRes.json() || [];
                 
                 let sysData = await sysRes.json();
                 if (sysData && sysData.length > 0 && sysData[0].konkur_date) {
@@ -307,16 +308,15 @@
         };
 
         // ==========================================
-        // 🧠 موتور پردازش ظرفیت (آپدیت شده)
+        // 🧠 موتور پردازش ظرفیت (بدون کسر مجدد)
         // ==========================================
         function processServiceCapacities() {
             dbData.services.forEach(srv => {
                 let activeInSrv = dbData.allActiveSubs.filter(s => s.service_category === srv.category && s.service_type === srv.type);
                 srv.current_count = activeInSrv.length;
                 
-                // در نظر گرفتن Null به عنوان ظرفیت نامحدود (999)
-                let cap = (srv.capacity !== null && srv.capacity !== undefined) ? parseInt(srv.capacity) : 999;
-                srv.empty_seats = cap - srv.current_count;
+                // 💡 چون ظرفیت در دیتابیس شما همون ظرفیت باقیمانده است، مستقیم همون رو می‌خونیم
+                srv.empty_seats = (srv.capacity !== null && srv.capacity !== undefined) ? parseInt(srv.capacity) : 999;
                 
                 let nonRenewers = activeInSrv.filter(s => s.will_not_renew === true);
                 if (nonRenewers.length > 0) {
@@ -327,7 +327,6 @@
                 }
             });
         }
-
         // ==========================================
         // 🃏 ساخت کارت‌های هوشمند
         // ==========================================
@@ -335,38 +334,33 @@
             const panGrid = document.getElementById('pansionGrid');
             const conGrid = document.getElementById('consultGrid');
 
-            panGrid.innerHTML = `<div class="option-card ${state.pansion === 'none' ? 'selected' : ''}" onclick="selectPlan('pansion', 'none', null)"><div class="opt-title">فعلاً پانسیون نمی‌خوام / تمدید نمی‌کنم</div><div class="opt-desc">بدون رزرو میز مطالعه</div><div class="opt-price">۰ تومان</div></div>`;
-            conGrid.innerHTML = `<div class="option-card ${state.consult === 'none' ? 'selected' : ''}" onclick="selectPlan('consult', 'none', null)"><div class="opt-title">فعلاً مشاوره نمی‌خوام / تمدید نمی‌کنم</div><div class="opt-desc">بدون دریافت برنامه تحصیلی</div><div class="opt-price">۰ تومان</div></div>`;
+            panGrid.innerHTML = `<div class="option-card ${state.pansion === 'none' ? 'selected' : ''}" onclick="selectPlan('pansion', 'none', null, 'none')"><div class="opt-title">فعلاً پانسیون نمی‌خوام / تمدید نمی‌کنم</div><div class="opt-desc">بدون رزرو میز مطالعه</div><div class="opt-price">۰ تومان</div></div>`;
+            conGrid.innerHTML = `<div class="option-card ${state.consult === 'none' ? 'selected' : ''}" onclick="selectPlan('consult', 'none', null, 'none')"><div class="opt-title">فعلاً مشاوره نمی‌خوام / تمدید نمی‌کنم</div><div class="opt-desc">بدون دریافت برنامه تحصیلی</div><div class="opt-price">۰ تومان</div></div>`;
 
-            let normGrade = ['دهم', 'یازدهم'].includes(studentData.grade) ? studentData.grade : 'دوازدهم';
-            let normMajor = studentData.normMajor || 'all';
-
-            // فیلتر جادویی: پلن‌هایی که به پایه و رشته می‌خورن، پلاس پلن‌هایی که کاربر همین الان داره!
+            // استفاده از ستون‌های استاندارد شده برای فیلتر
             let allowedPlans = dbData.services.filter(x => 
-                ((x.target_grade === normGrade || x.target_grade === 'all') &&
-                (x.target_major === normMajor || x.target_major === 'all')) ||
+                ((x.target_grade === studentData.normGrade || x.target_grade === 'all') &&
+                 (x.target_major === studentData.normMajor || x.target_major === 'all')) ||
                 dbData.userSubs.some(s => s.service_category === x.category && s.service_type === x.type)
             );
 
             allowedPlans.forEach(plan => {
                 let isMyActivePlan = dbData.userSubs.some(s => s.service_category === plan.category && s.service_type === plan.type);
                 
-                // اگه تو اون دسته طرح فعال داره، فقط همونو نشون بده برای تمدید
                 if (plan.category === 'pansion' && state.hasPansionActive && !isMyActivePlan) return;
                 if (plan.category === 'consult' && state.hasConsultActive && !isMyActivePlan) return;
 
-                let isSelected = state[plan.category] === plan.type;
+                let isSelected = state[plan.category] === plan.id; // مقایسه با ID
                 let price = parseInt(plan.base_price);
                 
                 let capHtml = '';
                 let isSelectable = true;
                 let startDateToPass = null; 
 
-                // منطق ظرفیت و رزرو
                 if (isMyActivePlan) {
                     capHtml = `<div class="cap-status cap-available">🔄 تمدید اشتراک فعلی شما</div>`;
                     let mySub = dbData.userSubs.find(s => s.service_category === plan.category);
-                    startDateToPass = mySub.end_date; // تمدید از روز پایان قرارداد قبلی شروع میشه
+                    startDateToPass = mySub.end_date; 
                 } 
                 else {
                     if (plan.empty_seats > 0) {
@@ -384,7 +378,8 @@
                 }
 
                 let badge = isMyActivePlan ? `<div class="opt-badge">طرح فعلی شما</div>` : '';
-                let onclickAttr = isSelectable ? `onclick="selectPlan('${plan.category}', '${plan.type}', '${startDateToPass}')"` : '';
+                // در اینجا ID و Type هر دو پاس داده می‌شوند
+                let onclickAttr = isSelectable ? `onclick="selectPlan('${plan.category}', '${plan.id}', '${startDateToPass}', '${plan.type}')"` : '';
                 let cardClass = isSelected ? 'selected' : ''; if (!isSelectable) cardClass += ' disabled';
 
                 let cardHtml = `
@@ -405,14 +400,16 @@
         // ==========================================
         // 🎛️ کنترلرها 
         // ==========================================
-        function selectPlan(category, type, startDate) {
-            state[category] = type;
+        function selectPlan(category, id, startDate, type) {
+            state[category] = id;
             if(category === 'pansion') {
+                state.panType = type;
                 state.panStartDate = startDate;
-                document.getElementById('panDurationBox').style.display = type === 'none' ? 'none' : 'block';
+                document.getElementById('panDurationBox').style.display = id === 'none' ? 'none' : 'block';
             } else {
+                state.conType = type;
                 state.conStartDate = startDate;
-                document.getElementById('conDurationBox').style.display = type === 'none' ? 'none' : 'block';
+                document.getElementById('conDurationBox').style.display = id === 'none' ? 'none' : 'block';
             }
             document.getElementById('promoCode').value = '';
             document.getElementById('promoMsg').innerText = '';
@@ -469,8 +466,8 @@
             
             document.getElementById('invoiceArea').style.display = 'block'; document.getElementById('checkoutBox').style.display = 'block';
 
-            let panSrv = dbData.services.find(s => s.category === 'pansion' && s.type === state.pansion);
-            let conSrv = dbData.services.find(s => s.category === 'consult' && s.type === state.consult);
+            let panSrv = dbData.services.find(s => s.id === state.pansion);
+            let conSrv = dbData.services.find(s => s.id === state.consult);
             let basePanMonthly = panSrv ? parseInt(panSrv.base_price) : 0;
             let baseConMonthly = conSrv ? parseInt(conSrv.base_price) : 0;
             
@@ -496,7 +493,7 @@
             let p_buy = state.pansion !== 'none' ? state.panDuration : 0;
             let c_buy = state.consult !== 'none' ? state.conDuration : 0;
 
-            // محاسبه تعداد ماه‌هایی که تازه الان با هم تلاقی پیدا کردن
+            // محاسبه تعداد ماه‌هایی که هم‌پوشانی دارند
             let overlapBefore = Math.min(p_current, c_current);
             let overlapAfter = Math.min(p_current + p_buy, c_current + c_buy);
             let newlyOverlappedMonths = Math.max(0, overlapAfter - overlapBefore);
@@ -514,13 +511,14 @@
                 }
 
                 comboDisc = (consultBaseForDiscount * newlyOverlappedMonths) * 0.60;
-                msgEl.innerHTML = `💎 طرح الماس: ۶۰٪ تخفیف روی ${newlyOverlappedMonths.toFixed(1)} ماه اشتراکِ مشترک اعمال شد.`;
+                msgEl.innerHTML = `💎 طرح الماس: ۶۰٪ تخفیف روی ${newlyOverlappedMonths.toFixed(1)} ماه مشترک اعمال شد.`;
                 if (nonOverlapNewConsult > 0) msgEl.innerHTML += `<br>🎟️ کدهای تخفیف را می‌توانید روی ${nonOverlapNewConsult.toFixed(1)} ماه باقیمانده مشاوره اعمال کنید.`;
                 msgEl.style.color = "var(--primary)";
             } else {
                 if (msgEl.innerText.includes('الماس')) msgEl.innerText = '';
             }
 
+            // اعمال کد تخفیف فقط روی ماه‌های مشاوره‌ای که طرح الماس نگرفتن
             if (state.promoRate > 0) {
                 if (nonOverlapNewConsult > 0) {
                     promoDisc = (baseConMonthly * nonOverlapNewConsult) * state.promoRate;
@@ -574,11 +572,11 @@
                 instBox.style.display = 'block';
                 const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
                 
-                // ⏱️ تعیین مبنای شروع اقساط (تاریخ پایان قرارداد قبلی یا امروز)
+                // ⏱️ شروع اقساط بر مبنای تاریخ پایان قرارداد (تمدید) یا امروز
                 let baseInstDate = new Date();
                 if (state.panStartDate && state.conStartDate) {
                     let d1 = new Date(state.panStartDate); let d2 = new Date(state.conStartDate);
-                    baseInstDate = d1 < d2 ? d1 : d2; 
+                    baseInstDate = d1 > d2 ? d1 : d2; 
                 } else if (state.panStartDate) { baseInstDate = new Date(state.panStartDate); } 
                 else if (state.conStartDate) { baseInstDate = new Date(state.conStartDate); }
 
@@ -644,20 +642,21 @@
             
             const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = "در حال صدور قرارداد و فاکتور... ⏳";
 
-            let panStatusTxt = state.pansion !== 'none' ? (state.panStartDate ? `(تمدید: شروع محاسبه از ${new Date(state.panStartDate).toLocaleDateString('fa-IR')})` : '(شروع از امروز)') : '';
-            let conStatusTxt = state.consult !== 'none' ? (state.conStartDate ? `(تمدید: شروع محاسبه از ${new Date(state.conStartDate).toLocaleDateString('fa-IR')})` : '(شروع از امروز)') : '';
+            // ثبت تاریخ دقیق محاسبه در فاکتور برای ادمین
+            let panStatusTxt = state.pansion !== 'none' ? (state.panStartDate ? `(تمدید: محاسبه از ${new Date(state.panStartDate).toLocaleDateString('fa-IR')})` : '(شروع از امروز)') : '';
+            let conStatusTxt = state.consult !== 'none' ? (state.conStartDate ? `(تمدید: محاسبه از ${new Date(state.conStartDate).toLocaleDateString('fa-IR')})` : '(شروع از امروز)') : '';
+
             let pVal = document.getElementById('panDuration').value; let cVal = document.getElementById('conDuration').value;
             let pDur = pVal === 'konkur' ? 'تا روز کنکور' : pVal + ' ماهه';
             let cDur = cVal === 'konkur' ? 'تا روز کنکور' : cVal + ' ماهه';
 
             let invoiceText = `درخواست تمدید / خرید جدید:\n`;
-            if (state.pansion !== 'none') invoiceText += `- پانسیون ${state.pansion} | ${pDur} ${panStatusTxt}\n`;
-            if (state.consult !== 'none') invoiceText += `- مشاوره ${state.consult} | ${cDur} ${conStatusTxt}\n`;
+            if (state.pansion !== 'none') invoiceText += `- پانسیون ${state.panType} | ${pDur} ${panStatusTxt}\n`;
+            if (state.consult !== 'none') invoiceText += `- مشاوره ${state.conType} | ${cDur} ${conStatusTxt}\n`;
             
             invoiceText += `مبلغ نهایی فاکتور: ${document.getElementById('inv_total').innerText}\nروش پرداخت: ${state.paymentMethod === 'cash' ? 'نقدی' : 'اقساط'}\n`;
             if(state.paymentMethod === 'installments') invoiceText += `زمان‌بندی اقساط:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
 
-            // ارسال پِی‌لود دقیقاً با همون اکشنی که بله بهش حساسه
             const payload = {
                 action: 'web_auth', sub_action: 'register_step2', 
                 national_id: userId,
@@ -670,10 +669,10 @@
                     final_amount: financeData.final,
                     payment_method: state.paymentMethod,
                     paid_upfront: financeData.upfront,
-                    pansion_tier: state.pansion,       
+                    pansion_tier: state.panType,       
                     pan_duration: state.panDuration,
                     pan_start: state.panStartDate, 
-                    consult_tier: state.consult,       
+                    consult_tier: state.conType,       
                     con_duration: state.conDuration,
                     con_start: state.conStartDate 
                 },
@@ -681,16 +680,14 @@
             };
 
             try {
-                // ۱. شلیک درخواست به گوگل اسکریپت (برای ارسال پیام به بله)
                 fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
 
-                // ۲. ثبت مستقیم در جدول Students تا در پنل ادمین تو لیست فاکتورهای منتظر تایید بیاد
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
                 await fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, {
                     method: 'PATCH',
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        status: 'pending', // این خط باعث میشه مستقیم بره تو لیست ادمین
+                        status: 'pending',
                         invoice_details: invoiceText,
                         receipt_base64: receiptBase64,
                         file_type: receiptMimeType,
