@@ -481,6 +481,38 @@
         function roundDown100k(amount) { return Math.floor(amount / 100000) * 100000; }
         function copyText(id) { navigator.clipboard.writeText(document.getElementById(id).innerText).then(()=>alert("✅ کپی شد.")); }
 
+
+        // ==========================================
+        // 📜 موتور هوشمند نمایش قوانین (متصل به جدول terms_and_rules)
+        // ==========================================
+        function updateRules() {
+            let rules = [];
+            let nGrade = studentData.normGrade || 'all';
+
+            // ۱. قوانینی که برای همه (all) است
+            dbData.rules.filter(r => r.target_category === 'all' && (r.target_grade === 'all' || r.target_grade === nGrade))
+                        .forEach(r => rules.push(r.rule_text));
+            
+            // ۲. قوانینی که فقط برای پانسیون است (اگر پانسیون انتخاب شده باشد)
+            if (state.pansion !== 'none') {
+                dbData.rules.filter(r => r.target_category === 'pansion' && (r.target_grade === 'all' || r.target_grade === nGrade))
+                            .forEach(r => rules.push(r.rule_text));
+            }
+            
+            // ۳. قوانینی که فقط برای مشاوره است (اگر مشاوره انتخاب شده باشد)
+            if (state.consult !== 'none') {
+                dbData.rules.filter(r => r.target_category === 'consult' && (r.target_grade === 'all' || r.target_grade === nGrade))
+                            .forEach(r => rules.push(r.rule_text));
+            }
+
+            const rulesContainer = document.getElementById('dynamicRules');
+            if (rules.length > 0) {
+                // ریختن قوانین فیلتر شده داخل باکس HTML
+                rulesContainer.innerHTML = rules.map(r => `<li>${r}</li>`).join('');
+            } else {
+                rulesContainer.innerHTML = '<li>قوانین انضباطی و مالی آموزشگاه را می‌پذیرم.</li>';
+            }
+        }
         // ==========================================
         // 🧮 موتور محاسبات (حل باگ طرح الماس)
         // ==========================================
@@ -495,7 +527,8 @@
             }
             
             document.getElementById('invoiceArea').style.display = 'block'; document.getElementById('checkoutBox').style.display = 'block';
-
+            updateRules(); // 👈 فراخوانی موتور آپدیت قوانین
+            
             let panSrv = dbData.services.find(s => s.id === state.pansion);
             let conSrv = dbData.services.find(s => s.id === state.consult);
             let basePanMonthly = panSrv ? parseInt(panSrv.base_price) : 0;
