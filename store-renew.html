@@ -349,17 +349,16 @@
             conGrid.innerHTML = `<div class="option-card ${state.consult === 'none' ? 'selected' : ''}" onclick="selectPlan('consult', 'none', null, 'none')"><div class="opt-title">فعلاً مشاوره نمی‌خوام / تمدید نمی‌کنم</div><div class="opt-desc">بدون دریافت برنامه تحصیلی</div><div class="opt-price">۰ تومان</div></div>`;
 
             // فیلتر منعطف و هوشمند (پشتیبانی از نام‌های مختلف ستون‌ها و عدم وجود رشته)
+            // 💡 فیلتر ضدباگ (رعایت قطعی رشته و پایه)
             let allowedPlans = dbData.services.filter(x => {
                 let sMajor = x.target_major || x['target-major'] || 'all';
                 let sGrade = x.target_grade || x['target-grade'] || 'all';
                 
-                // اگر کاربر رشته/پایه نداشت، یا طرح برای همه بود، مچ میشه
                 let matchMajor = (studentData.normMajor === 'all' || sMajor === 'all' || sMajor === studentData.normMajor);
                 let matchGrade = (studentData.normGrade === 'all' || sGrade === 'all' || sGrade === studentData.normGrade);
                 
-                let isMyActivePlan = dbData.userSubs.some(s => s.service_category === x.category && s.service_type === x.type);
-
-                return (matchMajor && matchGrade) || isMyActivePlan;
+                // 🛑 قانون جدید: تحت هیچ شرایطی فیلتر رشته و پایه رو دور نزن!
+                return matchMajor && matchGrade;
             });
 
             allowedPlans.forEach(plan => {
