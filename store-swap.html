@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تعویض و ارتقای طرح | قطب‌نمای راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root { 
+            --primary: #1e3a8a; --primary-hover: #1e40af; --accent: #d97706;  
+            --bg-color: #f1f5f9; --surface: #ffffff; --text-main: #1e293b; 
+            --text-muted: #64748b; --border: #e2e8f0; --shadow: 0 20px 40px rgba(30, 58, 138, 0.15);
+            --danger: #ef4444; --success: #10b981; --warning: #f59e0b;
+        }
+
+        [data-theme="dark"] {
+            --primary: #3b82f6; --primary-hover: #60a5fa; --accent: #f59e0b;
+            --bg-color: #0f172a; --surface: #1e293b; --text-main: #f8fafc;
+            --text-muted: #94a3b8; --border: #334155; --shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-color); color: var(--text-main); min-height: 100vh; padding: 30px 15px; transition: 0.4s ease; display: flex; justify-content: center; }
+
+        .theme-toggle { position: absolute; top: 20px; left: 20px; background: var(--surface); border: 2px solid var(--border); color: var(--text-main); width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); z-index: 100; transition: 0.3s; }
+        .theme-toggle:hover { transform: scale(1.1); border-color: var(--primary); }
+
+        .auth-box { background: var(--surface); border-radius: 32px; padding: 40px; width: 100%; max-width: 850px; box-shadow: var(--shadow); border: 1px solid var(--border); animation: slideUp 0.5s ease-out; position: relative; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        #loaderOverlay { position: absolute; inset: 0; background: var(--surface); border-radius: 32px; z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.3s opacity; }
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .header-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px dashed var(--border); padding-bottom: 15px; }
+        .header-title h1 { font-size: 20px; font-weight: 900; color: var(--primary); }
+        .back-btn { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); padding: 8px 15px; border-radius: 12px; text-decoration: none; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--primary); }
+
+        /* 💳 کارت بانکی */
+        .payment-card { background: linear-gradient(135deg, #0f172a, #1e3a8a); border-radius: 20px; padding: 25px; color: white; position: relative; overflow: hidden; box-shadow: 0 15px 30px rgba(30, 58, 138, 0.3); margin-bottom: 20px; }
+        .payment-card::after { content: '🏦'; position: absolute; left: -10px; top: -10px; font-size: 120px; opacity: 0.05; transform: rotate(-20deg); pointer-events: none; }
+        .pc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; opacity: 0.9; font-size: 13px; }
+        .pc-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; backdrop-filter: blur(5px); }
+        .pc-label { font-size: 11px; opacity: 0.8; margin-bottom: 3px; display: block; }
+        .pc-value { font-size: 18px; font-weight: 900; letter-spacing: 2px; direction: ltr; text-align: left; }
+        .pc-value.shaba { font-size: 14px; letter-spacing: 1px; }
+        .btn-copy-mini { background: var(--accent); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+
+        .wallet-banner { background: rgba(217, 119, 6, 0.1); border: 1px dashed var(--accent); padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 25px; }
+
+        .section-title { font-size: 15px; font-weight: bold; color: var(--accent); margin: 25px 0 15px 0; border-bottom: 1px solid var(--border); padding-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+        
+        .selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .option-card { background: var(--bg-color); border: 2px solid var(--border); border-radius: 16px; padding: 20px; text-align: right; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; }
+        .option-card:hover:not(.disabled) { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .option-card.selected { border-color: var(--primary); background: rgba(59, 130, 246, 0.05); }
+        .option-card.selected::before { content: '✅'; position: absolute; top: 15px; left: 15px; font-size: 16px; z-index: 5; }
+        .option-card.disabled { opacity: 0.6; cursor: not-allowed; border-color: var(--border); background: rgba(0,0,0,0.05); }
+        
+        .opt-badge { position: absolute; top: -1px; right: 15px; background: var(--success); color: white; padding: 3px 10px; border-radius: 0 0 8px 8px; font-size: 10px; font-weight: bold; }
+        .opt-title { font-size: 14px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; margin-top: 10px; }
+        .opt-price { font-size: 14px; color: var(--primary); font-weight: bold; margin-bottom: 10px; }
+
+        .duration-box { background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--primary); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none; animation: fadeIn 0.3s; }
+        .duration-box label { font-size: 13px; font-weight: bold; color: var(--primary); display: block; margin-bottom: 8px; }
+        .duration-select { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface); color: var(--text-main); font-family: inherit; font-size: 13px; font-weight: bold; outline: none; }
+
+        /* 🧾 فاکتور */
+        .invoice-box { background: rgba(0,0,0,0.02); border: 1px dashed var(--border); border-radius: 16px; padding: 20px; margin-top: 20px; display: none; }
+        .promo-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        .promo-group input { flex: 1; padding: 12px 15px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); outline: none; font-size: 13px; }
+        .promo-btn { padding: 10px 20px; background: var(--primary); border: none; border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: bold; color: white; }
+        
+        .invoice-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; color: var(--text-muted); align-items: center; }
+        .invoice-row.highlight { color: var(--success); font-weight: bold; }
+        .invoice-row.wallet { color: var(--accent); font-weight: bold; background: rgba(217, 119, 6, 0.1); padding: 8px 12px; border-radius: 8px; }
+        .invoice-total { display: flex; justify-content: space-between; border-top: 2px dashed var(--border); padding-top: 15px; margin-top: 10px; font-size: 18px; font-weight: 900; color: var(--primary); }
+
+        .pay-method-switch { display: flex; gap: 10px; margin-bottom: 20px; background: var(--bg-color); padding: 5px; border-radius: 12px; border: 1px solid var(--border); }
+        .pay-method-btn { flex: 1; text-align: center; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; color: var(--text-muted); }
+        .pay-method-btn.active { background: var(--primary); color: white; box-shadow: var(--shadow); }
+        .installment-details { background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); padding: 15px; border-radius: 12px; font-size: 12px; margin-top: 15px; display: none; }
+        .installment-details li { margin-right: 15px; margin-bottom: 8px; color: var(--text-main); font-weight: bold;}
+
+        .rules-box { background: rgba(0,0,0,0.03); border-radius: 12px; border: 1px solid var(--border); padding: 15px; margin-bottom: 25px; margin-top: 25px; display: none;}
+        .file-upload { border: 2px dashed var(--border); padding: 25px 20px; border-radius: 16px; text-align: center; cursor: pointer; position: relative; background: var(--bg-color); margin-bottom: 20px; transition: 0.2s; display: none; }
+        .file-upload.has-file { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
+        .file-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+        .btn-submit { background: linear-gradient(135deg, var(--primary), #312e81); color: white; width: 100%; padding: 16px; border-radius: 14px; border: none; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 10px 25px rgba(30, 58, 138, 0.2); transition: 0.2s; display: none;}
+    </style>
+</head>
+<body data-theme="dark">
+
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️</button>
+
+    <div class="auth-box">
+        
+        <div id="loaderOverlay">
+            <div class="spinner"></div>
+            <h3 style="color: var(--primary); font-size: 14px;">در حال پردازش سوابق مالی...</h3>
+        </div>
+
+        <div class="header-title">
+            <h1>تعویض و ارتقای طرح</h1>
+            <a href="profile.html" class="back-btn">🔙 بازگشت</a>
+        </div>
+
+        <div class="payment-card">
+            <div class="pc-header"><div>صاحب حساب: <b>ارشاد شفیعی فرد</b></div><div>بانک سامان</div></div>
+            <div class="pc-row">
+                <div><span class="pc-label">شماره کارت:</span><div class="pc-value" id="txtCard">6219861810380484</div></div>
+                <button class="btn-copy-mini" onclick="copyText('txtCard')">کپی</button>
+            </div>
+            <div class="pc-row" style="margin-bottom: 0;">
+                <div><span class="pc-label">شماره شبا:</span><div class="pc-value shaba" id="txtSheba">IR200560611828006108618001</div></div>
+                <button class="btn-copy-mini" onclick="copyText('txtSheba')">کپی</button>
+            </div>
+        </div>
+
+        <div class="wallet-banner">
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: bold;">موجودی قابل استفاده کیف پول:</span>
+            <span id="uiWalletBalance" style="font-size: 16px; font-weight: 900; color: var(--accent); margin-right: 5px;">0</span>
+            <span style="font-size: 11px; color: var(--accent);">تومان</span>
+        </div>
+
+        <div style="background: rgba(245, 158, 11, 0.1); color: var(--warning); padding: 15px; border-radius: 12px; font-size: 12px; margin-bottom: 25px; line-height: 1.8; font-weight: bold;">
+            ⚠️ راهنمای معاوضه (Trade-in):<br>
+            سیستم بخش‌هایی از قرارداد که <b>«بدون تغییر»</b> بگذارید را دست نمی‌زند. ارزشِ بخش‌هایی که تغییر دهید (ارتقا/لغو) را محاسبه کرده و به کیف پول شما واریز می‌کند. سپس فاکتورِ طرح جدید صادر شده و از کیف پولتان کسر می‌شود.
+        </div>
+
+        <div class="section-title">🏠 تغییرات پانسیون مطالعاتی</div>
+        <div class="selection-grid" id="pansionGrid"></div>
+
+        <div class="section-title">🧠 تغییرات مشاوره تحصیلی</div>
+        <div class="selection-grid" id="consultGrid"></div>
+
+        <div class="duration-box" id="durationBox">
+            <label>⏱️ مدت زمان طرح‌های جدید (از امروز):</label>
+            <select class="duration-select" id="newDuration" onchange="calculateInvoice()">
+                <option value="1">۱ ماهه</option>
+                <option value="3">۳ ماهه (تخفیف ویژه)</option>
+                <option value="konkur">تا روز کنکور (روزشمار دقیق)</option>
+            </select>
+        </div>
+
+        <div class="invoice-box" id="invoiceArea">
+            <h3 style="color: var(--primary); font-size: 16px; margin-bottom: 20px; text-align: center;">🧾 فاکتور الحاقی (مابه‌التفاوت)</h3>
+            
+            <div class="promo-group">
+                <input type="text" id="promoCode" placeholder="کد تخفیف (فقط مشاوره جدید)">
+                <button class="promo-btn" onclick="applyPromo()">ثبت کد</button>
+            </div>
+            <div id="promoMsg" style="font-size: 11px; margin-top: -10px; margin-bottom: 15px; font-weight: bold; min-height: 16px;"></div>
+
+            <div class="pay-method-switch" id="paySwitchContainer">
+                <div class="pay-method-btn active" id="btnPayCash" onclick="setPayMethod('cash')">💳 پرداخت نقدی مابه‌التفاوت</div>
+                <div class="pay-method-btn" id="btnPayInst" onclick="setPayMethod('installments')">📑 پرداخت اقساطی</div>
+            </div>
+
+            <div class="invoice-row highlight" id="row_tradein" style="display:none; color: var(--accent);">
+                <span>🔄 ارزش بازخرید طرح‌های لغوشده:</span><span id="inv_tradein">+ 0 تومان</span>
+            </div>
+            
+            <div class="invoice-row" id="row_pan_new" style="display:none;"><span>هزینه پانسیون جدید:</span><span id="inv_pan_new">0 تومان</span></div>
+            <div class="invoice-row" id="row_con_new" style="display:none;"><span>هزینه مشاوره جدید:</span><span id="inv_con_new">0 تومان</span></div>
+            
+            <div class="invoice-row discount" id="row_combo_disc" style="display: none;"><span>💎 تخفیف الماس (روی خرید جدید):</span><span id="inv_combo_disc">- 0 تومان</span></div>
+            <div class="invoice-row discount" id="row_promo_disc" style="display: none;"><span>🎟️ تخفیف کُد:</span><span id="inv_promo_disc">- 0 تومان</span></div>
+            <div class="invoice-row discount" id="row_time_disc" style="display: none;"><span id="lbl_time_disc">⏳ تخفیف زمانی:</span><span id="inv_time_disc">- 0 تومان</span></div>
+            
+            <div class="invoice-row wallet" id="row_wallet_used" style="display: none;"><span>🎁 کسر نهایی از کیف پول:</span><span id="inv_wallet_used">- 0 تومان</span></div>
+
+            <div class="invoice-total">
+                <span>مبلغ قابل پرداخت شما:</span><span id="inv_total">0 تومان</span>
+            </div>
+
+            <ul class="installment-details" id="installmentDetails"></ul>
+            
+            <div id="creditAlert" style="font-size: 12px; color: var(--success); text-align: center; margin-top: 15px; font-weight: bold; display: none;">
+                * شما بستانکار شدید! مبلغ اضافه به کیف پول شما واریز شد.
+            </div>
+        </div>
+
+        <div class="rules-box" id="rulesBox">
+            <div style="font-size: 13px; font-weight: bold; color: var(--accent); margin-bottom: 10px;">📜 قوانین و مقررات معاوضه:</div>
+            <ul id="dynamicRules" style="font-size: 11px; color: var(--text-main); line-height: 1.8; margin-right: 15px; margin-bottom: 15px;"></ul>
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" id="regRules" style="width: 18px; height: 18px;">
+                <span style="font-size: 12px; font-weight: bold; color: var(--primary);">تمامی قوانین فوق را خواندم و می‌پذیرم.</span>
+            </label>
+        </div>
+
+        <div class="file-upload" id="boxFile" onclick="document.getElementById('receipt').click()">
+            <div style="font-size: 30px; margin-bottom: 5px;">📥</div>
+            <div id="lblFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی مابه‌التفاوت</div>
+            <input type="file" id="receipt" accept="image/*" onchange="handleReceiptSelect(this)" onclick="event.stopPropagation()" style="display: none;">
+        </div>
+
+        <button class="btn-submit" id="btnSubmit" onclick="submitFinalStep()">تایید نهایی و صدور قرارداد جایگزین 🚀</button>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // 🌓 مدیریت تم
+        // ==========================================
+        const themeBtn = document.getElementById('themeBtn');
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        if (currentTheme === 'dark') { document.body.setAttribute('data-theme', 'dark'); themeBtn.innerText = '☀️'; } 
+        else { document.body.removeAttribute('data-theme'); themeBtn.innerText = '🌙'; }
+        
+        function toggleTheme() {
+            if (document.body.getAttribute('data-theme') === 'dark') { document.body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); themeBtn.innerText = '🌙'; } 
+            else { document.body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); themeBtn.innerText = '☀️'; }
+        }
+
+        // ==========================================
+        // 🔗 تنظیمات و متغیرها
+        // ==========================================
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec'; 
+        
+        const userId = localStorage.getItem('qotbnama_user_id');
+        if (!userId) window.location.href = 'index.html';
+
+        let studentData = {};
+        let dbData = { services: [], promos: [], userSubs: [], rules: [] };
+        let daysToKonkur = 30;
+        
+        let state = {
+            pansion: 'no_change', panType: 'no_change',
+            consult: 'no_change', conType: 'no_change',
+            paymentMethod: 'cash', promoRate: 0
+        };
+
+        let financeData = { tradeInValue: 0, newCharge: 0, discount: 0, walletUsed: 0, newWalletBalance: 0, final: 0, upfront: 0, installments: [] };
+
+        // ==========================================
+        // 🚀 راه‌اندازی 
+        // ==========================================
+        window.onload = async function() {
+            try {
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
+
+                const [studentRes, servicesRes, promosRes, mySubsRes, sysRes, rulesRes] = await Promise.all([
+                    fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, { headers }),
+                    fetch(`${cleanUrl}/rest/v1/services?is_active=eq.true`, { headers }),
+                    fetch(`${cleanUrl}/rest/v1/promo_codes?is_active=eq.true`, { headers }),
+                    fetch(`${cleanUrl}/rest/v1/subscriptions?student_nid=eq.${userId}&status=eq.active`, { headers }),
+                    fetch(`${cleanUrl}/rest/v1/system_settings?select=konkur_date`, { headers }),
+                    fetch(`${cleanUrl}/rest/v1/terms_and_rules`, { headers })
+                ]);
+
+                let sData = await studentRes.json();
+                if (sData && sData.length > 0) {
+                    studentData = sData[0];
+                    let m = studentData.major || '';
+                    if (m.includes('ریاضی')) studentData.normMajor = 'ریاضی';
+                    else if (m.includes('تجربی')) studentData.normMajor = 'تجربی';
+                    else if (m.includes('انسانی')) studentData.normMajor = 'انسانی';
+                    else studentData.normMajor = 'all';
+
+                    let g = studentData.grade || '';
+                    if (g === 'دوازدهم' || g.includes('دوازدهم')) studentData.normGrade = 'دوازدهم';
+                    else if (g === 'یازدهم' || g.includes('یازدهم')) studentData.normGrade = 'یازدهم';
+                    else if (g === 'دهم' || g.includes('دهم')) studentData.normGrade = 'دهم';
+                    else studentData.normGrade = 'all';
+                } else { alert("حساب یافت نشد."); window.location.href='index.html'; return; }
+
+                dbData.services = await servicesRes.json() || [];
+                dbData.promos = await promosRes.json() || [];
+                dbData.userSubs = await mySubsRes.json() || [];
+                dbData.rules = await rulesRes.json() || [];
+                
+                let sysData = await sysRes.json();
+                if (sysData && sysData.length > 0 && sysData[0].konkur_date) {
+                    let kDate = new Date(sysData[0].konkur_date);
+                    daysToKonkur = Math.ceil((kDate - new Date()) / (1000 * 3600 * 24));
+                    if (daysToKonkur <= 0) daysToKonkur = 1;
+                }
+
+                document.getElementById('uiWalletBalance').innerText = formatMoney(studentData.wallet_balance || 0);
+
+                // اگر کاربر هیچ پلن فعالی نداره، اینجا جاش نیست!
+                if(dbData.userSubs.length === 0) {
+                    alert("شما هیچ اشتراک فعالی برای تعویض ندارید! لطفا از بخش 'تمدید و فروشگاه' خرید جدید انجام دهید.");
+                    window.location.href = 'store-renew.html';
+                    return;
+                }
+
+                renderCards();
+                
+                document.getElementById('loaderOverlay').style.opacity = '0';
+                setTimeout(() => document.getElementById('loaderOverlay').style.display = 'none', 300);
+
+            } catch (err) { alert("خطا در دریافت اطلاعات سرور."); }
+        };
+
+        // ==========================================
+        // 🃏 ساخت کارت‌های هوشمند (Trade-in)
+        // ==========================================
+        function renderCards() {
+            const panGrid = document.getElementById('pansionGrid');
+            const conGrid = document.getElementById('consultGrid');
+            panGrid.innerHTML = ''; conGrid.innerHTML = '';
+
+            let hasPan = dbData.userSubs.some(s => s.service_category === 'pansion');
+            let hasCon = dbData.userSubs.some(s => s.service_category === 'consult');
+
+            // کارت‌های ثابت پانسیون
+            if(hasPan) {
+                panGrid.innerHTML += `<div class="option-card ${state.pansion === 'no_change' ? 'selected' : ''}" onclick="selectPlan('pansion', 'no_change', 'no_change')"><div class="opt-badge" style="background:var(--text-muted)">قرارداد فعلی</div><div class="opt-title">بدون تغییر</div><div class="opt-desc">حفظ قرارداد و اقساط فعلی پانسیون</div><div class="opt-price">-</div></div>`;
+                panGrid.innerHTML += `<div class="option-card ${state.pansion === 'none' ? 'selected' : ''}" onclick="selectPlan('pansion', 'none', 'none')"><div class="opt-title" style="color:var(--danger)">لغو کامل پانسیون</div><div class="opt-desc">بازخرید روزهای باقیمانده (با کسر جریمه)</div><div class="opt-price">-</div></div>`;
+            } else {
+                panGrid.innerHTML += `<div class="option-card ${state.pansion === 'no_change' ? 'selected' : ''}" onclick="selectPlan('pansion', 'no_change', 'no_change')"><div class="opt-title">فعلاً پانسیون نمی‌خوام</div><div class="opt-desc">بدون رزرو میز مطالعه</div><div class="opt-price">-</div></div>`;
+            }
+
+            // کارت‌های ثابت مشاوره
+            if(hasCon) {
+                conGrid.innerHTML += `<div class="option-card ${state.consult === 'no_change' ? 'selected' : ''}" onclick="selectPlan('consult', 'no_change', 'no_change')"><div class="opt-badge" style="background:var(--text-muted)">قرارداد فعلی</div><div class="opt-title">بدون تغییر</div><div class="opt-desc">حفظ قرارداد و اقساط فعلی مشاوره</div><div class="opt-price">-</div></div>`;
+                conGrid.innerHTML += `<div class="option-card ${state.consult === 'none' ? 'selected' : ''}" onclick="selectPlan('consult', 'none', 'none')"><div class="opt-title" style="color:var(--danger)">لغو کامل مشاوره</div><div class="opt-desc">بازخرید روزهای باقیمانده (با کسر جریمه)</div><div class="opt-price">-</div></div>`;
+            } else {
+                conGrid.innerHTML += `<div class="option-card ${state.consult === 'no_change' ? 'selected' : ''}" onclick="selectPlan('consult', 'no_change', 'no_change')"><div class="opt-title">فعلاً مشاوره نمی‌خوام</div><div class="opt-desc">بدون دریافت برنامه تحصیلی</div><div class="opt-price">-</div></div>`;
+            }
+
+            let allowedPlans = dbData.services.filter(x => 
+                (x.target_grade === studentData.normGrade || x.target_grade === 'all') &&
+                (x.target_major === studentData.normMajor || x.target_major === 'all')
+            );
+
+            allowedPlans.forEach(plan => {
+                // نیازی نیست طرحی که الان داره رو به عنوان خرید جدید نشون بدیم
+                if (dbData.userSubs.some(s => s.service_category === plan.category && s.service_type === plan.type)) return;
+
+                let isSelected = state[plan.category] === plan.id; 
+                let price = parseInt(plan.base_price);
+                let cardClass = isSelected ? 'selected' : ''; 
+
+                let cardHtml = `
+                    <div class="option-card ${cardClass}" onclick="selectPlan('${plan.category}', '${plan.id}', '${plan.type}')">
+                        <div class="opt-badge" style="background:var(--primary)">جایگزین جدید</div>
+                        <div class="opt-title">${plan.title}</div>
+                        <div class="opt-desc">${plan.description || ''}</div>
+                        <div class="opt-price">${formatMoney(price)} <span style="font-size:10px;color:var(--text-muted);">/ ماه</span></div>
+                    </div>
+                `;
+
+                if (plan.category === 'pansion') panGrid.innerHTML += cardHtml;
+                else if (plan.category === 'consult') conGrid.innerHTML += cardHtml;
+            });
+        }
+
+        // ==========================================
+        // 🎛️ کنترلرها
+        // ==========================================
+        function selectPlan(category, id, type) {
+            state[category] = id;
+            if(category === 'pansion') state.panType = type;
+            else state.conType = type;
+            
+            document.getElementById('promoCode').value = '';
+            document.getElementById('promoMsg').innerText = '';
+            state.promoRate = 0;
+            
+            // نمایش باکس زمان فقط اگر حداقل یکی از انتخاب‌ها، خرید طرح جدید باشه
+            if((state.pansion !== 'no_change' && state.pansion !== 'none') || (state.consult !== 'no_change' && state.consult !== 'none')) {
+                document.getElementById('durationBox').style.display = 'block';
+            } else {
+                document.getElementById('durationBox').style.display = 'none';
+            }
+
+            renderCards(); calculateInvoice();
+        }
+
+        function setPayMethod(method) {
+            state.paymentMethod = method;
+            document.getElementById('btnPayCash').classList.toggle('active', method === 'cash');
+            document.getElementById('btnPayInst').classList.toggle('active', method === 'installments');
+            calculateInvoice();
+        }
+
+        function applyPromo() {
+            const codeInput = document.getElementById('promoCode').value.trim().toUpperCase();
+            const msg = document.getElementById('promoMsg');
+            const promoObj = dbData.promos.find(p => p.code.toUpperCase() === codeInput);
+            
+            if (promoObj) {
+                state.promoRate = promoObj.discount_percent / 100;
+                // Message updated in calculateInvoice
+            } else {
+                state.promoRate = 0;
+                msg.innerText = "❌ کد تخفیف نامعتبر است.";
+                msg.style.color = "var(--danger)";
+            }
+            calculateInvoice();
+        }
+
+        function formatMoney(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+        function roundDown100k(amount) { return Math.floor(amount / 100000) * 100000; }
+        function copyText(id) { navigator.clipboard.writeText(document.getElementById(id).innerText).then(()=>alert("✅ کپی شد.")); }
+
+        function updateRules() {
+            let rules = [];
+            let nGrade = studentData.normGrade || 'all';
+
+            dbData.rules.filter(r => r.target_category === 'all' && (r.target_grade === 'all' || r.target_grade === nGrade)).forEach(r => rules.push(r.rule_text));
+            if (state.pansion !== 'no_change' && state.pansion !== 'none') {
+                dbData.rules.filter(r => r.target_category === 'pansion' && (r.target_grade === 'all' || r.target_grade === nGrade)).forEach(r => rules.push(r.rule_text));
+            }
+            if (state.consult !== 'no_change' && state.consult !== 'none') {
+                dbData.rules.filter(r => r.target_category === 'consult' && (r.target_grade === 'all' || r.target_grade === nGrade)).forEach(r => rules.push(r.rule_text));
+            }
+            rules.push("با ثبت این درخواست، بخش‌های لغو شده در قرارداد قبلی باطل گردیده و ارزش آن طبق قوانین فسخ به کیف پول مسترد می‌شود.");
+
+            const rulesContainer = document.getElementById('dynamicRules');
+            if (rules.length > 0) rulesContainer.innerHTML = rules.map(r => `<li>${r}</li>`).join('');
+            else rulesContainer.innerHTML = '<li>قوانین انضباطی و مالی آموزشگاه را می‌پذیرم.</li>';
+        }
+
+        // ==========================================
+        // 🧮 موتور عظیم معاوضه و حسابداری (Trade-in Engine)
+        // ==========================================
+        function calculateInvoice() {
+            let durVal = document.getElementById('newDuration').value;
+            let dur = durVal === 'konkur' ? (daysToKonkur / 30) : parseInt(durVal);
+
+            if (state.pansion === 'no_change' && state.consult === 'no_change') {
+                document.getElementById('invoiceArea').style.display = 'none'; document.getElementById('rulesBox').style.display = 'none'; document.getElementById('boxFile').style.display = 'none'; document.getElementById('btnSubmit').style.display = 'none'; return;
+            }
+            
+            document.getElementById('invoiceArea').style.display = 'block'; document.getElementById('rulesBox').style.display = 'block'; document.getElementById('btnSubmit').style.display = 'block';
+            updateRules();
+
+            let refundAmount = 0;
+            let newPanCharge = 0; let newConCharge = 0;
+            
+            let oldPan = dbData.userSubs.find(s => s.service_category === 'pansion');
+            let oldCon = dbData.userSubs.find(s => s.service_category === 'consult');
+
+            // 🔄 1. محاسبه بازخرید پانسیون قبلی (اگر تغییر کرده باشد)
+            if (state.pansion !== 'no_change' && oldPan) {
+                let remainDays = Math.max(0, Math.ceil((new Date(oldPan.end_date) - new Date()) / (1000 * 3600 * 24)));
+                let oldSrv = dbData.services.find(s => s.category === 'pansion' && s.type === oldPan.service_type);
+                if (oldSrv && remainDays > 0) {
+                    let monthlyVal = parseInt(oldSrv.base_price);
+                    
+                    let newSrv = dbData.services.find(s => s.id === state.pansion);
+                    let newPrice = newSrv ? parseInt(newSrv.base_price) : 0;
+                    
+                    // تشخیص تنزیل یا لغو
+                    let isDowngrade = newPrice < monthlyVal || state.pansion === 'none';
+                    
+                    let refund = (remainDays / 30) * monthlyVal;
+                    if (isDowngrade) refund *= 0.8; // جریمه 20 درصدی
+                    refundAmount += refund;
+                }
+            }
+
+            // 🔄 2. محاسبه بازخرید مشاوره قبلی (اگر تغییر کرده باشد)
+            if (state.consult !== 'no_change' && oldCon) {
+                let remainDays = Math.max(0, Math.ceil((new Date(oldCon.end_date) - new Date()) / (1000 * 3600 * 24)));
+                let oldSrv = dbData.services.find(s => s.category === 'consult' && s.type === oldCon.service_type);
+                if (oldSrv && remainDays > 0) {
+                    let monthlyVal = parseInt(oldSrv.base_price);
+                    // اگر قبلا پانسیون داشته، مشاوره‌اش شامل طرح الماس بوده، پس همون 40 درصد پولی که داده رو پس میدیم!
+                    if (oldPan) monthlyVal *= 0.4; 
+
+                    let newSrv = dbData.services.find(s => s.id === state.consult);
+                    let newPrice = newSrv ? parseInt(newSrv.base_price) : 0;
+                    let isDowngrade = newPrice < parseInt(oldSrv.base_price) || state.consult === 'none';
+                    
+                    let refund = (remainDays / 30) * monthlyVal;
+                    if (isDowngrade) refund *= 0.8;
+                    refundAmount += refund;
+                }
+            }
+            
+            refundAmount = Math.floor(refundAmount / 10000) * 10000;
+
+            // 🛒 3. محاسبه هزینه‌های خرید جدید
+            if (state.pansion !== 'no_change' && state.pansion !== 'none') {
+                let newPanSrv = dbData.services.find(s => s.id === state.pansion);
+                if (newPanSrv) newPanCharge = parseInt(newPanSrv.base_price) * dur;
+            }
+            if (state.consult !== 'no_change' && state.consult !== 'none') {
+                let newConSrv = dbData.services.find(s => s.id === state.consult);
+                if (newConSrv) newConCharge = parseInt(newConSrv.base_price) * dur;
+            }
+
+            let subTotal = newPanCharge + newConCharge;
+            let msgEl = document.getElementById('promoMsg');
+            
+            // 💎 4. اعمال طرح الماس روی فاکتور جدید
+            let comboDisc = 0;
+            // آیا دانش‌آموز در دوره جدید پانسیون خواهد داشت؟ (یا حفظ کرده یا خریده)
+            let willHavePansion = (state.pansion === 'no_change' && oldPan) || (state.pansion !== 'no_change' && state.pansion !== 'none');
+            
+            // اگر پانسیون داره و "همین الان" داره مشاوره جدید می‌خره
+            if (willHavePansion && newConCharge > 0) {
+                comboDisc = newConCharge * 0.60;
+                subTotal -= comboDisc;
+                msgEl.innerHTML = `💎 طرح الماس فعال است: ۶۰٪ تخفیف روی مشاوره اعمال شد.`;
+                msgEl.style.color = "var(--primary)";
+                document.getElementById('promoCode').disabled = true; state.promoRate = 0;
+            } else {
+                document.getElementById('promoCode').disabled = false;
+                if (msgEl.innerText.includes('الماس')) msgEl.innerText = '';
+            }
+
+            // 🎟️ 5. اعمال کد تخفیف
+            let promoDisc = 0;
+            if (state.promoRate > 0 && comboDisc === 0 && newConCharge > 0) {
+                promoDisc = newConCharge * state.promoRate;
+                subTotal -= promoDisc;
+                msgEl.innerHTML = `✅ کد تخفیف با موفقیت اعمال شد.`;
+            }
+
+            // 💳 6. کنترل اقساط و تخفیف زمانی (بر اساس مابه‌التفاوت)
+            const switchCont = document.getElementById('paySwitchContainer');
+            if (dur === 1 || subTotal < 3000000) { 
+                switchCont.style.display = 'none'; state.paymentMethod = 'cash'; 
+                document.getElementById('btnPayCash').classList.add('active');
+                document.getElementById('btnPayInst').classList.remove('active');
+            } else { switchCont.style.display = 'flex'; } 
+
+            let timeDiscRate = dur === 3 ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (dur === 10 ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
+            let timeDisc = subTotal * timeDiscRate; 
+            subTotal -= timeDisc;
+
+            // 🔄 7. کسر بازخرید (Trade-in) از فاکتور جدید
+            let transferredToWallet = 0;
+            if (refundAmount > 0) {
+                if (refundAmount > subTotal) {
+                    transferredToWallet = refundAmount - subTotal; // بستانکار شد
+                    subTotal = 0;
+                } else {
+                    subTotal -= refundAmount;
+                }
+            }
+
+            // 🎁 8. کسر از کیف پول موجود
+            financeData.newWalletBalance = (studentData.wallet_balance || 0) + transferredToWallet;
+            let walletUsed = 0;
+            if (subTotal > 0 && financeData.newWalletBalance > 0) {
+                walletUsed = Math.min(financeData.newWalletBalance, subTotal);
+                subTotal -= walletUsed;
+                financeData.newWalletBalance -= walletUsed;
+            }
+
+            financeData.tradeInValue = refundAmount;
+            financeData.newCharge = newPanCharge + newConCharge;
+            financeData.discount = comboDisc + promoDisc + timeDisc;
+            financeData.walletUsed = walletUsed;
+            financeData.final = subTotal;
+            financeData.installments = [];
+
+            // 📊 نمایش مقادیر در فاکتور
+            document.getElementById('row_tradein').style.display = refundAmount > 0 ? 'flex' : 'none'; document.getElementById('inv_tradein').innerText = '+ ' + formatMoney(refundAmount) + ' تومان';
+            document.getElementById('row_pan_new').style.display = newPanCharge > 0 ? 'flex' : 'none'; document.getElementById('inv_pan_new').innerText = formatMoney(newPanCharge) + ' تومان';
+            document.getElementById('row_con_new').style.display = newConCharge > 0 ? 'flex' : 'none'; document.getElementById('inv_con_new').innerText = formatMoney(newConCharge) + ' تومان';
+            document.getElementById('row_combo_disc').style.display = comboDisc > 0 ? 'flex' : 'none'; document.getElementById('inv_combo_disc').innerText = '- ' + formatMoney(comboDisc) + ' تومان';
+            document.getElementById('row_promo_disc').style.display = promoDisc > 0 ? 'flex' : 'none'; document.getElementById('inv_promo_disc').innerText = '- ' + formatMoney(promoDisc) + ' تومان';
+            document.getElementById('row_time_disc').style.display = timeDisc > 0 ? 'flex' : 'none'; document.getElementById('inv_time_disc').innerText = '- ' + formatMoney(timeDisc) + ' تومان';
+            document.getElementById('row_wallet_used').style.display = walletUsed > 0 ? 'flex' : 'none'; document.getElementById('inv_wallet_used').innerText = '- ' + formatMoney(walletUsed) + ' تومان';
+            
+            const instBox = document.getElementById('installmentDetails');
+            const fileBox = document.getElementById('boxFile');
+            
+            if (financeData.final === 0) {
+                document.getElementById('inv_total').innerText = "0 تومان";
+                document.getElementById('creditAlert').style.display = 'block';
+                if(transferredToWallet > 0) document.getElementById('creditAlert').innerText = `* شما بستانکار شدید! مبلغ ${formatMoney(transferredToWallet)} تومان به کیف پول شما واریز شد.`;
+                else document.getElementById('creditAlert').innerText = `* مبلغ قابل پرداخت ۰ تومان است.`;
+                
+                fileBox.style.display = 'none'; instBox.style.display = 'none'; switchCont.style.display = 'none';
+                financeData.upfront = 0;
+            } else {
+                document.getElementById('inv_total').innerText = formatMoney(financeData.final) + ' تومان';
+                document.getElementById('creditAlert').style.display = 'none';
+                fileBox.style.display = 'block';
+
+                if (state.paymentMethod === 'installments') {
+                    instBox.style.display = 'block';
+                    const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
+                    
+                    // اقساط جدید همیشه بر مبنای "همین امروز" (روز خرید فاکتور جدید) ثبت می‌شوند!
+                    let today = new Date();
+
+                    if (dur === 1) { 
+                        let upfrontRounded = roundDown100k(financeData.final * 0.50);
+                        let remaining = financeData.final - upfrontRounded;
+                        financeData.upfront = upfrontRounded;
+                        
+                        let d1 = new Date(); d1.setDate(today.getDate() + 10); 
+                        financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
+                        instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
+                    } 
+                    else if (dur === 3) {
+                        let upfrontRounded = roundDown100k(financeData.final * 0.50);
+                        let remaining = financeData.final - upfrontRounded;
+                        financeData.upfront = upfrontRounded;
+
+                        let d1 = new Date(); d1.setDate(today.getDate() + 45); 
+                        financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
+                        instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
+                    } 
+                    else { 
+                        let upfrontRounded = roundDown100k(Math.min(financeData.final * 0.40, 15000000));
+                        let remaining = financeData.final - upfrontRounded;
+                        financeData.upfront = upfrontRounded;
+
+                        let checkAmt = roundDown100k(remaining / 3);
+                        let lastCheckAmt = remaining - (checkAmt * 2);
+                        
+                        let d1 = new Date(); d1.setMonth(today.getMonth() + 2);
+                        let d2 = new Date(); d2.setMonth(today.getMonth() + 4);
+                        let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
+                        
+                        financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: checkAmt, installment_number: 1 });
+                        financeData.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: 2 });
+                        financeData.installments.push({ due_date: d3.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: 3 });
+                        
+                        instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>قسط اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>قسط دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>قسط سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
+                    }
+                } else { 
+                    instBox.style.display = 'none'; 
+                    financeData.upfront = financeData.final; 
+                }
+            }
+        }
+
+        // ==========================================
+        // 📤 ارسال نهایی به ادمین
+        // ==========================================
+        let receiptBase64 = null; let receiptMimeType = null;
+        function handleReceiptSelect(input) {
+            if (input.files && input.files[0]) {
+                if(input.files[0].size > 5 * 1024 * 1024) { alert("حجم عکس نباید بیشتر از ۵ مگابایت باشد."); input.value = ''; return; }
+                document.getElementById('lblFileName').innerText = `✅ فیش ضمیمه شد: ${input.files[0].name}`;
+                document.getElementById('boxFile').classList.add('has-file');
+                receiptMimeType = input.files[0].type;
+                const reader = new FileReader(); reader.onload = function(e) { receiptBase64 = e.target.result.split(',')[1]; }; reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function submitFinalStep() {
+            if(!document.getElementById('regRules').checked) return alert("❌ لطفاً ابتدا تعهدنامه را تایید کنید.");
+            if(financeData.final > 0 && !receiptBase64) return alert("❌ آپلود تصویر فیش واریزی مابه‌التفاوت الزامی است.");
+            
+            const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = "در حال صدور فاکتور... ⏳";
+
+            let durVal = document.getElementById('newDuration').value;
+            let durStr = durVal === 'konkur' ? 'تا کنکور' : durVal + ' ماهه';
+
+            let invoiceText = `⚠️ عملیات تعویض (Trade-in): لطفاً پس از تایید این فاکتور، قراردادهای قدیمی که لغو شده‌اند را در سیستم ابطال (swapped) کنید.\n\n`;
+            
+            if (state.pansion !== 'no_change') {
+                invoiceText += `- پانسیون: ${state.pansion === 'none' ? 'لغو کامل' : 'تغییر به '+state.panType+' ('+durStr+')'}\n`;
+            } else { invoiceText += `- پانسیون: بدون تغییر (حفظ قرارداد فعلی)\n`; }
+
+            if (state.consult !== 'no_change') {
+                invoiceText += `- مشاوره: ${state.consult === 'none' ? 'لغو کامل' : 'تغییر به '+state.conType+' ('+durStr+')'}\n`;
+            } else { invoiceText += `- مشاوره: بدون تغییر (حفظ قرارداد فعلی)\n`; }
+            
+            invoiceText += `\nارزش بازخرید طرح‌های لغوشده: ${formatMoney(financeData.tradeInValue)} تومان\n`;
+            invoiceText += `مبلغ نهایی پرداختی (مابه‌التفاوت): ${formatMoney(financeData.final)} تومان\n`;
+            if(state.paymentMethod === 'installments' && financeData.installments.length > 0) invoiceText += `زمان‌بندی اقساط جدید:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
+
+            const payload = {
+                action: 'web_auth', sub_action: 'store_purchase', 
+                national_id: userId,
+                receipt_base64: receiptBase64, mime_type: receiptMimeType,
+                invoice_data: { invoice_text: invoiceText }
+            };
+
+            try {
+                // ارسال به ربات بله
+                fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+
+                let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+
+                // ثبت مستقیم در لیست فاکتورهای ادمین (بدون Pending کردن اکانت)
+                const invPayload = {
+                    student_nid: userId, student_name: studentData.full_name,
+                    amount: financeData.final, status: 'pending',
+                    receipt_base64: receiptBase64, mime_type: receiptMimeType,
+                    description: invoiceText
+                };
+                
+                const invRes = await fetch(`${cleanUrl}/rest/v1/invoices`, {
+                    method: 'POST',
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+                    body: JSON.stringify(invPayload)
+                });
+                
+                const invData = await invRes.json();
+                
+                // ثبت اقساط جدید در صورت وجود
+                if (financeData.installments.length > 0 && invData && invData.length > 0) {
+                    const instPayload = financeData.installments.map(inst => ({
+                        student_nid: userId, student_name: studentData.full_name,
+                        invoice_id: invData[0].id, amount: inst.amount, due_date: inst.due_date,
+                        installment_number: inst.installment_number, status: 'pending_upload'
+                    }));
+                    await fetch(`${cleanUrl}/rest/v1/installments`, { method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify(instPayload) });
+                }
+
+                // آپدیت موجودی کیف پول کاربر
+                await fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, {
+                    method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ wallet_balance: financeData.newWalletBalance })
+                });
+
+                alert("🎉 فاکتور جایگزینی با موفقیت صادر شد و در انتظار تایید مدیریت است.");
+                window.location.href = 'profile.html';
+
+            } catch(err) { 
+                alert("خطا در ثبت اطلاعات در دیتابیس."); 
+                btn.disabled = false; btn.innerText = "تلاش مجدد"; 
+            }
+        }
+    </script>
+</body>
+</html>
