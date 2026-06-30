@@ -139,7 +139,8 @@
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
                 
                 // 🌟 اصلاح بزرگ: جستجو بر اساس national_id یا chat_id (تا هم بچه‌های سایت و هم ربات رو بشناسه)
-                const fetchUrl = `${cleanUrl}/rest/v1/students?select=grade,major&or=(national_id.eq.${userId},chat_id.eq.${userId})`;
+               const fetchUrl = `${cleanUrl}/rest/v1/students?select=grade,major&national_id.eq.${userId}`;
+
                 
                 const response = await fetch(fetchUrl, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
                 const data = await response.json();
