@@ -223,7 +223,7 @@
         }
 
         // ==========================================
-        // 🔑 سیستم فراموشی رمز عبور (ارتباط با بک‌اند)
+        // 🔑 سیستم فراموشی رمز عبور (ارتباط مستقیم با سوپابیس)
         // ==========================================
         let forgotNidGlobal = "";
 
@@ -241,7 +241,7 @@
             box.innerText = msg; box.style.display = 'block';
         }
 
-        // مرحله ۱: دریافت سوال امنیتی
+        // مرحله ۱: دریافت سوال امنیتی (مستقیم از دیتابیس)
         async function getSecurityQuestion() {
             const nid = document.getElementById('forgotNidInput').value.trim();
             if(!nid) return showForgotAlert(1, "کد ملی الزامی است.");
@@ -251,16 +251,19 @@
             showForgotAlert(1, '');
 
             try {
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST', body: JSON.stringify({ action: 'web_auth', sub_action: 'get_security_question', national_id: nid })
-                });
-                const result = await response.json();
-                
-                if(!result.success) throw new Error(result.error);
+                // جستجوی مستقیم در جدول دانش‌آموزان
+                const { data: users, error } = await supabaseClient
+                    .from('students')
+                    .select('security_question')
+                    .eq('national_id', nid);
+
+                if (error) throw new Error("خطا در ارتباط با دیتابیس.");
+                if (!users || users.length === 0) throw new Error("این کد ملی در سیستم ثبت نشده است.");
+                if (!users[0].security_question) throw new Error("سوال امنیتی برای شما ثبت نشده است. با مدیریت تماس بگیرید.");
 
                 forgotNidGlobal = nid;
-                document.getElementById('lblSecurityQuestion').innerText = result.question;
-                openModal('forgotModal2'); // رفتن به مدال بعدی
+                document.getElementById('lblSecurityQuestion').innerText = users[0].security_question;
+                openModal('forgotModal2'); // رفتن به مدال دوم
 
             } catch(err) {
                 showForgotAlert(1, err.message, 'error');
@@ -268,28 +271,37 @@
             btn.disabled = false; btn.innerText = "دریافت سوال امنیتی";
         }
 
-        // مرحله ۲: ثبت پاسخ و تغییر رمز
+        // مرحله ۲: بررسی پاسخ و تغییر رمز (مستقیم در دیتابیس)
         async function resetPassword() {
             const answer = document.getElementById('forgotAnswerInput').value.trim();
             const newPass = document.getElementById('forgotNewPassInput').value.trim();
             
             if(!answer || !newPass) return showForgotAlert(2, "پاسخ و رمز جدید را وارد کنید.");
+            if(newPass.length < 4) return showForgotAlert(2, "رمز عبور جدید باید حداقل ۴ کاراکتر باشد.");
             
             const btn = document.getElementById('btnForgotSubmit');
             btn.disabled = true; btn.innerText = "در حال بررسی... ⏳";
             showForgotAlert(2, '');
 
             try {
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST', 
-                    body: JSON.stringify({ 
-                        action: 'web_auth', sub_action: 'reset_password', 
-                        national_id: forgotNidGlobal, security_answer: answer, new_password: newPass 
-                    })
-                });
-                const result = await response.json();
+                // ۱. گرفتن جواب امنیتی ثبت شده از دیتابیس
+                const { data: users, error: fetchErr } = await supabaseClient
+                    .from('students')
+                    .select('security_answer')
+                    .eq('national_id', forgotNidGlobal);
+
+                if (fetchErr || !users || users.length === 0) throw new Error("حساب کاربری یافت نشد.");
                 
-                if(!result.success) throw new Error(result.error);
+                // ۲. مقایسه جواب کاربر با جواب دیتابیس
+                if (users[0].security_answer !== answer) throw new Error("پاسخ به سوال امنیتی اشتباه است!");
+
+                // ۳. آپدیت رمز عبور در دیتابیس
+                const { error: updateErr } = await supabaseClient
+                    .from('students')
+                    .update({ password: newPass })
+                    .eq('national_id', forgotNidGlobal);
+
+                if (updateErr) throw new Error("خطا در ذخیره رمز عبور جدید.");
 
                 showForgotAlert(2, "✅ رمز عبور با موفقیت تغییر کرد. در حال انتقال...", 'success');
                 setTimeout(() => { 
