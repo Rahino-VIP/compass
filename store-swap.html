@@ -138,15 +138,23 @@
         <div class="section-title">🧠 تغییرات مشاوره تحصیلی</div>
         <div class="selection-grid" id="consultGrid"></div>
 
-        <div class="duration-box" id="durationBox">
-            <label>⏱️ مدت زمان طرح‌های جدید (از امروز):</label>
-            <select class="duration-select" id="newDuration" onchange="calculateInvoice()">
+        <div class="duration-box" id="panDurationBox">
+            <label>⏱️ مدت زمان پانسیون جدید (از امروز):</label>
+            <select class="duration-select" id="newPanDuration" onchange="calculateInvoice()">
                 <option value="1">۱ ماهه</option>
                 <option value="3">۳ ماهه (تخفیف ویژه)</option>
                 <option value="konkur">تا روز کنکور (روزشمار دقیق)</option>
             </select>
         </div>
 
+        <div class="duration-box" id="conDurationBox">
+            <label>⏱️ مدت زمان مشاوره جدید (از امروز):</label>
+            <select class="duration-select" id="newConDuration" onchange="calculateInvoice()">
+                <option value="1">۱ ماهه</option>
+                <option value="3">۳ ماهه (تخفیف ویژه)</option>
+                <option value="konkur">تا روز کنکور (روزشمار دقیق)</option>
+            </select>
+        </div>
         <div class="invoice-box" id="invoiceArea">
             <h3 style="color: var(--primary); font-size: 16px; margin-bottom: 20px; text-align: center;">🧾 فاکتور الحاقی (مابه‌التفاوت)</h3>
             
@@ -368,16 +376,18 @@
             document.getElementById('promoMsg').innerText = '';
             state.promoRate = 0;
             
-            // نمایش باکس زمان فقط اگر حداقل یکی از انتخاب‌ها، خرید طرح جدید باشه
-            if((state.pansion !== 'no_change' && state.pansion !== 'none') || (state.consult !== 'no_change' && state.consult !== 'none')) {
-                document.getElementById('durationBox').style.display = 'block';
-            } else {
-                document.getElementById('durationBox').style.display = 'none';
+            // نمایش مستقل باکس زمان پانسیون
+            if (category === 'pansion') {
+                document.getElementById('panDurationBox').style.display = (id !== 'no_change' && id !== 'none') ? 'block' : 'none';
+            }
+            // نمایش مستقل باکس زمان مشاوره
+            if (category === 'consult') {
+                document.getElementById('conDurationBox').style.display = (id !== 'no_change' && id !== 'none') ? 'block' : 'none';
             }
 
             renderCards(); calculateInvoice();
         }
-
+        
         function setPayMethod(method) {
             state.paymentMethod = method;
             document.getElementById('btnPayCash').classList.toggle('active', method === 'cash');
@@ -427,8 +437,10 @@
         // 🧮 موتور عظیم معاوضه و حسابداری (Trade-in Engine)
         // ==========================================
         function calculateInvoice() {
-            let durVal = document.getElementById('newDuration').value;
-            let dur = durVal === 'konkur' ? (daysToKonkur / 30) : parseInt(durVal);
+            let pDurVal = document.getElementById('newPanDuration').value;
+            let cDurVal = document.getElementById('newConDuration').value;
+            let panDur = pDurVal === 'konkur' ? (daysToKonkur / 30) : parseInt(pDurVal);
+            let conDur = cDurVal === 'konkur' ? (daysToKonkur / 30) : parseInt(cDurVal);
 
             if (state.pansion === 'no_change' && state.consult === 'no_change') {
                 document.getElementById('invoiceArea').style.display = 'none'; document.getElementById('rulesBox').style.display = 'none'; document.getElementById('boxFile').style.display = 'none'; document.getElementById('btnSubmit').style.display = 'none'; return;
@@ -439,98 +451,121 @@
 
             let refundAmount = 0;
             let newPanCharge = 0; let newConCharge = 0;
+            let basePanPrice = 0; let baseConPrice = 0;
             
             let oldPan = dbData.userSubs.find(s => s.service_category === 'pansion');
             let oldCon = dbData.userSubs.find(s => s.service_category === 'consult');
 
-            // 🔄 1. محاسبه بازخرید پانسیون قبلی (اگر تغییر کرده باشد)
+            // 🔄 1. محاسبه بازخرید پانسیون
             if (state.pansion !== 'no_change' && oldPan) {
                 let remainDays = Math.max(0, Math.ceil((new Date(oldPan.end_date) - new Date()) / (1000 * 3600 * 24)));
                 let oldSrv = dbData.services.find(s => s.category === 'pansion' && s.type === oldPan.service_type);
                 if (oldSrv && remainDays > 0) {
                     let monthlyVal = parseInt(oldSrv.base_price);
-                    
                     let newSrv = dbData.services.find(s => s.id === state.pansion);
-                    let newPrice = newSrv ? parseInt(newSrv.base_price) : 0;
-                    
-                    // تشخیص تنزیل یا لغو
-                    let isDowngrade = newPrice < monthlyVal || state.pansion === 'none';
-                    
-                    let refund = (remainDays / 30) * monthlyVal;
-                    if (isDowngrade) refund *= 0.8; // جریمه 20 درصدی
-                    refundAmount += refund;
-                }
-            }
-
-            // 🔄 2. محاسبه بازخرید مشاوره قبلی (اگر تغییر کرده باشد)
-            if (state.consult !== 'no_change' && oldCon) {
-                let remainDays = Math.max(0, Math.ceil((new Date(oldCon.end_date) - new Date()) / (1000 * 3600 * 24)));
-                let oldSrv = dbData.services.find(s => s.category === 'consult' && s.type === oldCon.service_type);
-                if (oldSrv && remainDays > 0) {
-                    let monthlyVal = parseInt(oldSrv.base_price);
-                    // اگر قبلا پانسیون داشته، مشاوره‌اش شامل طرح الماس بوده، پس همون 40 درصد پولی که داده رو پس میدیم!
-                    if (oldPan) monthlyVal *= 0.4; 
-
-                    let newSrv = dbData.services.find(s => s.id === state.consult);
-                    let newPrice = newSrv ? parseInt(newSrv.base_price) : 0;
-                    let isDowngrade = newPrice < parseInt(oldSrv.base_price) || state.consult === 'none';
+                    let isDowngrade = (newSrv ? parseInt(newSrv.base_price) : 0) < monthlyVal || state.pansion === 'none';
                     
                     let refund = (remainDays / 30) * monthlyVal;
                     if (isDowngrade) refund *= 0.8;
                     refundAmount += refund;
                 }
             }
-            
+
+            // 🔄 2. محاسبه بازخرید مشاوره
+            if (state.consult !== 'no_change' && oldCon) {
+                let remainDays = Math.max(0, Math.ceil((new Date(oldCon.end_date) - new Date()) / (1000 * 3600 * 24)));
+                let oldSrv = dbData.services.find(s => s.category === 'consult' && s.type === oldCon.service_type);
+                if (oldSrv && remainDays > 0) {
+                    let monthlyVal = parseInt(oldSrv.base_price);
+                    if (oldPan) monthlyVal *= 0.4; 
+
+                    let newSrv = dbData.services.find(s => s.id === state.consult);
+                    let isDowngrade = (newSrv ? parseInt(newSrv.base_price) : 0) < parseInt(oldSrv.base_price) || state.consult === 'none';
+                    
+                    let refund = (remainDays / 30) * monthlyVal;
+                    if (isDowngrade) refund *= 0.8;
+                    refundAmount += refund;
+                }
+            }
             refundAmount = Math.floor(refundAmount / 10000) * 10000;
 
             // 🛒 3. محاسبه هزینه‌های خرید جدید
             if (state.pansion !== 'no_change' && state.pansion !== 'none') {
                 let newPanSrv = dbData.services.find(s => s.id === state.pansion);
-                if (newPanSrv) newPanCharge = parseInt(newPanSrv.base_price) * dur;
+                if (newPanSrv) { basePanPrice = parseInt(newPanSrv.base_price); newPanCharge = basePanPrice * panDur; }
             }
             if (state.consult !== 'no_change' && state.consult !== 'none') {
                 let newConSrv = dbData.services.find(s => s.id === state.consult);
-                if (newConSrv) newConCharge = parseInt(newConSrv.base_price) * dur;
+                if (newConSrv) { baseConPrice = parseInt(newConSrv.base_price); newConCharge = baseConPrice * conDur; }
             }
 
             let subTotal = newPanCharge + newConCharge;
             let msgEl = document.getElementById('promoMsg');
             
-            // 💎 4. اعمال طرح الماس روی فاکتور جدید
+            // 💎 4. محاسبه دقیق ماه‌های هم‌پوشانی برای طرح الماس
             let comboDisc = 0;
-            // آیا دانش‌آموز در دوره جدید پانسیون خواهد داشت؟ (یا حفظ کرده یا خریده)
-            let willHavePansion = (state.pansion === 'no_change' && oldPan) || (state.pansion !== 'no_change' && state.pansion !== 'none');
+            let panMonthsActive = 0;
             
-            // اگر پانسیون داره و "همین الان" داره مشاوره جدید می‌خره
-            if (willHavePansion && newConCharge > 0) {
-                comboDisc = newConCharge * 0.60;
+            if (state.pansion !== 'no_change' && state.pansion !== 'none') {
+                panMonthsActive = panDur; // پانسیون جدید خریده
+            } else if (state.pansion === 'no_change' && oldPan) {
+                // پانسیون قبلی رو دست نزده، ببینیم چقدر ازش مونده
+                panMonthsActive = Math.max(0, (new Date(oldPan.end_date) - new Date()) / (1000 * 3600 * 24 * 30));
+            }
+            
+            if (panMonthsActive > 0 && newConCharge > 0) {
+                let overlapMonths = Math.min(panMonthsActive, conDur);
+                let nonOverlapMonths = Math.max(0, conDur - overlapMonths);
+                
+                comboDisc = (baseConPrice * overlapMonths) * 0.60;
                 subTotal -= comboDisc;
-                msgEl.innerHTML = `💎 طرح الماس فعال است: ۶۰٪ تخفیف روی مشاوره اعمال شد.`;
+                
+                msgEl.innerHTML = `💎 طرح الماس فعال است: ۶۰٪ تخفیف روی ${overlapMonths.toFixed(1)} ماه مشترک.`;
+                if (nonOverlapMonths > 0) msgEl.innerHTML += `<br>🎟️ کد تخفیف را می‌توانید برای ${nonOverlapMonths.toFixed(1)} ماه باقیمانده وارد کنید.`;
                 msgEl.style.color = "var(--primary)";
-                document.getElementById('promoCode').disabled = true; state.promoRate = 0;
+                
+                if (nonOverlapMonths <= 0) {
+                    document.getElementById('promoCode').disabled = true; state.promoRate = 0;
+                } else {
+                    document.getElementById('promoCode').disabled = false;
+                }
             } else {
                 document.getElementById('promoCode').disabled = false;
                 if (msgEl.innerText.includes('الماس')) msgEl.innerText = '';
             }
 
-            // 🎟️ 5. اعمال کد تخفیف
+            // 🎟️ 5. اعمال کد تخفیف (فقط روی ماه‌های غیرمشترک)
             let promoDisc = 0;
-            if (state.promoRate > 0 && comboDisc === 0 && newConCharge > 0) {
-                promoDisc = newConCharge * state.promoRate;
-                subTotal -= promoDisc;
-                msgEl.innerHTML = `✅ کد تخفیف با موفقیت اعمال شد.`;
+            if (state.promoRate > 0 && newConCharge > 0) {
+                let panMonthsAct = (state.pansion !== 'no_change' && state.pansion !== 'none') ? panDur : ((state.pansion === 'no_change' && oldPan) ? Math.max(0, (new Date(oldPan.end_date) - new Date()) / (1000 * 3600 * 24 * 30)) : 0);
+                let overlapM = Math.min(panMonthsAct, conDur);
+                let nonOverlapM = Math.max(0, conDur - overlapM);
+
+                if (nonOverlapM > 0) {
+                    promoDisc = (baseConPrice * nonOverlapM) * state.promoRate;
+                    subTotal -= promoDisc;
+                    msgEl.innerHTML += `<br>✅ کد تخفیف با موفقیت روی ماه‌های آزاد اعمال شد.`;
+                }
             }
 
-            // 💳 6. کنترل اقساط و تخفیف زمانی (بر اساس مابه‌التفاوت)
+            // 💳 6. کنترل اقساط و تخفیف زمانی (مجزا)
             const switchCont = document.getElementById('paySwitchContainer');
-            if (dur === 1 || subTotal < 3000000) { 
+            let maxDur = Math.max(
+                (state.pansion !== 'no_change' && state.pansion !== 'none') ? panDur : 0, 
+                (state.consult !== 'no_change' && state.consult !== 'none') ? conDur : 0
+            );
+
+            if (maxDur <= 1 || subTotal < 3000000) { 
                 switchCont.style.display = 'none'; state.paymentMethod = 'cash'; 
-                document.getElementById('btnPayCash').classList.add('active');
-                document.getElementById('btnPayInst').classList.remove('active');
+                document.getElementById('btnPayCash').classList.add('active'); document.getElementById('btnPayInst').classList.remove('active');
             } else { switchCont.style.display = 'flex'; } 
 
-            let timeDiscRate = dur === 3 ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (dur === 10 ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
-            let timeDisc = subTotal * timeDiscRate; 
+            let panTimeRate = pDurVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (pDurVal === 'konkur' ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
+            let conTimeRate = cDurVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (cDurVal === 'konkur' ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
+            
+            // تخفیف زمانی مشاوره فقط روی پولی که ازش مونده (بعد از الماس و کد) اعمال میشه
+            let conNetForTimeDisc = newConCharge - comboDisc - promoDisc;
+            let timeDisc = (newPanCharge * panTimeRate) + (Math.max(0, conNetForTimeDisc) * conTimeRate); 
             subTotal -= timeDisc;
 
             // 🔄 7. کسر بازخرید (Trade-in) از فاکتور جدید
@@ -558,10 +593,10 @@
             financeData.discount = comboDisc + promoDisc + timeDisc;
             financeData.walletUsed = walletUsed;
             financeData.final = subTotal;
-            financeData.installments = [];
             financeData.walletNetChange = transferredToWallet - walletUsed;
+            financeData.installments = [];
 
-            // 📊 نمایش مقادیر در فاکتور
+            // 📊 نمایش در فاکتور
             document.getElementById('row_tradein').style.display = refundAmount > 0 ? 'flex' : 'none'; document.getElementById('inv_tradein').innerText = '+ ' + formatMoney(refundAmount) + ' تومان';
             document.getElementById('row_pan_new').style.display = newPanCharge > 0 ? 'flex' : 'none'; document.getElementById('inv_pan_new').innerText = formatMoney(newPanCharge) + ' تومان';
             document.getElementById('row_con_new').style.display = newConCharge > 0 ? 'flex' : 'none'; document.getElementById('inv_con_new').innerText = formatMoney(newConCharge) + ' تومان';
@@ -589,24 +624,20 @@
                 if (state.paymentMethod === 'installments') {
                     instBox.style.display = 'block';
                     const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
-                    
-                    // اقساط جدید همیشه بر مبنای "همین امروز" (روز خرید فاکتور جدید) ثبت می‌شوند!
                     let today = new Date();
 
-                    if (dur === 1) { 
+                    if (maxDur <= 1) { 
                         let upfrontRounded = roundDown100k(financeData.final * 0.50);
                         let remaining = financeData.final - upfrontRounded;
                         financeData.upfront = upfrontRounded;
-                        
                         let d1 = new Date(); d1.setDate(today.getDate() + 10); 
                         financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
                         instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
                     } 
-                    else if (dur === 3) {
+                    else if (maxDur <= 3) {
                         let upfrontRounded = roundDown100k(financeData.final * 0.50);
                         let remaining = financeData.final - upfrontRounded;
                         financeData.upfront = upfrontRounded;
-
                         let d1 = new Date(); d1.setDate(today.getDate() + 45); 
                         financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
                         instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
@@ -615,10 +646,8 @@
                         let upfrontRounded = roundDown100k(Math.min(financeData.final * 0.40, 15000000));
                         let remaining = financeData.final - upfrontRounded;
                         financeData.upfront = upfrontRounded;
-
                         let checkAmt = roundDown100k(remaining / 3);
                         let lastCheckAmt = remaining - (checkAmt * 2);
-                        
                         let d1 = new Date(); d1.setMonth(today.getMonth() + 2);
                         let d2 = new Date(); d2.setMonth(today.getMonth() + 4);
                         let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
@@ -656,17 +685,20 @@
             
             const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = "در حال صدور فاکتور... ⏳";
 
-            let durVal = document.getElementById('newDuration').value;
-            let durStr = durVal === 'konkur' ? 'تا کنکور' : durVal + ' ماهه';
+            // خطوط مربوط به durVal رو پیدا کن و با این عوض کن:
+            let pDurVal = document.getElementById('newPanDuration').value;
+            let cDurVal = document.getElementById('newConDuration').value;
+            let pDurStr = pDurVal === 'konkur' ? 'تا کنکور' : pDurVal + ' ماهه';
+            let cDurStr = cDurVal === 'konkur' ? 'تا کنکور' : cDurVal + ' ماهه';
 
             let invoiceText = `⚠️ عملیات تعویض (Trade-in): لطفاً پس از تایید این فاکتور، قراردادهای قدیمی که لغو شده‌اند را در سیستم ابطال (swapped) کنید.\n\n`;
             
             if (state.pansion !== 'no_change') {
-                invoiceText += `- پانسیون: ${state.pansion === 'none' ? 'لغو کامل' : 'تغییر به '+state.panType+' ('+durStr+')'}\n`;
+                invoiceText += `- پانسیون: ${state.pansion === 'none' ? 'لغو کامل' : 'تغییر به '+state.panType+' ('+pDurStr+')'}\n`;
             } else { invoiceText += `- پانسیون: بدون تغییر (حفظ قرارداد فعلی)\n`; }
 
             if (state.consult !== 'no_change') {
-                invoiceText += `- مشاوره: ${state.consult === 'none' ? 'لغو کامل' : 'تغییر به '+state.conType+' ('+durStr+')'}\n`;
+                invoiceText += `- مشاوره: ${state.consult === 'none' ? 'لغو کامل' : 'تغییر به '+state.conType+' ('+cDurStr+')'}\n`;
             } else { invoiceText += `- مشاوره: بدون تغییر (حفظ قرارداد فعلی)\n`; }
             
             invoiceText += `\nارزش بازخرید طرح‌های لغوشده: ${formatMoney(financeData.tradeInValue)} تومان\n`;
