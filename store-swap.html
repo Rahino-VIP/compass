@@ -751,7 +751,30 @@
                     invPayload.receipt_base64 = receiptBase64;
                     invPayload.mime_type = receiptMimeType;
                 }
+                // 💡 ساخت برچسب دیتای سیستمی
+                let sysData = {
+                    panTier: state.pansion === 'no_change' || state.pansion === 'none' ? 'none' : state.panType,
+                    panDur: pDurVal,
+                    conTier: state.consult === 'no_change' || state.consult === 'none' ? 'none' : state.conType,
+                    conDur: cDurVal,
+                    isTradeIn: true
+                };
+            
+                invoiceText += `\n[WALLET_CHANGE: ${financeData.walletNetChange > 0 ? '+' : ''}${financeData.walletNetChange}]`;
+                invoiceText += `\n[SYSTEM_DATA: ${JSON.stringify(sysData)}]`;
 
+            // 💡 فقط ستون‌های اصلی دیتابیس ارسال می‌شوند (بدون ستون‌های اضافی)
+                let invPayload = {
+                    student_nid: userId, student_name: studentData.full_name,
+                    final_amount: financeData.final, paid_upfront: financeData.upfront || 0,
+                    status: 'pending', invoice_type: 'تعویض و ارتقا',
+                    invoice_details: invoiceText
+                };
+            
+                if (receiptBase64) {
+                    invPayload.receipt_base64 = receiptBase64;
+                    invPayload.mime_type = receiptMimeType;
+                }
                 const invRes = await fetch(`${cleanUrl}/rest/v1/invoices`, {
                     method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
                     body: JSON.stringify(invPayload)
