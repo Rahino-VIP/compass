@@ -731,41 +731,77 @@
             };
 
             try {
+                // ارسال پیامک و بله
                 fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
 
-                // 💡 فقط ستون‌های اصلی! هیچ ستون اضافه‌ای فرستاده نمیشه تا دیتابیس ارور نده
+                // 💡 اصلاح حیاتی: حذف student_name تا دیتابیس ارور ۴۰۰ نده!
                 let invPayload = {
-                    student_nid: userId, student_name: studentData.full_name,
-                    final_amount: financeData.final, paid_upfront: financeData.upfront || 0,
-                    status: 'pending', invoice_type: 'تعویض و ارتقا',
+                    student_nid: userId, 
+                    final_amount: financeData.final, 
+                    paid_upfront: financeData.upfront || 0,
+                    status: 'pending', 
+                    invoice_type: 'تعویض و ارتقا',
                     invoice_details: invoiceText
                 };
                 if (receiptBase64) { invPayload.receipt_base64 = receiptBase64; invPayload.mime_type = receiptMimeType; }
 
+                // ثبت فاکتور
                 const invRes = await fetch(`${cleanUrl}/rest/v1/invoices`, {
-                    method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+                    method: 'POST', 
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
                     body: JSON.stringify(invPayload)
                 });
+                
+                if (!invRes.ok) {
+                    let err = await invRes.text();
+                    alert("❌ خطای دیتابیس (Invoices):\n" + err); // این خط دقیقاً ارور دیتابیس رو بهت نشون میده!
+                    btn.disabled = false; btn.innerText = "تایید نهایی"; return;
+                }
+                
                 const invData = await invRes.json();
                 
+                // ثبت اقساط (اینجا هم student_name حذف شد)
                 if (financeData.installments.length > 0 && invData && invData.length > 0) {
                     const instPayload = financeData.installments.map(inst => ({
-                        student_nid: userId, student_name: studentData.full_name,
-                        invoice_id: invData[0].id, amount: inst.amount, due_date: inst.due_date,
-                        installment_number: inst.installment_number, status: 'pending_upload'
+                        student_nid: userId,
+                        invoice_id: invData[0].id, 
+                        amount: inst.amount, 
+                        due_date: inst.due_date,
+                        installment_number: inst.installment_number, 
+                        status: 'pending_upload'
                     }));
-                    await fetch(`${cleanUrl}/rest/v1/installments`, { method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify(instPayload) });
+                    
+                    let instRes = await fetch(`${cleanUrl}/rest/v1/installments`, { 
+                        method: 'POST', 
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify(instPayload) 
+                    });
+                    
+                    if (!instRes.ok) {
+                        let err = await instRes.text();
+                        alert("❌ خطای دیتابیس (Installments):\n" + err);
+                        btn.disabled = false; btn.innerText = "تایید نهایی"; return;
+                    }
                 }
 
+                // آپدیت وضعیت کاربر
                 let studentUpdatePayload = { status: 'pending', invoice_details: invoiceText };
                 if (receiptBase64) { studentUpdatePayload.receipt_base64 = receiptBase64; studentUpdatePayload.file_type = receiptMimeType; }
-                await fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify(studentUpdatePayload) });
+                
+                await fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, { 
+                    method: 'PATCH', 
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(studentUpdatePayload) 
+                });
 
                 alert("🎉 درخواست با موفقیت ثبت شد و در انتظار تایید مدیریت است.");
                 window.location.href = 'profile.html';
 
-            } catch(err) { alert("خطا در ارتباط با سرور."); btn.disabled = false; btn.innerText = "تایید نهایی و صدور قرارداد جایگزین 🚀"; }
+            } catch(err) { 
+                alert("خطای شبکه یا ارتباط با سرور."); 
+                btn.disabled = false; btn.innerText = "تایید نهایی و صدور قرارداد جایگزین 🚀"; 
+            }
         }
     </script>
 </body>
