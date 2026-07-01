@@ -567,7 +567,6 @@
 
             let invoiceText = `طرح انتخابی: ${state.pansion !== 'none' ? 'پانسیون '+state.pansion+' ('+pDurStr+')' : ''} ${state.consult !== 'none' ? 'مشاوره '+state.consult+' ('+cDurStr+')' : ''}\n`;
             // ... (بقیه تابع بدون تغییر است) ...
-            let invoiceText = `طرح انتخابی: ${state.pansion !== 'none' ? 'پانسیون '+state.pansion : ''} ${state.consult !== 'none' ? 'مشاوره '+state.consult : ''}\n`;
             invoiceText += `مبلغ نهایی فاکتور: ${document.getElementById('inv_total').innerText}\nروش پرداخت: ${state.paymentMethod === 'cash' ? 'نقدی' : 'اقساط'}\n`;
             if(state.paymentMethod === 'installments') invoiceText += `زمان‌بندی اقساط:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
             if(state.hasReferral) invoiceText += `(کسر ۱۰۰ هزار تومان هدیه معرفی در فاکتور لحاظ شد)\n`;
