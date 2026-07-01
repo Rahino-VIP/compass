@@ -129,7 +129,8 @@
 
         <div style="background: rgba(245, 158, 11, 0.1); color: var(--warning); padding: 15px; border-radius: 12px; font-size: 12px; margin-bottom: 25px; line-height: 1.8; font-weight: bold;">
             ⚠️ راهنمای معاوضه (Trade-in):<br>
-            سیستم بخش‌هایی از قرارداد که <b>«بدون تغییر»</b> بگذارید را دست نمی‌زند. ارزشِ بخش‌هایی که تغییر دهید (ارتقا/لغو) را محاسبه کرده و به کیف پول شما واریز می‌کند. سپس فاکتورِ طرح جدید صادر شده و از کیف پولتان کسر می‌شود.
+            سیستم بخش‌هایی که <b>«بدون تغییر»</b> بگذارید را دست نمی‌زند. <br>
+            <span style="color:var(--danger)">توجه:</span> در این بخش شما تنها <b>مابه‌التفاوت</b> طرح جدید را پرداخت می‌کنید. در صورتی که از قرارداد قبلی خود <b>اقساط پرداخت‌نشده‌ای</b> دارید، آن اقساط باطل نشده و به قوت خود باقی هستند.
         </div>
 
         <div class="section-title">🏠 تغییرات پانسیون مطالعاتی</div>
@@ -260,7 +261,7 @@
                     fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/services?is_active=eq.true`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/promo_codes?is_active=eq.true`, { headers }),
-                    fetch(`${cleanUrl}/rest/v1/subscriptions?student_nid=eq.${userId}&status=eq.active`, { headers }),
+                    fetch(`${cleanUrl}/rest/v1/subscriptions?student_nid=eq.${userId}&status=eq.active&select=id,service_category,service_type,start_date,end_date`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/system_settings?select=konkur_date`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/terms_and_rules`, { headers })
                 ]);
@@ -456,35 +457,48 @@
             let oldPan = dbData.userSubs.find(s => s.service_category === 'pansion');
             let oldCon = dbData.userSubs.find(s => s.service_category === 'consult');
 
-            // 🔄 1. محاسبه بازخرید پانسیون
+            // 🔄 1. محاسبه بازخرید پانسیون (بدون جریمه 20٪، فقط کسر تخفیف بلندمدت در صورت تنزیل)
             if (state.pansion !== 'no_change' && oldPan) {
                 let remainDays = Math.max(0, Math.ceil((new Date(oldPan.end_date) - new Date()) / (1000 * 3600 * 24)));
+                let consumedDays = Math.max(0, Math.ceil((new Date() - new Date(oldPan.start_date)) / (1000 * 3600 * 24)));
                 let oldSrv = dbData.services.find(s => s.category === 'pansion' && s.type === oldPan.service_type);
+                
                 if (oldSrv && remainDays > 0) {
                     let monthlyVal = parseInt(oldSrv.base_price);
                     let newSrv = dbData.services.find(s => s.id === state.pansion);
                     let isDowngrade = (newSrv ? parseInt(newSrv.base_price) : 0) < monthlyVal || state.pansion === 'none';
                     
                     let refund = (remainDays / 30) * monthlyVal;
-                    if (isDowngrade) refund *= 0.8;
-                    refundAmount += refund;
+                    
+                    // اگر تنزیل کرد و قراردادش از اول بلندمدت (بیشتر از 45 روز) بود، فقط تخفیف 10 درصدی روزهای مصرف شده رو پس می‌گیریم
+                    if (isDowngrade && (remainDays + consumedDays) > 45) {
+                        let discountToReturn = (consumedDays / 30) * monthlyVal * 0.10;
+                        refund -= discountToReturn;
+                    }
+                    refundAmount += Math.max(0, refund);
                 }
             }
 
             // 🔄 2. محاسبه بازخرید مشاوره
             if (state.consult !== 'no_change' && oldCon) {
                 let remainDays = Math.max(0, Math.ceil((new Date(oldCon.end_date) - new Date()) / (1000 * 3600 * 24)));
+                let consumedDays = Math.max(0, Math.ceil((new Date() - new Date(oldCon.start_date)) / (1000 * 3600 * 24)));
                 let oldSrv = dbData.services.find(s => s.category === 'consult' && s.type === oldCon.service_type);
+                
                 if (oldSrv && remainDays > 0) {
                     let monthlyVal = parseInt(oldSrv.base_price);
-                    if (oldPan) monthlyVal *= 0.4; 
+                    if (oldPan) monthlyVal *= 0.4; // ارزش واقعی که پرداخت کرده بوده (با تخفیف الماس)
 
                     let newSrv = dbData.services.find(s => s.id === state.consult);
                     let isDowngrade = (newSrv ? parseInt(newSrv.base_price) : 0) < parseInt(oldSrv.base_price) || state.consult === 'none';
                     
                     let refund = (remainDays / 30) * monthlyVal;
-                    if (isDowngrade) refund *= 0.8;
-                    refundAmount += refund;
+                    
+                    if (isDowngrade && (remainDays + consumedDays) > 45) {
+                        let discountToReturn = (consumedDays / 30) * monthlyVal * 0.10;
+                        refund -= discountToReturn;
+                    }
+                    refundAmount += Math.max(0, refund);
                 }
             }
             refundAmount = Math.floor(refundAmount / 10000) * 10000;
@@ -685,44 +699,40 @@
             
             const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = "در حال صدور فاکتور... ⏳";
 
-            // خطوط مربوط به durVal رو پیدا کن و با این عوض کن:
             let pDurVal = document.getElementById('newPanDuration').value;
             let cDurVal = document.getElementById('newConDuration').value;
             let pDurStr = pDurVal === 'konkur' ? 'تا کنکور' : pDurVal + ' ماهه';
             let cDurStr = cDurVal === 'konkur' ? 'تا کنکور' : cDurVal + ' ماهه';
 
-            let invoiceText = `⚠️ عملیات تعویض (Trade-in): لطفاً پس از تایید این فاکتور، قراردادهای قدیمی که لغو شده‌اند را در سیستم ابطال (swapped) کنید.\n\n`;
+            let invoiceText = `⚠️ عملیات تعویض (Trade-in): اقساط قبلی به قوت خود باقیست و این فاکتور تنها برای مابه‌التفاوت است. لطفاً قراردادهای قدیمی لغوشده را در سیستم ابطال (swapped) کنید.\n\n`;
             
             if (state.pansion !== 'no_change') {
                 invoiceText += `- پانسیون: ${state.pansion === 'none' ? 'لغو کامل' : 'تغییر به '+state.panType+' ('+pDurStr+')'}\n`;
-            } else { invoiceText += `- پانسیون: بدون تغییر (حفظ قرارداد فعلی)\n`; }
+            } else { invoiceText += `- پانسیون: بدون تغییر\n`; }
 
             if (state.consult !== 'no_change') {
                 invoiceText += `- مشاوره: ${state.consult === 'none' ? 'لغو کامل' : 'تغییر به '+state.conType+' ('+cDurStr+')'}\n`;
-            } else { invoiceText += `- مشاوره: بدون تغییر (حفظ قرارداد فعلی)\n`; }
+            } else { invoiceText += `- مشاوره: بدون تغییر\n`; }
             
-            invoiceText += `\nارزش بازخرید طرح‌های لغوشده: ${formatMoney(financeData.tradeInValue)} تومان\n`;
+            invoiceText += `\nارزش بازخرید روزهای باقیمانده: ${formatMoney(financeData.tradeInValue)} تومان\n`;
             invoiceText += `مبلغ نهایی پرداختی (مابه‌التفاوت): ${formatMoney(financeData.final)} تومان\n`;
             if(state.paymentMethod === 'installments' && financeData.installments.length > 0) invoiceText += `زمان‌بندی اقساط جدید:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
             
-            // برچسب امنیتی برای شارژ یا کسر از کیف پول توسط ادمین
             invoiceText += `\n[WALLET_CHANGE: ${financeData.walletNetChange > 0 ? '+' : ''}${financeData.walletNetChange}]`;
 
-            // 💡 اصلاح اول: ارسال رشته خالی به جای null برای جلوگیری از کرش کردن ربات بله
+            // ارسال به بله (تغییر sub_action برای اطمینان از دریافت ربات)
             const payload = {
-                action: 'web_auth', sub_action: 'store_purchase', 
+                action: 'web_auth', sub_action: 'register_step2', 
                 national_id: userId, 
-                receipt_base64: receiptBase64 || "", 
-                mime_type: receiptMimeType || "",
+                receipt_base64: receiptBase64 || "", mime_type: receiptMimeType || "",
                 invoice_data: { invoice_text: invoiceText }
             };
 
             try {
-                // ارسال به ربات بله
                 fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
 
-                // 💡 اصلاح دوم: مدیریت هوشمند عکس برای دیتابیس تا ادمین به هم نریزه
+                // ساخت پِی‌لود امن برای دیتابیس (بدون ارسال فیلد خالی)
                 let invPayload = {
                     student_nid: userId, student_name: studentData.full_name,
                     amount: financeData.final, status: 'pending',
@@ -733,14 +743,12 @@
                     invPayload.mime_type = receiptMimeType;
                 }
 
-                // ثبت در جدول Invoices
                 const invRes = await fetch(`${cleanUrl}/rest/v1/invoices`, {
                     method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
                     body: JSON.stringify(invPayload)
                 });
                 const invData = await invRes.json();
                 
-                // ثبت اقساط
                 if (financeData.installments.length > 0 && invData && invData.length > 0) {
                     const instPayload = financeData.installments.map(inst => ({
                         student_nid: userId, student_name: studentData.full_name,
@@ -750,7 +758,7 @@
                     await fetch(`${cleanUrl}/rest/v1/installments`, { method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify(instPayload) });
                 }
 
-                // 💡 اصلاح سوم: در جدول Students عکس قبلی رو پاک می‌کنیم تا عکس قدیمیش تو پنل ادمین نشون داده نشه
+                // آپدیت جدول Students (فقط فیلدهایی که دیتا دارن)
                 let studentUpdatePayload = { 
                     status: 'pending',
                     invoice_details: invoiceText
@@ -758,11 +766,8 @@
                 if (receiptBase64) {
                     studentUpdatePayload.receipt_base64 = receiptBase64;
                     studentUpdatePayload.file_type = receiptMimeType;
-                } else {
-                    studentUpdatePayload.receipt_base64 = "";
-                    studentUpdatePayload.file_type = "";
                 }
-
+                
                 await fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, {
                     method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify(studentUpdatePayload)
