@@ -57,6 +57,17 @@
         .btn-upgrade-main { background: var(--primary-light); color: white; width: 100%; padding: 14px; border-radius: 16px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: var(--shadow); transition: 0.2s; margin-bottom: 25px; }
         .btn-upgrade-main:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
+        /* 💳 استایل کارت بانکی حرفه‌ای */
+        .payment-card { background: linear-gradient(135deg, #0f172a, #1e3a8a); border-radius: 20px; padding: 25px; color: white; position: relative; overflow: hidden; box-shadow: 0 15px 30px rgba(30, 58, 138, 0.3); margin-bottom: 30px; }
+        .payment-card::after { content: '🏦'; position: absolute; left: -10px; top: -10px; font-size: 120px; opacity: 0.05; transform: rotate(-20deg); pointer-events: none; }
+        .pc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; opacity: 0.9; font-size: 13px; }
+        .pc-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; backdrop-filter: blur(5px); }
+        .pc-label { font-size: 11px; opacity: 0.8; margin-bottom: 3px; display: block; text-align: right; }
+        .pc-value { font-size: 18px; font-weight: 900; letter-spacing: 2px; direction: ltr; text-align: left; }
+        .pc-value.shaba { font-size: 14px; letter-spacing: 1px; }
+        .btn-copy-mini { background: var(--accent, #d97706); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-copy-mini:hover { filter: brightness(1.1); transform: scale(1.05); }
+
         /* ⏳ تایم‌لاین اقساط تعاملی */
         .installments-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: var(--shadow); }
         .inst-title { font-size: 15px; font-weight: 900; color: var(--text-main); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
@@ -134,17 +145,28 @@
             🔄 تعویض و ارتقای طرح (Trade-in)
         </button>
 
+        <div class="payment-card">
+                <div class="pc-header">
+                    <div>صاحب حساب: <b>ارشاد شفیعی فرد</b></div>
+                    <div>بانک سامان</div>
+                </div>
+                <div class="pc-row">
+                    <div>
+                        <span class="pc-label">شماره کارت:</span>
+                        <div class="pc-value" id="txtCard">6219861810380484</div>
+                    </div>
+                    <button class="btn-copy-mini" onclick="copyText('txtCard')">کپی</button>
+                </div>
+                <div class="pc-row" style="margin-bottom: 0;">
+                    <div>
+                        <span class="pc-label">شماره شبا:</span>
+                        <div class="pc-value shaba" id="txtSheba">IR200560611828006108618001</div>
+                    </div>
+                    <button class="btn-copy-mini" onclick="copyText('txtSheba')">کپی</button>
+                </div>
+            </div>
+
         <div class="installments-box" id="installmentsBox" style="display: none;">
-            <div class="payment-card">
-            <div class="pc-header"><div>صاحب حساب: <b>ارشاد شفیعی فرد</b></div><div>بانک سامان</div></div>
-            <div class="pc-row">
-                <div><span class="pc-label">شماره کارت:</span><div class="pc-value" id="txtCard">6219861810380484</div></div>
-                <button class="btn-copy-mini" onclick="copyText('txtCard')">کپی</button>
-            </div>
-            <div class="pc-row" style="margin-bottom: 0;">
-                <div><span class="pc-label">شماره شبا:</span><div class="pc-value shaba" id="txtSheba">IR200560611828006108618001</div></div>
-                <button class="btn-copy-mini" onclick="copyText('txtSheba')">کپی</button>
-            </div>
             </div>
             <div class="inst-title">💳 اقساط و فیش‌های پرداختی شما</div>
             <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 20px;">تصویر فیش واریزی هر قسط را در موعد مقرر از همین بخش آپلود کنید.</p>
@@ -235,7 +257,9 @@
         // 👇 این دو خط اضافه شود:
         let selectedReceiptBase64 = null; 
         let selectedReceiptMime = null;
-        
+        function copyText(id) { 
+            navigator.clipboard.writeText(document.getElementById(id).innerText).then(()=>alert("✅ کپی شد.")); 
+        }
         window.onload = async function() { await fetchProfileData(); };
 
         function formatMoney(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
