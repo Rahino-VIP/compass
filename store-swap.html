@@ -732,25 +732,7 @@
                 fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
 
-                // 💡 اصلاح شد: تطبیق دقیق نام ستون‌ها با دیتابیس invoices
-                let invPayload = {
-                    student_nid: userId, 
-                    student_name: studentData.full_name,
-                    final_amount: financeData.final, 
-                    paid_upfront: financeData.upfront || 0,
-                    status: 'pending', 
-                    invoice_type: 'تعویض و ارتقا',
-                    invoice_details: invoiceText,
-                    pansion_tier: state.pansion === 'no_change' ? null : state.panType,
-                    pan_duration: pDurVal,
-                    consult_tier: state.consult === 'no_change' ? null : state.conType,
-                    con_duration: cDurVal
-                };
                 
-                if (receiptBase64) {
-                    invPayload.receipt_base64 = receiptBase64;
-                    invPayload.mime_type = receiptMimeType;
-                }
                 // 💡 ساخت برچسب دیتای سیستمی
                 let sysData = {
                     panTier: state.pansion === 'no_change' || state.pansion === 'none' ? 'none' : state.panType,
