@@ -179,27 +179,20 @@
         };
 
         // ☀️ سیستم بیدارباش خاموش
+       // ☀️ سیستم بیدارباش (حالت تست: محدودیت زمانی غیرفعال شده است)
         async function checkMorningStatus() {
-            // 💡 اصلاح شد: جستجو با national_id
             const { data } = await supabaseClient.from('students').select('wake_streak, last_wakeup_date').eq('national_id', String(userId)).single();
             if(data) document.getElementById('streakCount').innerText = data.wake_streak || 0;
 
             const now = new Date();
-            const h = now.getHours(); const m = now.getMinutes();
             const todayStr = now.toISOString().split('T')[0];
 
+            // اگر امروز هنوز اعلام بیداری نکرده، در هر ساعتی که باشه مودال رو نشون بده
             if (!data || data.last_wakeup_date !== todayStr) {
-                // اگر بین ۵ تا ۷:۱۵ بود، مودال رو نشون بده ولی قفل نکن
-                if ((h >= 5 && h < 7) || (h === 7 && m <= 15)) {
-                    document.getElementById('wakeupModal').style.display = 'flex';
-                    fetchMorningQuiz();
-                } else if (h >= 7) {
-                    // 💡 ثبت اخطار خاموش در صندوق پیام
-                    sendSilentWakeupWarning(todayStr);
-                }
+                document.getElementById('wakeupModal').style.display = 'flex';
+                fetchMorningQuiz();
             }
         }
-
         async function sendSilentWakeupWarning(todayStr) {
             let lastWarning = localStorage.getItem('last_wake_warn');
             if (lastWarning !== todayStr) {
