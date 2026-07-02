@@ -60,32 +60,31 @@
         .btn-check:hover, .quest-card.completed .btn-check { background: var(--success); border-color: var(--success); color: white; }
 
         /* مدال‌ها */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
-        .modal-box { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 24px; padding: 25px; width: 100%; max-width: 400px; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(5px); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
+        .modal-box { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 24px; padding: 25px; width: 100%; max-width: 400px; position: relative;}
         .btn-gold { background: linear-gradient(135deg, var(--gold), #d97706); color: #000; width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; }
         
-        /* استایل اختصاصی بیدارباش */
         .streak-badge { background: rgba(245, 158, 11, 0.1); border: 1px solid var(--gold); color: var(--gold); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-        #blurLayer { transition: filter 0.5s; }
-        .is-locked { filter: blur(8px) grayscale(50%); pointer-events: none; user-select: none; }
         .quiz-input { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid var(--vip-border); background: var(--vip-bg); color: var(--text-main); font-size: 16px; outline: none; margin: 20px 0; text-align: center; font-weight: bold; }
         .quiz-input:focus { border-color: var(--gold); }
+        .close-modal-btn { position: absolute; top: 15px; left: 15px; background: transparent; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="modal-overlay" id="wakeupModal" style="background: rgba(0,0,0,0.9);">
+    <div class="modal-overlay" id="wakeupModal">
         <div class="modal-box" style="border-color: var(--warning);">
+            <button class="close-modal-btn" onclick="document.getElementById('wakeupModal').style.display='none'">✖</button>
             <div style="font-size: 60px; margin-bottom: 10px;">☀️</div>
-            <h2 style="color: var(--warning); margin-bottom: 5px;">وقت بیداریه قهرمان!</h2>
-            <p style="color: var(--text-muted); font-size: 13px;">برای باز شدن قفل برنامه‌های امروز، معمای زیر رو حل کن (فقط تا ۰۷:۱۵ فرصت داری!)</p>
+            <h2 style="color: var(--warning); margin-bottom: 5px;">صبح بخیر قهرمان!</h2>
+            <p style="color: var(--text-muted); font-size: 13px;">برای حفظ زنجیره بیداریت، معمای زیر رو حل کن و انرژی بگیر!</p>
             
             <div id="quizContainer" style="background: var(--vip-bg); padding: 20px; border-radius: 12px; margin-top: 20px; border: 1px solid var(--vip-border);">
                 <div id="quizQuestion" style="font-weight: bold; font-size: 16px; color: var(--text-main);">در حال دریافت معما از مرکز... ⏳</div>
                 <input type="text" id="quizAnswerInput" class="quiz-input" placeholder="جواب شما..." style="display:none;">
             </div>
             
-            <button class="btn-gold" id="btnSubmitQuiz" onclick="checkQuizAnswer()" style="display:none; margin-top: 15px;">ارسال و باز کردن قفل 🔓</button>
+            <button class="btn-gold" id="btnSubmitQuiz" onclick="checkQuizAnswer()" style="display:none; margin-top: 15px;">اعلام بیداری و دریافت امتیاز 🔥</button>
             <p id="quizErrorMsg" style="color: var(--danger); font-size: 12px; margin-top: 10px; display: none;">جوابت اشتباه بود، دوباره تلاش کن!</p>
         </div>
     </div>
@@ -107,52 +106,52 @@
         </div>
     </div>
 
-    <div id="blurLayer">
-        <div class="app-container">
-            <div class="nav-header">
-                <a href="menu.html" class="action-btn">🔙</a>
-                <div class="page-title">
-                    قطب‌نمای راهینو
-                    <span class="page-subtitle" id="todayDateLabel">...</span>
-                </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <div class="streak-badge" id="streakBadge" title="زنجیره بیداری شما">🔥 <span id="streakCount">0</span></div>
-                    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
-                    <a href="vip-setup.html" class="action-btn">⚙️</a>
-                </div>
+    <div class="app-container">
+        <div class="nav-header">
+            <a href="menu.html" class="action-btn">🔙</a>
+            <div class="page-title">
+                قطب‌نمای راهینو
+                <span class="page-subtitle" id="todayDateLabel">...</span>
             </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="streak-badge" id="streakBadge" title="زنجیره بیداری شما">🔥 <span id="streakCount">0</span></div>
+                <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+                <a href="vip-setup.html" class="action-btn">⚙️</a>
+            </div>
+        </div>
 
-            <div class="tabs-container">
-                <a href="schedule.html" class="tab-btn active">🎯 عملیات امروز</a>
-                <a href="week.html" class="tab-btn">🗓️ تقویم هفته</a>
-                <a href="request.html" class="tab-btn">🎁 اتاق فکر</a>
-            </div>
+        <div class="tabs-container">
+            <a href="schedule.html" class="tab-btn active">🎯 عملیات امروز</a>
+            <a href="week.html" class="tab-btn">🗓️ تقویم هفته</a>
+            <a href="request.html" class="tab-btn">🎁 اتاق فکر</a>
+        </div>
 
-            <div class="daily-note" id="dailyNoteBox" style="display: none;">
-                <div class="daily-note-icon">👨‍🏫</div>
-                <div class="daily-note-title">پیام مشاور شما:</div>
-                <div class="daily-note-text" id="dailyNoteContent">...</div>
-            </div>
+        <div class="daily-note" id="dailyNoteBox" style="display: none;">
+            <div class="daily-note-icon">👨‍🏫</div>
+            <div class="daily-note-title">پیام مشاور شما:</div>
+            <div class="daily-note-text" id="dailyNoteContent">...</div>
+        </div>
 
-            <div class="progress-box">
-                <div class="progress-header"><span>پیشرفت مأموریت‌ها</span><span id="progressText" style="color:var(--gold);">0%</span></div>
-                <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
-            </div>
+        <div class="progress-box">
+            <div class="progress-header"><span>پیشرفت مأموریت‌ها</span><span id="progressText" style="color:var(--gold);">0%</span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+        </div>
 
-            <div id="questsContainer">
-                <div style="text-align:center; padding: 40px; color: var(--text-muted);">در حال دریافت اطلاعات...</div>
-            </div>
+        <div id="questsContainer">
+            <div style="text-align:center; padding: 40px; color: var(--text-muted);">در حال دریافت اطلاعات...</div>
         </div>
     </div>
 
     <script>
-        // --- تنظیمات دیتابیس ---
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
-        const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec'; // آدرس منشی گوگل اسکریپت
+        const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
         
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); 
+        
+        // 💡 اصلاح شد: خواندن کد ملی به عنوان آیدی اصلی
         const userId = localStorage.getItem('qotbnama_user_id') || '999999';
+        
         const todayNameFa = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(new Date());
         let currentScheduleObj = null;
 
@@ -160,7 +159,6 @@
         let hasCelebratedToday = false;
         let currentQuizAnswer = "";
 
-        // 🌗 سیستم دارک مود
         const themeBtn = document.getElementById('themeBtn');
         const currentTheme = localStorage.getItem('theme') || 'dark';
         if (currentTheme === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); themeBtn.innerText = '☀️'; } 
@@ -173,44 +171,50 @@
         }
 
         window.onload = async function() {
-            if (!userId) { window.location.href = 'index.html'; return; }
-            
+            if (!userId || userId === '999999') { window.location.href = 'index.html'; return; }
             const todayShamsi = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
             document.getElementById('todayDateLabel').innerText = todayShamsi;
-            
             await checkMorningStatus();
             await loadCurrentSchedule();
         };
 
-        // ☀️ سیستم چک کردن بیدارباش
+        // ☀️ سیستم بیدارباش خاموش
         async function checkMorningStatus() {
-            // دریافت اطلاعات استریک دانش‌آموز از دیتابیس
-            const { data } = await supabaseClient.from('students').select('wake_streak, last_wakeup_date').eq('chat_id', String(userId)).single();
-            if(data) {
-                document.getElementById('streakCount').innerText = data.wake_streak || 0;
-            }
+            // 💡 اصلاح شد: جستجو با national_id
+            const { data } = await supabaseClient.from('students').select('wake_streak, last_wakeup_date').eq('national_id', String(userId)).single();
+            if(data) document.getElementById('streakCount').innerText = data.wake_streak || 0;
 
             const now = new Date();
             const h = now.getHours(); const m = now.getMinutes();
             const todayStr = now.toISOString().split('T')[0];
 
-            // اگر بین ساعت 5:00 تا 7:15 صبح است
-            if ((h >= 5 && h < 7) || (h === 7 && m <= 15)) {
-                // اگر امروز بیدار نشده، قفل رو فعال کن
-                if (!data || data.last_wakeup_date !== todayStr) {
-                    document.getElementById('blurLayer').classList.add('is-locked');
+            if (!data || data.last_wakeup_date !== todayStr) {
+                // اگر بین ۵ تا ۷:۱۵ بود، مودال رو نشون بده ولی قفل نکن
+                if ((h >= 5 && h < 7) || (h === 7 && m <= 15)) {
                     document.getElementById('wakeupModal').style.display = 'flex';
                     fetchMorningQuiz();
+                } else if (h >= 7) {
+                    // 💡 ثبت اخطار خاموش در صندوق پیام
+                    sendSilentWakeupWarning(todayStr);
                 }
+            }
+        }
+
+        async function sendSilentWakeupWarning(todayStr) {
+            let lastWarning = localStorage.getItem('last_wake_warn');
+            if (lastWarning !== todayStr) {
+                await supabaseClient.from('messages').insert({
+                    student_nid: userId,
+                    title: '⏰ خواب موندن در عملیات صبحگاهی!',
+                    body: 'دوست من، امروز نتونستی تو تایم مقرر (قبل از ۷:۱۵) بیداریت رو تو پنل اعلام کنی. مراقب باش این اتفاق تکرار نشه چون گزارشش مستقیم به مشاورت میرسه!'
+                });
+                localStorage.setItem('last_wake_warn', todayStr);
             }
         }
 
         async function fetchMorningQuiz() {
             try {
-                const response = await fetch(GAS_WEBAPP_URL, {
-                    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'get_morning_quiz' })
-                });
+                const response = await fetch(GAS_WEBAPP_URL, { method: 'POST', body: JSON.stringify({ action: 'get_morning_quiz' }) });
                 const result = await response.json();
                 if(result.success) {
                     document.getElementById('quizQuestion').innerText = result.quiz.question;
@@ -219,45 +223,33 @@
                     document.getElementById('btnSubmitQuiz').style.display = 'block';
                 }
             } catch (e) {
-                document.getElementById('quizQuestion').innerText = "خطا در اتصال به مرکز معما. موقتاً قفل باز شد!";
-                setTimeout(() => unlockApp(false), 2000);
+                document.getElementById('quizQuestion').innerText = "خطا در اتصال. با دکمه بالا صفحه را ببندید.";
             }
         }
 
         async function checkQuizAnswer() {
             let userAns = document.getElementById('quizAnswerInput').value.trim();
-            if(userAns === currentQuizAnswer || userAns === "") { // در اینجا برای اینکه گیر نکنه، خالی رو هم رد کردیم ولی میتونی سخت‌گیرش کنی
+            if(userAns === currentQuizAnswer || userAns === "") {
                 document.getElementById('quizErrorMsg').style.display = 'none';
                 document.getElementById('btnSubmitQuiz').innerText = "در حال ثبت بیداری...";
                 
-                // ارسال درخواست ثبت استریک به سرور
-                const response = await fetch(GAS_WEBAPP_URL, {
-                    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'submit_wakeup', student_id: userId })
-                });
+                const response = await fetch(GAS_WEBAPP_URL, { method: 'POST', body: JSON.stringify({ action: 'submit_wakeup', student_id: userId }) });
                 const result = await response.json();
                 
                 if(result.success) {
                     document.getElementById('streakCount').innerText = result.new_streak;
-                    unlockApp(true);
+                    document.getElementById('wakeupModal').style.display = 'none';
+                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#f59e0b', '#ef4444'] });
                 }
             } else {
                 document.getElementById('quizErrorMsg').style.display = 'block';
             }
         }
 
-        function unlockApp(triggerConfettiEffect) {
-            document.getElementById('wakeupModal').style.display = 'none';
-            document.getElementById('blurLayer').classList.remove('is-locked');
-            if(triggerConfettiEffect) {
-                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#f59e0b', '#ef4444'] });
-            }
-        }
-
-        // --- بقیه کدهای قبلی (تایمر، رندر پارت‌ها و...) ---
         async function loadCurrentSchedule() {
+            // 💡 اصلاح شد: جستجو با national_id
             const { data, error } = await supabaseClient.from('ai_schedules').select('*')
-                .eq('chat_id', String(userId)).eq('status', 'approved').order('created_at', { ascending: false }).limit(1);
+                .eq('national_id', String(userId)).eq('status', 'approved').order('created_at', { ascending: false }).limit(1);
             if (data && data.length > 0) { currentScheduleObj = data[0]; renderTodayTab(); } 
             else { document.getElementById('questsContainer').innerHTML = '<div style="text-align:center;color:var(--text-muted);">برنامه‌ای یافت نشد.</div>'; }
         }
@@ -315,7 +307,6 @@
             
             if(!confirm(isOnlineClass ? "آیا در کلاس غیبت داشتی؟ (به دو پارت تقسیم می‌شود)" : "انتقال به اولین جبرانی خالی؟")) return;
 
-            // (همون منطق شیفت کلاس‌ها که در پیام‌های قبل ساختیم رو میتونی کامل اینجا بذاری)
             let makeupIdx = planArr.findIndex((p, idx) => idx > origIdx && p.subject === "بانک جبرانی" && p.status === 'pending');
             if(makeupIdx === -1) { alert("ظرفیت بانک جبرانی هفته پر شده است!"); return; }
 
