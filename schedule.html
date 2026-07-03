@@ -178,7 +178,7 @@
             await loadCurrentSchedule();
         };
 
-       // ☀️ سیستم بیدارباش (حالت تست: محدودیت زمانی غیرفعال شده است)
+       // ☀️ سیستم بیدارباش (حالت تست:محدودیت زمانی غیرفعال شده است)
         async function checkMorningStatus() {
             const { data } = await supabaseClient.from('students').select('wake_streak, last_wakeup_date').eq('national_id', String(userId)).single();
             if(data) document.getElementById('streakCount').innerText = data.wake_streak || 0;
