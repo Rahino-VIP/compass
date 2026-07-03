@@ -204,34 +204,78 @@
             }
         }
 
+        // 🧠 دریافت معمای جذاب و بامزه از هوش مصنوعی (Google Script)
         async function fetchMorningQuiz() {
             try {
-                const response = await fetch(GAS_WEBAPP_URL, { method: 'POST', body: JSON.stringify({ action: 'get_morning_quiz' }) });
+                // 💡 اضافه شدن هدر جادویی برای رفع ارور CORS و اتصال موفق به گوگل
+                const response = await fetch(GAS_WEBAPP_URL, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+                    body: JSON.stringify({ action: 'get_morning_quiz' }) 
+                });
+                
                 const result = await response.json();
-                if(result.success) {
+                
+                if(result.success && result.quiz) {
                     document.getElementById('quizQuestion').innerText = result.quiz.question;
                     currentQuizAnswer = String(result.quiz.answer).trim();
                     document.getElementById('quizAnswerInput').style.display = 'block';
                     document.getElementById('btnSubmitQuiz').style.display = 'block';
+                } else {
+                    throw new Error("فرمت دیتای هوش مصنوعی نامعتبر بود.");
                 }
             } catch (e) {
-                document.getElementById('quizQuestion').innerText = "خطا در اتصال. با دکمه بالا صفحه را ببندید.";
+                // 🛡️ سیستم جایگزین: اگر یه روز سرور گوگل قطع بود، حداقل یه سوال ساده بپرسه که دانش‌آموز بتونه بیداریش رو ثبت کنه
+                console.error("خطای هوش مصنوعی:", e);
+                document.getElementById('quizQuestion').innerText = "ارتباط با هوش مصنوعی کند شده! برای بیداری سریع بگو: ۲ ضربدر ۲ بعلاوه ۵ چند میشه؟";
+                currentQuizAnswer = "9"; 
+                document.getElementById('quizAnswerInput').style.display = 'block';
+                document.getElementById('btnSubmitQuiz').style.display = 'block';
             }
         }
 
+        // ✅ بررسی جواب و آپدیت مستقیم در دیتابیس سوپابیس (سرعت نور)
         async function checkQuizAnswer() {
             let userAns = document.getElementById('quizAnswerInput').value.trim();
+            
             if(userAns === currentQuizAnswer || userAns === "") {
                 document.getElementById('quizErrorMsg').style.display = 'none';
-                document.getElementById('btnSubmitQuiz').innerText = "در حال ثبت بیداری...";
+                document.getElementById('btnSubmitQuiz').innerText = "در حال ثبت بیداری... ⏳";
+                document.getElementById('btnSubmitQuiz').disabled = true;
                 
-                const response = await fetch(GAS_WEBAPP_URL, { method: 'POST', body: JSON.stringify({ action: 'submit_wakeup', student_id: userId }) });
-                const result = await response.json();
-                
-                if(result.success) {
-                    document.getElementById('streakCount').innerText = result.new_streak;
+                try {
+                    const { data: stData, error: fetchErr } = await supabaseClient
+                        .from('students')
+                        .select('wake_streak')
+                        .eq('national_id', String(userId))
+                        .single();
+
+                    if (fetchErr) throw fetchErr;
+
+                    let newStreak = (stData.wake_streak || 0) + 1;
+                    const todayStr = new Date().toISOString().split('T')[0];
+
+                    const { error: updateErr } = await supabaseClient
+                        .from('students')
+                        .update({ 
+                            wake_streak: newStreak, 
+                            last_wakeup_date: todayStr 
+                        })
+                        .eq('national_id', String(userId));
+
+                    if (updateErr) throw updateErr;
+
+                    document.getElementById('streakCount').innerText = newStreak;
                     document.getElementById('wakeupModal').style.display = 'none';
                     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#f59e0b', '#ef4444'] });
+                    
+                    document.getElementById('btnSubmitQuiz').innerText = "اعلام بیداری و دریافت امتیاز 🔥";
+                    document.getElementById('btnSubmitQuiz').disabled = false;
+
+                } catch(e) {
+                    alert("❌ خطا در ثبت اطلاعات: " + e.message);
+                    document.getElementById('btnSubmitQuiz').innerText = "اعلام بیداری و دریافت امتیاز 🔥";
+                    document.getElementById('btnSubmitQuiz').disabled = false;
                 }
             } else {
                 document.getElementById('quizErrorMsg').style.display = 'block';
