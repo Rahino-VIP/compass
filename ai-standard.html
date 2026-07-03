@@ -204,7 +204,7 @@
                     let jdn = jalaliToJdn(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]));
                     
                     // 🌟 اصلاح کلیدی: تبدیل (jdn + 1) به (jdn + 2)
-                    let dayOfWeek = (jdn + 2) % 7; // شنبه = 0
+                    let dayOfWeek = (jdn + 4) % 7; // شنبه = 0
                     let saturdayJdn = jdn - dayOfWeek;
                     let fridayJdn = saturdayJdn + 6;
                     
