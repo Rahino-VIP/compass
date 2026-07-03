@@ -185,7 +185,7 @@
             let epBase = y - ((y >= 0) ? 474 : 473);
             let epYear = 474 + (epBase % 2820);
             let md = (m <= 7) ? ((m - 1) * 31) : (((m - 1) * 30) + 6);
-            let days = d + md + Math.floor(((epYear * 682) - 110) / 2816) + (epYear - 1) * 365 + Math.floor(epBase / 2820) * 1029983 + (1948320 - 1);
+            let days = d + md + Math.floor(((epYear * 682) - 110) / 2816) + (epYear - 1) * 365 + Math.floor(epBase / 2820) * 1029983 + (1948321);
             return days;
         }
 
