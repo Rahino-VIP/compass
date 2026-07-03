@@ -266,7 +266,7 @@
                 let jdn = jalaliToJdn(parseInt(dateParts[0]), parseInt(dateParts[1]), parseInt(dateParts[2]));
                 
                 // 🌟 اصلاح کلیدی: با عدد ۲، روز شنبه دقیقا برابر 0 و جمعه برابر 6 می‌شود
-                let dayOfWeek = (jdn + 2) % 7; 
+                let dayOfWeek = (jdn + 1) % 7; 
                 
                 let saturdayJdn = jdn - dayOfWeek;
                 let fridayJdn = saturdayJdn + 6;
