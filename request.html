@@ -79,55 +79,93 @@
     </div>
 
     <script>
-        const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
-        const userId = localStorage.getItem('qotbnama_user_id') || '999999';
-
-        // 🌗 سیستم دارک مود
-        const themeBtn = document.getElementById('themeBtn');
-        const currentTheme = localStorage.getItem('theme') || 'dark'; // پیش فرض دارک
-        if (currentTheme === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); themeBtn.innerText = '☀️'; } else { themeBtn.innerText = '🌙'; }
-
+        // ==========================================
+        // 🌓 سیستم تغییر تم (دارک و لایت مود)
+        // ==========================================
         function toggleTheme() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            if (isDark) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); themeBtn.innerText = '🌙'; } 
-            else { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); themeBtn.innerText = '☀️'; }
+            const root = document.documentElement;
+            const currentTheme = root.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            root.setAttribute('data-theme', newTheme);
+            
+            // ذخیره تم تو مرورگر که با رفرش نپره
+            localStorage.setItem('app_theme', newTheme);
         }
 
-        async function requestNewSchedule() {
-            const note = document.getElementById('nextWeekNote').value.trim();
-            const optExam = document.getElementById('opt_exam').checked;
-            const btn = document.getElementById('btnRequestPlan');
+        // بررسی تم ذخیره شده موقع لود صفحه
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('app_theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+        });
 
-            btn.innerHTML = 'در حال ارسال... ⏳'; btn.disabled = true;
+        // ==========================================
+        // 🚀 سیستم ارسال درخواست برنامه‌ریزی
+        // ==========================================
+        // آدرس وب‌اپ گوگل اسکریپت خودت رو حتماً اینجا بذار
+        const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
+
+        async function requestNewSchedule() {
+            // ۱. گرفتن اطلاعات از فرم (مطمئن شو آیدی این فیلدها تو HTML درسته)
+            const noteInput = document.getElementById('student_note');
+            const optExamInput = document.getElementById('opt_exam');
+            
+            const note = noteInput ? noteInput.value : '';
+            const optExam = optExamInput ? optExamInput.checked : false;
+
+            // شناسه ملی دانش‌آموز (معمولا موقع لاگین تو لوکال استوریج ذخیره میشه)
+            // فعلا برای تست همون آیدی که تو دیتابیست ساختی رو می‌ذاریم
+            const userId = localStorage.getItem('national_id') || '937884860'; 
+
+            // دکمه‌ای که روش کلیک شده رو پیدا می‌کنیم تا بهش افکت لودینگ بدیم
+            const btn = document.getElementById('btnRequestPlan') || document.querySelector('button[onclick="requestNewSchedule()"]');
+            
+            if(btn) {
+                btn.innerHTML = 'در حال ارسال... ⏳'; 
+                btn.disabled = true;
+            }
 
             try {
+                // ۲. ارسال ریکوئست به سرور
                 const response = await fetch(GAS_WEBAPP_URL, {
-                    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    // ۳. پیدا کردن بودجه‌بندی آزمونِ درخواستی
-    // تاریخ آزمون را از فرانت‌اند می‌گیریم (مثلاً 02_05_1405)
-    const targetExamDate = payload.target_exam_date; 
-    if(!targetExamDate) throw new Error("تاریخ آزمون هدف مشخص نشده است.");
-
-    const budgets = fetchFromSupabase('exam_budgets', `grade=eq.${grade}&major=eq.${major}&exam_date=eq.${targetExamDate}`);
-    if (!budgets || budgets.length === 0) throw new Error(`هیچ بودجه‌بندی برای آزمون ${targetExamDate} یافت نشد.`);
-    
-    const currentBudget = budgets[0]; // چون تاریخ دقیق دادیم، همون اولی جواب ماست
-    const examDate = currentBudget.exam_date;
-    const budgetData = typeof currentBudget.budget_data === 'string' ? JSON.parse(currentBudget.budget_data) : currentBudget.budget_data;
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ 
+                        action: 'generate_schedule', 
+                        student_id: userId, 
+                        student_note: note, 
+                        target_exam_date: '02_05_1405', // 👈 تاریخ بودجه‌بندی که ساختیم
+                        student_options: { "school_exams_focus": optExam } 
+                    })
+                });
 
                 const result = await response.json();
+                
+                // ۳. عملیات موفقیت‌آمیز
                 if (result.success) {
-                    document.getElementById('fridayForm').innerHTML = `
-                        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px;">
-                            <div style="font-size: 30px; margin-bottom: 10px;">✅</div>
-                            <h3 style="color: var(--success);">عملیات موفق</h3>
-                            <p style="font-size: 13px; color: var(--text-muted);">اطلاعات دریافت شد. تیم مشاوران در حال تدوین استراتژی هستند.</p>
+                    const formContainer = document.getElementById('fridayForm') || document.body;
+                    formContainer.innerHTML = `
+                        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px; text-align: center; margin-top: 20px;">
+                            <div style="font-size: 40px; margin-bottom: 10px;">✅</div>
+                            <h3 style="color: var(--success); margin-bottom: 10px;">درخواست با موفقیت ثبت شد</h3>
+                            <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">
+                                اطلاعات شما به هسته مرکزی ارسال شد. الگوریتم در حال چیدمان برنامه‌ی شماست. 
+                                لطفاً منتظر تایید مشاور بمانید.
+                            </p>
                         </div>
                     `;
-                } else throw new Error(result.error);
+                } else {
+                    throw new Error(result.error);
+                }
+
             } catch (error) {
-                alert('❌ خطا در ارتباط: ' + error.message);
-                btn.innerHTML = 'ارسال اطلاعات به اتاق فکر 🚀'; btn.disabled = false;
+                console.error(error);
+                alert('❌ خطا در ارتباط با سرور: ' + error.message);
+                if(btn) {
+                    btn.innerHTML = 'ارسال اطلاعات به اتاق فکر 🚀'; 
+                    btn.disabled = false;
+                }
             }
         }
     </script>
