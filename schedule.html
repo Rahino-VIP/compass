@@ -176,19 +176,6 @@
             await loadCurrentSchedule();
         };
 
-       
-        async function sendSilentWakeupWarning(todayStr) {
-            let lastWarning = localStorage.getItem('last_wake_warn');
-            if (lastWarning !== todayStr) {
-                await supabaseClient.from('messages').insert({
-                    student_nid: userId,
-                    title: '⏰ خواب موندن در عملیات صبحگاهی!',
-                    body: 'دوست من، امروز نتونستی تو تایم مقرر (قبل از ۷:۱۵) بیداریت رو تو پنل اعلام کنی. مراقب باش این اتفاق تکرار نشه چون گزارشش مستقیم به مشاورت میرسه!'
-                });
-                localStorage.setItem('last_wake_warn', todayStr);
-            }
-        }
-
         let gameTimerInterval;
         let tapCount = 0;
 
