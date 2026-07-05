@@ -69,10 +69,13 @@
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); 
-        const userId = localStorage.getItem('qotbnama_user_id') || '999999';
+        
+        // 🌟 اصلاح ۱: استفاده از کلید درست برای دریافت کد ملی دانش‌آموز
+        const userId = localStorage.getItem('national_id') || '3456734567';
+        
         let allSchedules = []; let currentScheduleObj = null;
 
         // 🌗 سیستم دارک مود
@@ -89,17 +92,37 @@
         window.onload = async function() { await loadAllSchedules(); };
 
         async function loadAllSchedules() {
+            // 🌟 اصلاح ۲: جستجو در دیتابیس بر اساس national_id به جای chat_id
             const { data, error } = await supabaseClient.from('ai_schedules').select('*')
-                .eq('chat_id', String(userId)).eq('status', 'approved').order('created_at', { ascending: false });
+                .eq('national_id', String(userId)).eq('status', 'approved').order('created_at', { ascending: false });
             
+            if (error) {
+                console.error("خطا در دریافت برنامه:", error);
+                document.getElementById('gcalGrid').innerHTML = '<div style="padding: 40px; text-align: center; width: 100%; color: var(--danger);">خطا در ارتباط با سرور!</div>';
+                return;
+            }
+
             if (data && data.length > 0) {
                 allSchedules = data;
                 const selector = document.getElementById('weekSelector');
+                selector.innerHTML = ''; // پاک کردن گزینه‌های قبلی
+                
                 allSchedules.forEach((sch, index) => {
-                    let opt = document.createElement('option'); opt.value = index; opt.text = sch.week_label + (index===0 ? " (جاری)" : "");
+                    let opt = document.createElement('option'); 
+                    opt.value = index; 
+                    opt.text = sch.week_label + (index === 0 ? " (جاری)" : "");
                     selector.appendChild(opt);
                 });
-                currentScheduleObj = allSchedules[0]; renderGCal();
+                currentScheduleObj = allSchedules[0]; 
+                renderGCal();
+            } else {
+                // 🌟 اضافه شدن پیام در صورت نبود برنامه
+                document.getElementById('gcalGrid').innerHTML = `
+                    <div style="padding: 60px 20px; text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <span style="font-size: 50px; margin-bottom: 15px; opacity: 0.5;">🗓️</span>
+                        <h3 style="color: var(--text-muted);">هنوز برنامه تایید شده‌ای نداری!</h3>
+                        <p style="font-size: 13px; color: #64748b; margin-top: 10px;">درخواستت تو اتاق فکره یا هنوز درخواستی ندادی.</p>
+                    </div>`;
             }
         }
 
