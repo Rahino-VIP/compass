@@ -107,15 +107,14 @@
         const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
 
         async function requestNewSchedule() {
-            // ۱. گرفتن اطلاعات از فرم (مطمئن شو آیدی این فیلدها تو HTML درسته)
-            const noteInput = document.getElementById('student_note');
+            // ۱. گرفتن اطلاعات از فرم (💡 آیدی‌ها دقیقاً با HTML مچ شدند)
+            const noteInput = document.getElementById('nextWeekNote'); // تغییر مهم اینجا بود
             const optExamInput = document.getElementById('opt_exam');
             
             const note = noteInput ? noteInput.value : '';
             const optExam = optExamInput ? optExamInput.checked : false;
 
-            // شناسه ملی دانش‌آموز (معمولا موقع لاگین تو لوکال استوریج ذخیره میشه)
-            // فعلا برای تست همون آیدی که تو دیتابیست ساختی رو می‌ذاریم
+            // شناسه ملی دانش‌آموز
             const userId = localStorage.getItem('national_id') || '3456734567'; 
 
             // دکمه‌ای که روش کلیک شده رو پیدا می‌کنیم تا بهش افکت لودینگ بدیم
@@ -134,8 +133,8 @@
                     body: JSON.stringify({ 
                         action: 'generate_schedule', 
                         student_id: userId, 
-                        student_note: note, 
-                        target_exam_date: '02_05_1405', // 👈 تاریخ بودجه‌بندی که ساختیم
+                        student_note: note, // حالا دیگه متن یادداشت با موفقیت پر میشه
+                        target_exam_date: '02_05_1405',
                         student_options: { "school_exams_focus": optExam } 
                     })
                 });
