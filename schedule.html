@@ -75,17 +75,15 @@
     <div class="modal-overlay" id="wakeupModal">
         <div class="modal-box" style="border-color: var(--warning);">
             <button class="close-modal-btn" onclick="document.getElementById('wakeupModal').style.display='none'">✖</button>
-            <div style="font-size: 60px; margin-bottom: 10px;">☀️</div>
-            <h2 style="color: var(--warning); margin-bottom: 5px;">صبح بخیر قهرمان!</h2>
-            <p style="color: var(--text-muted); font-size: 13px;">برای حفظ زنجیره بیداریت، معمای زیر رو حل کن و انرژی بگیر!</p>
+            <div style="font-size: 50px; margin-bottom: 5px;">⏰</div>
+            <h2 style="color: var(--warning); margin-bottom: 5px;">عملیات بیدارباش!</h2>
+            <p style="color: var(--text-muted); font-size: 13px;">برای ثبت بیداریت، چالش زیر رو قبل از اتمام زمان انجام بده:</p>
             
-            <div id="quizContainer" style="background: var(--vip-bg); padding: 20px; border-radius: 12px; margin-top: 20px; border: 1px solid var(--vip-border);">
-                <div id="quizQuestion" style="font-weight: bold; font-size: 16px; color: var(--text-main);">در حال دریافت معما از مرکز... ⏳</div>
-                <input type="text" id="quizAnswerInput" class="quiz-input" placeholder="جواب شما..." style="display:none;">
+            <div id="gameTimerDisplay" style="font-size: 30px; font-weight: 900; color: var(--danger); margin: 15px 0; font-family: monospace;">⏳ --:--</div>
+            
+            <div id="quizContainer" style="background: var(--vip-bg); padding: 20px; border-radius: 12px; margin-top: 10px; border: 1px solid var(--vip-border); min-height: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <div style="color: var(--text-muted); font-weight: bold;">در حال آماده‌سازی بازی... ⏳</div>
             </div>
-            
-            <button class="btn-gold" id="btnSubmitQuiz" onclick="checkQuizAnswer()" style="display:none; margin-top: 15px;">اعلام بیداری و دریافت امتیاز 🔥</button>
-            <p id="quizErrorMsg" style="color: var(--danger); font-size: 12px; margin-top: 10px; display: none;">جوابت اشتباه بود، دوباره تلاش کن!</p>
         </div>
     </div>
 
@@ -178,20 +176,7 @@
             await loadCurrentSchedule();
         };
 
-       // ☀️ سیستم بیدارباش (حالت تست:محدودیت زمانی غیرفعال شده است)
-        async function checkMorningStatus() {
-            const { data } = await supabaseClient.from('students').select('wake_streak, last_wakeup_date').eq('national_id', String(userId)).single();
-            if(data) document.getElementById('streakCount').innerText = data.wake_streak || 0;
-
-            const now = new Date();
-            const todayStr = now.toISOString().split('T')[0];
-
-            // اگر امروز هنوز اعلام بیداری نکرده، در هر ساعتی که باشه مودال رو نشون بده
-            if (!data || data.last_wakeup_date !== todayStr) {
-                document.getElementById('wakeupModal').style.display = 'flex';
-                fetchMorningQuiz();
-            }
-        }
+       
         async function sendSilentWakeupWarning(todayStr) {
             let lastWarning = localStorage.getItem('last_wake_warn');
             if (lastWarning !== todayStr) {
@@ -204,10 +189,12 @@
             }
         }
 
-        // 🧠 دریافت معمای جذاب و بامزه ازهوش مصنوعی (Google Script)
+        let gameTimerInterval;
+        let tapCount = 0;
+
         async function fetchMorningQuiz() {
+            document.getElementById('quizContainer').innerHTML = '<div style="color: var(--text-muted); font-weight: bold;">در حال دریافت ماموریت... ⏳</div>';
             try {
-                // 💡 اضافه شدن هدر جادویی برای رفع ارور CORS و اتصال موفق به گوگل
                 const response = await fetch(GAS_WEBAPP_URL, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
@@ -217,68 +204,106 @@
                 const result = await response.json();
                 
                 if(result.success && result.quiz) {
-                    document.getElementById('quizQuestion').innerText = result.quiz.question;
-                    currentQuizAnswer = String(result.quiz.answer).trim();
-                    document.getElementById('quizAnswerInput').style.display = 'block';
-                    document.getElementById('btnSubmitQuiz').style.display = 'block';
+                    renderMiniGame(result.quiz);
                 } else {
-                    throw new Error("فرمت دیتای هوش مصنوعی نامعتبر بود.");
+                    throw new Error("دیتای بازی دریافت نشد");
                 }
             } catch (e) {
-                // 🛡️ سیستم جایگزین: اگر یه روز سرور گوگل قطع بود، حداقل یه سوال ساده بپرسه که دانش‌آموز بتونه بیداریش رو ثبت کنه
-                console.error("خطای هوش مصنوعی:", e);
-                document.getElementById('quizQuestion').innerText = "ارتباط با هوش مصنوعی کند شده! برای بیداری سریع بگو: ۲ ضربدر ۲ بعلاوه ۵ چند میشه؟";
-                currentQuizAnswer = "9"; 
-                document.getElementById('quizAnswerInput').style.display = 'block';
-                document.getElementById('btnSubmitQuiz').style.display = 'block';
+                // بازی اورژانسی اگر اینترنت قطع بود
+                renderMiniGame({ type: 'tap_fast', timeLimit: 10, target: 20 });
             }
         }
 
-        // ✅ بررسی جواب و آپدیت مستقیم در دیتابیس سوپابیس (سرعت نور)
-        async function checkQuizAnswer() {
-            let userAns = document.getElementById('quizAnswerInput').value.trim();
+        function renderMiniGame(gameData) {
+            clearInterval(gameTimerInterval);
+            let timeLeft = gameData.timeLimit || 15;
+            document.getElementById('gameTimerDisplay').innerText = `⏳ 00:${timeLeft.toString().padStart(2, '0')}`;
             
-            if(userAns === currentQuizAnswer || userAns === "") {
-                document.getElementById('quizErrorMsg').style.display = 'none';
-                document.getElementById('btnSubmitQuiz').innerText = "در حال ثبت بیداری... ⏳";
-                document.getElementById('btnSubmitQuiz').disabled = true;
+            const container = document.getElementById('quizContainer');
+            container.innerHTML = '';
+
+            // رندر بازی ایموجی
+            if (gameData.type === 'odd_emoji') {
+                container.innerHTML = `<div style="margin-bottom: 15px; font-weight: 900; font-size: 14px;">ایموجی متفاوت رو سریع پیدا کن!</div>`;
+                let grid = document.createElement('div');
+                grid.style.display = 'grid'; grid.style.gridTemplateColumns = 'repeat(4, 1fr)'; grid.style.gap = '10px';
                 
-                try {
-                    const { data: stData, error: fetchErr } = await supabaseClient
-                        .from('students')
-                        .select('wake_streak')
-                        .eq('national_id', String(userId))
-                        .single();
-
-                    if (fetchErr) throw fetchErr;
-
-                    let newStreak = (stData.wake_streak || 0) + 1;
-                    const todayStr = new Date().toISOString().split('T')[0];
-
-                    const { error: updateErr } = await supabaseClient
-                        .from('students')
-                        .update({ 
-                            wake_streak: newStreak, 
-                            last_wakeup_date: todayStr 
-                        })
-                        .eq('national_id', String(userId));
-
-                    if (updateErr) throw updateErr;
-
-                    document.getElementById('streakCount').innerText = newStreak;
-                    document.getElementById('wakeupModal').style.display = 'none';
-                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#f59e0b', '#ef4444'] });
+                for (let i = 0; i < gameData.total; i++) {
+                    let btn = document.createElement('button');
+                    btn.style.fontSize = '26px'; btn.style.background = 'var(--vip-surface)';
+                    btn.style.border = '2px solid var(--vip-border)'; btn.style.borderRadius = '12px';
+                    btn.style.padding = '5px'; btn.style.cursor = 'pointer'; btn.style.transition = '0.2s';
                     
-                    document.getElementById('btnSubmitQuiz').innerText = "اعلام بیداری و دریافت امتیاز 🔥";
-                    document.getElementById('btnSubmitQuiz').disabled = false;
-
-                } catch(e) {
-                    alert("❌ خطا در ثبت اطلاعات: " + e.message);
-                    document.getElementById('btnSubmitQuiz').innerText = "اعلام بیداری و دریافت امتیاز 🔥";
-                    document.getElementById('btnSubmitQuiz').disabled = false;
+                    if (i === gameData.targetIndex) {
+                        btn.innerText = gameData.oddEmoji;
+                        btn.onclick = () => winGame();
+                    } else {
+                        btn.innerText = gameData.normalEmoji;
+                        btn.onclick = () => { btn.style.opacity = '0.3'; } // وقتی اشتباه میزنه ایموجی کمرنگ میشه
+                    }
+                    grid.appendChild(btn);
                 }
-            } else {
-                document.getElementById('quizErrorMsg').style.display = 'block';
+                container.appendChild(grid);
+            } 
+            // رندر بازی کلیک سرعتی
+            else if (gameData.type === 'tap_fast') {
+                tapCount = 0;
+                container.innerHTML = `<div style="margin-bottom: 15px; font-weight: 900; font-size: 14px;">سریع ${gameData.target} بار روی دکمه ضربه بزن!</div>`;
+                let btn = document.createElement('button');
+                btn.className = 'btn-gold';
+                btn.innerText = `ضربه بزن! (0 / ${gameData.target})`;
+                btn.style.height = '90px'; btn.style.fontSize = '22px'; btn.style.userSelect = 'none';
+                
+                btn.onclick = () => {
+                    tapCount++;
+                    btn.innerText = `ضربه بزن! (${tapCount} / ${gameData.target})`;
+                    btn.style.transform = 'scale(0.95)';
+                    setTimeout(() => btn.style.transform = 'scale(1)', 50); // افکت کلیک
+                    if (tapCount >= gameData.target) winGame();
+                };
+                container.appendChild(btn);
+            }
+
+            // شمارش معکوس تایمر
+            gameTimerInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    clearInterval(gameTimerInterval);
+                    document.getElementById('gameTimerDisplay').innerText = `⏳ 00:00`;
+                    container.innerHTML = `
+                        <div style="color: var(--danger); font-weight: bold; font-size: 16px;">زمان تموم شد! 😴</div>
+                        <p style="font-size:12px; color:var(--text-muted); margin-top:5px;">یه آبی به دست و روت بزن دوباره امتحان کن.</p>
+                        <button class="btn-gold" style="margin-top:15px; padding: 10px;" onclick="fetchMorningQuiz()">تلاش مجدد 🔄</button>
+                    `;
+                } else {
+                    document.getElementById('gameTimerDisplay').innerText = `⏳ 00:${timeLeft.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        // تابع برد و ثبت بیداری در دیتابیس
+        async function winGame() {
+            clearInterval(gameTimerInterval);
+            document.getElementById('quizContainer').innerHTML = `<div style="color: var(--success); font-weight: 900; font-size: 22px; text-align: center;">ایول! خواب از سرت پرید! 🔥<br><span style="font-size:12px; color:var(--text-muted); font-weight:normal;">در حال ثبت بیداری...</span></div>`;
+            
+            try {
+                // ثبت مستقیم بیداری در سوپابیس (بدون پاس‌کاری اضافه)
+                const { data: stData } = await supabaseClient.from('students').select('wake_streak').eq('national_id', String(userId)).single();
+                let newStreak = (stData.wake_streak || 0) + 1;
+                const todayStr = new Date().toISOString().split('T')[0];
+
+                await supabaseClient.from('students').update({ wake_streak: newStreak, last_wakeup_date: todayStr }).eq('national_id', String(userId));
+
+                document.getElementById('streakCount').innerText = newStreak;
+                
+                setTimeout(() => {
+                    document.getElementById('wakeupModal').style.display = 'none';
+                    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#f59e0b', '#ef4444', '#10b981'] });
+                }, 1500);
+
+            } catch(e) {
+                alert("❌ خطا در ثبت اطلاعات: " + e.message);
+                document.getElementById('wakeupModal').style.display = 'none';
             }
         }
 
