@@ -192,6 +192,30 @@
         let gameTimerInterval;
         let tapCount = 0;
 
+        // ==========================================
+        // ☀️ سیستم بررسی و اجرای مینی‌گیم بیدارباش
+        // ==========================================
+        async function checkMorningStatus() {
+            try {
+                // چک کردن وضعیت امروز دانش‌آموز در سوپابیس
+                const { data } = await supabaseClient.from('students').select('wake_streak, last_wakeup_date').eq('national_id', String(userId)).single();
+                if(data) document.getElementById('streakCount').innerText = data.wake_streak || 0;
+
+                const todayStr = new Date().toISOString().split('T')[0];
+
+                // اگر امروز هنوز اعلام بیداری نکرده، مودال رو باز کن و بازی رو بیار
+                if (!data || data.last_wakeup_date !== todayStr) {
+                    document.getElementById('wakeupModal').style.display = 'flex';
+                    fetchMorningQuiz();
+                }
+            } catch (err) {
+                console.error("خطا در بررسی وضعیت بیداری:", err);
+            }
+        }
+
+        let gameTimerInterval;
+        let tapCount = 0;
+
         async function fetchMorningQuiz() {
             document.getElementById('quizContainer').innerHTML = '<div style="color: var(--text-muted); font-weight: bold;">در حال دریافت ماموریت... ⏳</div>';
             try {
@@ -209,7 +233,8 @@
                     throw new Error("دیتای بازی دریافت نشد");
                 }
             } catch (e) {
-                // بازی اورژانسی اگر اینترنت قطع بود
+                console.error("خطا در ارتباط با سرور:", e);
+                // بازی اورژانسی اگر اینترنت ضعیف بود
                 renderMiniGame({ type: 'tap_fast', timeLimit: 10, target: 20 });
             }
         }
@@ -281,13 +306,12 @@
             }, 1000);
         }
 
-        // تابع برد و ثبت بیداری در دیتابیس
         async function winGame() {
             clearInterval(gameTimerInterval);
             document.getElementById('quizContainer').innerHTML = `<div style="color: var(--success); font-weight: 900; font-size: 22px; text-align: center;">ایول! خواب از سرت پرید! 🔥<br><span style="font-size:12px; color:var(--text-muted); font-weight:normal;">در حال ثبت بیداری...</span></div>`;
             
             try {
-                // ثبت مستقیم بیداری در سوپابیس (بدون پاس‌کاری اضافه)
+                // ثبت مستقیم بیداری در سوپابیس
                 const { data: stData } = await supabaseClient.from('students').select('wake_streak').eq('national_id', String(userId)).single();
                 let newStreak = (stData.wake_streak || 0) + 1;
                 const todayStr = new Date().toISOString().split('T')[0];
@@ -306,7 +330,6 @@
                 document.getElementById('wakeupModal').style.display = 'none';
             }
         }
-
         async function loadCurrentSchedule() {
             // 💡 اصلاح شد: جستجو با national_id
             const { data, error } = await supabaseClient.from('ai_schedules').select('*')
