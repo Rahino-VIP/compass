@@ -101,12 +101,17 @@
             
             <div style="background: var(--vip-bg); border-radius: 16px; padding: 12px; margin-bottom: 20px; border: 1px solid var(--vip-border);">
                 <div id="musicTrackName" style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; font-weight: bold;">موسیقی: در حال بارگذاری...</div>
-                <div style="display: flex; justify-content: center; gap: 20px; align-items: center;">
-                    <button onclick="prevMusic()" style="background:none;border:none;font-size:22px;cursor:pointer;" title="آهنگ قبلی">⏭</button>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; direction: ltr; padding: 0 10px;">
+                    <button id="loopModeBtn" onclick="toggleLoopMode()" style="background:none;border:none;font-size:18px;cursor:pointer; opacity: 0.8;" title="تکرار همین آهنگ">🔂</button>
                     
-                    <button id="playPauseBtn" onclick="toggleMusic()" style="background:var(--vip-surface); border:2px solid var(--vip-border); border-radius:50%; width:45px; height:45px; font-size:18px; cursor:pointer; display:flex; justify-content:center; align-items:center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">▶️</button>
+                    <div style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+                        <button onclick="prevMusic()" style="background:none;border:none;font-size:22px;cursor:pointer;" title="آهنگ قبلی">⏭</button>
+                        <button id="playPauseBtn" onclick="toggleMusic()" style="background:var(--vip-surface); border:2px solid var(--vip-border); border-radius:50%; width:45px; height:45px; font-size:18px; cursor:pointer; display:flex; justify-content:center; align-items:center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">▶️</button>
+                        <button onclick="nextMusic()" style="background:none;border:none;font-size:22px;cursor:pointer;" title="آهنگ بعدی">⏮</button>
+                    </div>
                     
-                    <button onclick="nextMusic()" style="background:none;border:none;font-size:22px;cursor:pointer;" title="آهنگ بعدی">⏮</button>
+                    <div style="width: 18px;"></div>
                 </div>
             </div>
 
@@ -569,7 +574,30 @@
         
         let currentTrack = 0;
         let audioPlayer = new Audio();
-        audioPlayer.loop = true;
+        let playbackMode = 'single'; 
+
+        // 🌟 رویداد پایان آهنگ: وقتی یه آهنگ تموم میشه چه اتفاقی بیفته؟
+        audioPlayer.onended = function() {
+            if (playbackMode === 'playlist') {
+                nextMusic(); // برو آهنگ بعدی و پخشش کن
+            } else {
+                audioPlayer.play(); // همین آهنگ رو از اول بخون
+            }
+        };
+
+        // 🌟 تابع تغییر حالت پخش با زدن روی دکمه
+        function toggleLoopMode() {
+            let btn = document.getElementById('loopModeBtn');
+            if (playbackMode === 'single') {
+                playbackMode = 'playlist';
+                btn.innerText = '🔁';
+                btn.title = 'پخش پشت‌سرهم';
+            } else {
+                playbackMode = 'single';
+                btn.innerText = '🔂';
+                btn.title = 'تکرار همین آهنگ';
+            }
+        }
 
         function toggleMusic() {
             // اگر آهنگی ست نشده، آهنگ دیفالت رو بذار
