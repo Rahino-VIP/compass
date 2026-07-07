@@ -192,14 +192,59 @@
             else { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); themeBtn.innerText = '☀️'; }
         }
 
+        // ==========================================
+        // 🛡️ دروازه‌بان امنیتی: بررسی تکمیل بودن فرم VIP
+        // ==========================================
+        async function checkVipSetup(userId) {
+            try {
+                // می‌گرده ببینه تو جدول vip-setting کدملی این شخص ثبت شده یا نه
+                const { data, error } = await supabaseClient
+                    .from('vip-setting') // 💡 نکته: اگر اسم جدولت تو سوپابیس آنلاین خط فاصله نداره (مثلاً vip_setting هست)، اینجا تغییرش بده
+                    .select('id')
+                    .eq('national_id', String(userId))
+                    .maybeSingle(); 
+
+                // اگر هیچ دیتایی پیدا نکرد یعنی فرم پر نشده!
+                if (!data) {
+                    alert("⚠️ رفیق! هنوز فرم استراتژی، کلاس‌ها و آزمون‌هات رو تکمیل نکردی!\nبدون این اطلاعات که نمی‌تونیم برات برنامه خفن بچینیم. اول این فرم رو پر کن.");
+                    // با replace می‌فرستیمش که نتونه با دکمه Back مرورگر برگرده!
+                    window.location.replace('vip-setup.html');
+                    return false;
+                }
+                
+                return true; // اگر فرم پر شده بود، درها باز میشه!
+            } catch (err) {
+                console.error("خطا در بررسی دروازه VIP:", err);
+                return true; // اگر اینترنت لحظه‌ای قطع شد، سخت نمی‌گیریم که بچه پشت در نمونه
+            }
+        }
+
+        // ==========================================
+        // 🚀 راه‌اندازی اولیه صفحه (لودینگ)
+        // ==========================================
         window.onload = async function() {
-            if (!userId || userId === '999999') { window.location.href = 'index.html'; return; }
+            // ۱. شناسایی هویت دقیق دانش‌آموز
+            const userId = localStorage.getItem('national_id') || 
+                           localStorage.getItem('qotbnama_user_id') || 
+                           localStorage.getItem('student_id') || 
+                           localStorage.getItem('chat_id');
+
+            if (!userId || userId === 'null' || userId === 'undefined') {
+                window.location.replace('index.html');
+                return;
+            }
+
+            // ۲. ⛔ توقف اجباری: فراخوانی دروازه‌بان امنیتی
+            const isSetupComplete = await checkVipSetup(userId);
+            if (!isSetupComplete) return; // اگر فرم پر نشده بود، کدهای زیر اصلاً اجرا نمیشن!
+
+            // ۳. اگر از دروازه رد شد، تاریخ امروز و بقیه چیزها لود میشه
             const todayShamsi = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
             document.getElementById('todayDateLabel').innerText = todayShamsi;
+            
             await checkMorningStatus();
             await loadCurrentSchedule();
         };
-
         // ==========================================
         // ☀️ سیستم بررسی و اجرای مینی‌گیم بیدارباش
         // ==========================================
