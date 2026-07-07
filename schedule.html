@@ -199,7 +199,7 @@
             try {
                 // می‌گرده ببینه تو جدول vip-setting کدملی این شخص ثبت شده یا نه
                 const { data, error } = await supabaseClient
-                    .from('vip-setting') // 💡 نکته: اگر اسم جدولت تو سوپابیس آنلاین خط فاصله نداره (مثلاً vip_setting هست)، اینجا تغییرش بده
+                    .from('vip_setting') // 💡 نکته: اگر اسم جدولت تو سوپابیس آنلاین خط فاصله نداره (مثلاً vip_setting هست)، اینجا تغییرش بده
                     .select('id')
                     .eq('national_id', String(userId))
                     .maybeSingle(); 
