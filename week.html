@@ -69,18 +69,26 @@
     </div>
 
     <script>
-const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); 
         
-        // 🌟 اصلاح ۱: استفاده از کلید درست برای دریافت کد ملی دانش‌آموز
-        const userId = localStorage.getItem('national_id') || '3456734567';
+        // 🌟 سیستم هوشمند استخراج آیدی (بدون هیچ آیدی پیش‌فرضی که باعث تداخل بشه)
+        const userId = localStorage.getItem('national_id') || 
+                       localStorage.getItem('qotbnama_user_id') || 
+                       localStorage.getItem('student_id') || 
+                       localStorage.getItem('chat_id');
+
+        // 🛡️ اگر هیچ آیدی پیدا نشد، به جای نشون دادن دیتای بقیه، کاربر رو پرت کن بیرون
+        if (!userId || userId === 'null' || userId === 'undefined') {
+            alert("❌ سیستم نمی‌تواند هویت شما را تشخیص دهد. لطفاً مجدداً وارد شوید.");
+            window.location.href = 'index.html';
+        }
         
         let allSchedules = []; let currentScheduleObj = null;
 
-        // 🌗 سیستم دارک مود
         const themeBtn = document.getElementById('themeBtn');
-        const currentTheme = localStorage.getItem('theme') || 'dark'; // پیش فرض دارک
+        const currentTheme = localStorage.getItem('theme') || 'dark'; 
         if (currentTheme === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); themeBtn.innerText = '☀️'; } else { themeBtn.innerText = '🌙'; }
 
         function toggleTheme() {
@@ -92,7 +100,6 @@ const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co';
         window.onload = async function() { await loadAllSchedules(); };
 
         async function loadAllSchedules() {
-            // 🌟 اصلاح ۲: جستجو در دیتابیس بر اساس national_id به جای chat_id
             const { data, error } = await supabaseClient.from('ai_schedules').select('*')
                 .eq('national_id', String(userId)).eq('status', 'approved').order('created_at', { ascending: false });
             
@@ -105,7 +112,7 @@ const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co';
             if (data && data.length > 0) {
                 allSchedules = data;
                 const selector = document.getElementById('weekSelector');
-                selector.innerHTML = ''; // پاک کردن گزینه‌های قبلی
+                selector.innerHTML = ''; 
                 
                 allSchedules.forEach((sch, index) => {
                     let opt = document.createElement('option'); 
@@ -116,7 +123,6 @@ const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co';
                 currentScheduleObj = allSchedules[0]; 
                 renderGCal();
             } else {
-                // 🌟 اضافه شدن پیام در صورت نبود برنامه
                 document.getElementById('gcalGrid').innerHTML = `
                     <div style="padding: 60px 20px; text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                         <span style="font-size: 50px; margin-bottom: 15px; opacity: 0.5;">🗓️</span>
@@ -128,15 +134,13 @@ const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co';
 
         function changeWeek(index) { currentScheduleObj = allSchedules[index]; renderGCal(); }
 
-        // تبدیل تاریخ میلادی به رشته شمسی (مثلاً ۲۴ مهر)
-       // تبدیل تاریخ بدون باگ منطقه زمانی
         function getShamsiDateStr(isoDateStr) {
             if(!isoDateStr) return "";
-            // جدا کردن سال، ماه و روز برای جلوگیری از باگ UTC
             let parts = isoDateStr.split('-');
             let dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
             return new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' }).format(dateObj);
         }
+
         function renderGCal() {
             const container = document.getElementById('gcalGrid'); container.innerHTML = '';
             const daysArr = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
@@ -148,9 +152,9 @@ const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co';
             const planArr = currentScheduleObj.raw_plan || [];
             
             daysArr.forEach(day => {
-                let dayBlocks = planArr.filter(p => p.day === day && p.subject !== "بانک جبرانی");
+                // 🌟 فیلتر حذف شد: حالا بانک جبرانی هم تو لیست روزها باقی می‌مونه
+                let dayBlocks = planArr.filter(p => p.day === day);
                 
-                // استخراج تاریخ واقعی این روز از اولین پارتِ همون روز
                 let actualDateShamsi = "تاریخ نامعلوم";
                 if(dayBlocks.length > 0 && dayBlocks[0].actual_date) {
                     actualDateShamsi = getShamsiDateStr(dayBlocks[0].actual_date);
@@ -165,14 +169,24 @@ const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co';
                     let endMins = (parseInt(part.end_time.split(':')[0])*60) + parseInt(part.end_time.split(':')[1]);
                     let topPx = Math.max(0, startMins - 360); let heightPx = endMins - startMins;
 
-                    let bgColor = "#64748b";
-                    if(part.type === 'class') bgColor = "#334155"; else if(part.type === 'online_debt') bgColor = "#ef4444";
-                    else if(part.subject.includes("زیست")) bgColor = "#10b981"; else if(part.subject.includes("ریاضی") || part.subject.includes("فیزیک")) bgColor = "#f59e0b";
-                    else if(part.subject.includes("شیمی")) bgColor = "#3b82f6"; else if(part.type === 'general') bgColor = "#8b5cf6";
+                    let bgColor = "#64748b"; // رنگ پیش‌فرض برای جبرانی و دروس عادی
+                    
+                    // 🌟 رنگ‌بندی تفکیک‌شده
+                    if(part.type === 'class') bgColor = "#334155"; 
+                    else if(part.type === 'online_debt') bgColor = "#ef4444";
+                    else if(part.subject.includes("زیست")) bgColor = "#10b981"; 
+                    else if(part.subject.includes("ریاضی") || part.subject.includes("فیزیک")) bgColor = "#f59e0b";
+                    else if(part.subject.includes("شیمی")) bgColor = "#3b82f6"; 
+                    else if(part.type === 'general') bgColor = "#8b5cf6";
+                    else if(part.subject.includes("جبرانی")) bgColor = "#475569"; // رنگ مخصوص باکس‌های جبرانی
 
                     let statusClass = part.status === 'completed' ? 'completed' : (part.status === 'shifted' ? 'shifted' : '');
+                    
+                    // 🌟 اگر درس شیفت شده بود، روی اسمش خط کشیده میشه
+                    let textDecoration = part.status === 'shifted' ? 'text-decoration: line-through;' : '';
+
                     dayHtml += `<div class="gcal-event ${statusClass}" style="top: ${topPx}px; height: ${heightPx}px; background: ${bgColor};" title="${part.subject}">
-                                    <div style="font-weight:900;font-size:11px;">${part.subject}</div>
+                                    <div style="font-weight:900;font-size:11px; ${textDecoration}">${part.subject}</div>
                                     <div style="font-size:9px;font-family:monospace;">${part.start_time}-${part.end_time}</div>
                                 </div>`;
                 });
