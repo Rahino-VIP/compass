@@ -92,7 +92,7 @@
             <div id="timerSubjectName" style="font-size:16px; color:var(--text-main); font-weight:bold; margin-bottom: 20px;"></div>
             
             <div id="breathContainer" style="height: 120px; display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
-                <div id="breathCircle" style="width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, rgba(16, 185, 129, 0.2), var(--success)); display: flex; align-items: center; justify-content: center; transition: transform 3s ease-in-out; transform: scale(1);">
+                <div id="breathCircle" style="width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, rgba(16, 185, 129, 0.2), var(--success)); display: flex; align-items: center; justify-content: center; transition: transform 2.5s ease-in-out; transform: scale(1);">
                     <span id="breathText" style="color: white; font-weight: bold; font-size: 14px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">آماده...</span>
                 </div>
             </div>
@@ -101,10 +101,12 @@
             
             <div style="background: var(--vip-bg); border-radius: 16px; padding: 12px; margin-bottom: 20px; border: 1px solid var(--vip-border);">
                 <div id="musicTrackName" style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; font-weight: bold;">موسیقی: در حال بارگذاری...</div>
-                <div style="display: flex; justify-content: center; gap: 20px; align-items: center; direction: ltr;">
-                    <button onclick="prevMusic()" style="background:none;border:none;font-size:22px;cursor:pointer;">⏮</button>
+                <div style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+                    <button onclick="prevMusic()" style="background:none;border:none;font-size:22px;cursor:pointer;" title="آهنگ قبلی">⏭</button>
+                    
                     <button id="playPauseBtn" onclick="toggleMusic()" style="background:var(--vip-surface); border:2px solid var(--vip-border); border-radius:50%; width:45px; height:45px; font-size:18px; cursor:pointer; display:flex; justify-content:center; align-items:center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">▶️</button>
-                    <button onclick="nextMusic()" style="background:none;border:none;font-size:22px;cursor:pointer;">⏭</button>
+                    
+                    <button onclick="nextMusic()" style="background:none;border:none;font-size:22px;cursor:pointer;" title="آهنگ بعدی">⏮</button>
                 </div>
             </div>
 
@@ -407,7 +409,7 @@
 
             let pendingTasks = todaysBlocks.filter(p => p.status === 'pending');
 
-            // 🌟 پیام جدید برای زمانی که همه تیک‌ها زده شده
+            // 🌟 پیام جدید و کامل برای زمانی که ۱۰۰٪ تیک‌ها زده شده (حل مشکل باکس‌های خالی)
             if (todaysBlocks.length > 0 && pendingTasks.length === 0) {
                 container.innerHTML = `
                     <div style="text-align:center; padding: 40px 20px; background: rgba(16, 185, 129, 0.05); border: 1px solid var(--success); border-radius: 20px; margin-top: 20px;">
@@ -440,8 +442,9 @@
                         </div>
                         <div class="quest-actions">
                             <div class="action-circle" onclick="shiftQuest('${part.block_id}')" title="انتقال به جبرانی">🔄</div>
-                            ${part.type !== 'class' ? `<div class="action-circle" onclick="openTimer('${part.subject}', '${part.start_time}', '${part.end_time}')" title="تایمر تمرکز">▶️</div>` : ''}
-                            <div class="action-circle btn-check" onclick="toggleQuest('${part.block_id}')" title="انجام شد">✅</div>
+                            ${part.type !== 'class' ? `<div class="action-circle" onclick="openTimer('${part.subject}', '${part.topic || ''}', '${part.start_time}', '${part.end_time}')" title="تایمر تمرکز">▶️</div>` : ''}
+                            
+                            <div class="action-circle btn-check" onclick="toggleQuest(event, '${part.block_id}')" title="انجام شد">✅</div>
                         </div>
                     </div>
                 `;
@@ -450,19 +453,35 @@
             isInitialLoad = false;
         }
 
+        // 🌟 ذخیره ایمن دیتابیس (جلوگیری از پریدن تیک موقع رفرش سریع)
         async function savePlanToDB() { 
-            await supabaseClient.from('ai_schedules').update({ raw_plan: currentScheduleObj.raw_plan }).eq('id', currentScheduleObj.id); 
+            const { error } = await supabaseClient.from('ai_schedules')
+                .update({ raw_plan: currentScheduleObj.raw_plan })
+                .eq('id', currentScheduleObj.id); 
+            if (error) throw error;
         }
 
-        // 🌟 اضافه شدن await برای جلوگیری از پریدن تیک‌ها
-        async function toggleQuest(blockId) {
-            let block = currentScheduleObj.raw_plan.find(p => p.block_id === blockId); if(!block) return;
+        async function toggleQuest(event, blockId) {
+            let block = currentScheduleObj.raw_plan.find(p => p.block_id === blockId); 
+            if(!block) return;
+            
+            // جلوگیری از کلیک اسپم و باگ رفرش
+            const btn = event.currentTarget;
+            btn.style.pointerEvents = 'none';
+            btn.innerText = '⏳';
+
             block.status = block.status === 'completed' ? 'pending' : 'completed';
             
-            await savePlanToDB(); // صبر میکنه تا تو دیتابیس ذخیره بشه
-            
-            updateProgressBar(); 
-            renderTodayTab(); 
+            try {
+                await savePlanToDB(); // صبر میکنه تا واقعاً ذخیره بشه
+                updateProgressBar(); 
+                renderTodayTab(); 
+            } catch (err) {
+                alert("❌ مشکل در ذخیره‌سازی! لطفاً اینترنت را چک کنید.");
+                block.status = block.status === 'completed' ? 'pending' : 'completed'; // برگرداندن به حالت قبل
+                btn.style.pointerEvents = 'auto';
+                btn.innerText = '✅';
+            }
         }
 
         async function shiftQuest(blockId) {
@@ -535,86 +554,105 @@
         }
 
         // ==========================================
-        // 🎵 سیستم تایمر، تنفس بادکنکی و موسیقی (کاملاً پایدار)
+        // 🎵 سیستم تایمر، تنفس بادکنکی و موسیقی (نسخه پایدار و نهایی)
         // ==========================================
         let timerInterval;
         let startTimeout;
+        let breathInterval;
         
-        // 🌟 لینک‌های رسمی و معتبر گوگل برای توسعه‌دهندگان (بدون فیلتر و بدون ارور)
+        // 🌟 لینک‌های مستقیم و تضمینی MP3 برای مطالعه (بدون فیلتر)
         const playlist = [
-            { name: '🌧️ باران شدید', url: 'https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg' },
-            { name: '🌊 امواج ساحل', url: 'https://actions.google.com/sounds/v1/water/ocean_waves_pebbles.ogg' },
-            { name: '🍃 طبیعت آرام', url: 'https://actions.google.com/sounds/v1/ambiences/relaxing_beach.ogg' }
+            { name: '🎧 لوفای تمرکز (Lo-Fi)', url: 'https://raw.githubusercontent.com/YoyoZhang24/RelaX50/main/audios/lofi.mp3' },
+            { name: '🌧️ باران آرامش‌بخش', url: 'https://raw.githubusercontent.com/YoyoZhang24/RelaX50/main/audios/rain.mp3' },
+            { name: '🌊 امواج ملایم ساحل', url: 'https://raw.githubusercontent.com/YoyoZhang24/RelaX50/main/audios/sea.mp3' }
         ];
         
         let currentTrack = 0;
         let audioPlayer = new Audio();
         audioPlayer.loop = true;
 
-        async function toggleMusic() {
-            if(audioPlayer.src === "") changeTrack(false);
+        function toggleMusic() {
+            // اگر آهنگی ست نشده، آهنگ دیفالت رو بذار
+            if (!audioPlayer.src || audioPlayer.src === window.location.href) {
+                audioPlayer.src = playlist[currentTrack].url;
+                document.getElementById('musicTrackName').innerText = `موسیقی: ${playlist[currentTrack].name}`;
+            }
             
-            if(audioPlayer.paused) { 
-                try {
-                    await audioPlayer.play(); 
+            if (audioPlayer.paused) {
+                audioPlayer.play().then(() => {
                     document.getElementById('playPauseBtn').innerText = '⏸️'; 
-                } catch(e) {
-                    console.log("پخش خودکار صوتی متوقف شد:", e);
-                }
+                }).catch(e => console.log("مرورگر اجازه پخش نداد:", e));
             } else { 
                 audioPlayer.pause(); 
                 document.getElementById('playPauseBtn').innerText = '▶️'; 
             }
         }
 
-        function nextMusic() { currentTrack = (currentTrack + 1) % playlist.length; changeTrack(true); }
-        function prevMusic() { currentTrack = (currentTrack - 1 + playlist.length) % playlist.length; changeTrack(true); }
-        
-        function changeTrack(autoPlay = false) {
+        function changeTrack() {
+            let wasPlaying = !audioPlayer.paused;
             audioPlayer.src = playlist[currentTrack].url;
             document.getElementById('musicTrackName').innerText = `موسیقی: ${playlist[currentTrack].name}`;
-            if(autoPlay) {
-                audioPlayer.play().then(() => document.getElementById('playPauseBtn').innerText = '⏸️').catch(e => console.log(e));
+            
+            if (wasPlaying) {
+                audioPlayer.play().then(() => {
+                    document.getElementById('playPauseBtn').innerText = '⏸️'; 
+                }).catch(e => console.log(e));
             } else {
                 document.getElementById('playPauseBtn').innerText = '▶️';
             }
         }
 
-        function openTimer(subject, startTime, endTime) {
+        function nextMusic() { 
+            currentTrack = (currentTrack + 1) % playlist.length; 
+            changeTrack(); 
+        }
+        
+        function prevMusic() { 
+            currentTrack = (currentTrack - 1 + playlist.length) % playlist.length; 
+            changeTrack(); 
+        }
+
+        function openTimer(subject, topic, startTime, endTime) {
             document.getElementById('timerModal').style.display = 'flex';
             
-            // ریست کردن ظاهر مودال برای شروع جدید
+            // ریست کردن ظاهر مودال برای شروع
             document.getElementById('breathContainer').style.display = 'flex';
             document.getElementById('timerDisplay').style.display = 'none';
             
             let sName = localStorage.getItem('student_name') ? localStorage.getItem('student_name').split(' ')[0] : 'قهرمان';
-            document.getElementById('timerSubjectName').innerHTML = `${sName} جان، قبل از شروع چند ثانیه ذهنت رو آزاد کن...`;
             
-            changeTrack(false); 
+            // 🌟 اضافه شدن اسم مبحث (topic) به نمایشگر تایمر
+            document.getElementById('timerSubjectName').innerHTML = `${sName} جان، ذهنت رو آزاد کن...<br>
+            <span style="color:var(--gold); font-size: 18px; display:block; margin-top:8px;">${subject}</span>
+            <span style="color:var(--text-muted); font-size: 13px;">${topic && topic !== 'undefined' ? topic : ''}</span>`;
+            
+            // آماده‌سازی موسیقی اول
+            audioPlayer.src = playlist[currentTrack].url;
+            document.getElementById('musicTrackName').innerText = `موسیقی: ${playlist[currentTrack].name}`;
+            document.getElementById('playPauseBtn').innerText = '▶️'; 
             
             let circle = document.getElementById('breathCircle');
             let bText = document.getElementById('breathText');
             
-            // 🌟 انیمیشن تنفس فقط برای ۶ ثانیه اجرا میشه
-            bText.innerText = 'دم...';
-            circle.style.transform = 'scale(1.5)';
+            // 🌟 انیمیشن تنفس بادکنکی (فقط یک دور، جمعاً ۵ ثانیه)
+            bText.innerText = 'نفس عمیق...';
+            setTimeout(() => { circle.style.transform = 'scale(1.4)'; }, 100);
             
             setTimeout(() => {
                 circle.style.transform = 'scale(0.8)';
-                bText.innerText = 'بازدم...';
-            }, 3000);
+                bText.innerText = 'رها کن...';
+            }, 2500);
 
-            // بعد از ۶ ثانیه انیمیشن تنفس محو و تایمر اصلی ظاهر میشه
+            // بعد از ۵ ثانیه انیمیشن محو و تایمر ظاهر میشه
             startTimeout = setTimeout(() => {
                 document.getElementById('breathContainer').style.display = 'none';
                 document.getElementById('timerDisplay').style.display = 'block';
-                document.getElementById('timerSubjectName').innerHTML = `درحال تمرکز روی<br><span style="color:var(--gold); font-size: 20px;">${subject}</span>`;
                 
-                // پخش خودکار موسیقی با شروع تایمر
-                if(audioPlayer.paused) toggleMusic();
+                // پخش خودکار موسیقی اگر مرورگر اجازه بده
+                toggleMusic();
 
                 let t = (timeStrToMins(endTime) - timeStrToMins(startTime)) * 60;
-                if(t <= 0) t = 90 * 60; // دیفالت ۹۰ دقیقه
+                if(t <= 0) t = 90 * 60; 
 
                 timerInterval = setInterval(() => {
                     t--; 
@@ -625,7 +663,7 @@
                         closeTimer(); 
                     }
                 }, 1000);
-            }, 6000);
+            }, 5500);
         }
 
         function closeTimer() { 
@@ -633,6 +671,7 @@
             clearInterval(timerInterval); 
             audioPlayer.pause();
             audioPlayer.currentTime = 0; 
+            document.getElementById('playPauseBtn').innerText = '▶️';
             
             // برگرداندن تنظیمات به حالت اولیه
             document.getElementById('breathCircle').style.transform = 'scale(1)';
