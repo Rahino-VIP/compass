@@ -89,21 +89,19 @@
 
     <div class="modal-overlay" id="timerModal">
         <div class="modal-box" style="text-align: center; max-width: 380px;">
-            <div id="timerSubjectName" style="font-size:15px; color:var(--text-main); font-weight:bold; margin-bottom: 15px;"></div>
+            <div id="timerSubjectName" style="font-size:16px; color:var(--text-main); font-weight:bold; margin-bottom: 20px;"></div>
             
-            <!-- انیمیشن تنفس بادکنکی -->
-            <div style="height: 120px; display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
+            <div id="breathContainer" style="height: 120px; display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
                 <div id="breathCircle" style="width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, rgba(16, 185, 129, 0.2), var(--success)); display: flex; align-items: center; justify-content: center; transition: transform 3s ease-in-out; transform: scale(1);">
                     <span id="breathText" style="color: white; font-weight: bold; font-size: 14px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">آماده...</span>
                 </div>
             </div>
 
-            <div class="timer-display" id="timerDisplay" style="font-size: 55px; font-weight: 900; color: var(--gold); font-family: monospace; margin: 10px 0;">00:00</div>
+            <div class="timer-display" id="timerDisplay" style="display: none; font-size: 55px; font-weight: 900; color: var(--gold); font-family: monospace; margin: 10px 0;">00:00</div>
             
-            <!-- موزیک پلیر -->
             <div style="background: var(--vip-bg); border-radius: 16px; padding: 12px; margin-bottom: 20px; border: 1px solid var(--vip-border);">
                 <div id="musicTrackName" style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; font-weight: bold;">موسیقی: در حال بارگذاری...</div>
-                <div style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+                <div style="display: flex; justify-content: center; gap: 20px; align-items: center; direction: ltr;">
                     <button onclick="prevMusic()" style="background:none;border:none;font-size:22px;cursor:pointer;">⏮</button>
                     <button id="playPauseBtn" onclick="toggleMusic()" style="background:var(--vip-surface); border:2px solid var(--vip-border); border-radius:50%; width:45px; height:45px; font-size:18px; cursor:pointer; display:flex; justify-content:center; align-items:center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">▶️</button>
                     <button onclick="nextMusic()" style="background:none;border:none;font-size:22px;cursor:pointer;">⏭</button>
@@ -394,7 +392,8 @@
 
         function renderTodayTab() {
             const planArr = currentScheduleObj.raw_plan || [];
-            const container = document.getElementById('questsContainer'); container.innerHTML = '';
+            const container = document.getElementById('questsContainer'); 
+            container.innerHTML = '';
 
             let todaysBlocks = planArr.filter(p => 
                 p.day === renderDayFa && 
@@ -404,18 +403,33 @@
                 (p.type !== 'class' || p.topic === 'کلاس آنلاین')
             );
 
-            // 🌟 مرتب‌سازی لیست بر اساس زمان شروع (از صبح تا شب)
             todaysBlocks.sort((a, b) => timeStrToMins(a.start_time) - timeStrToMins(b.start_time));
 
-            if (todaysBlocks.filter(p => p.status === 'pending').length === 0) { 
-                let msg = renderDayFa === todayNameFa ? 'امروز مأموریتی نداری! 🏖️' : `مأموریت‌های ${renderDayFa} تکمیل شد!`;
-                container.innerHTML = `<div style="text-align:center;color:var(--text-muted);">${msg}</div>`; 
+            let pendingTasks = todaysBlocks.filter(p => p.status === 'pending');
+
+            // 🌟 پیام جدید برای زمانی که همه تیک‌ها زده شده
+            if (todaysBlocks.length > 0 && pendingTasks.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding: 40px 20px; background: rgba(16, 185, 129, 0.05); border: 1px solid var(--success); border-radius: 20px; margin-top: 20px;">
+                        <div style="font-size: 50px; margin-bottom: 15px;">🏆</div>
+                        <h3 style="color: var(--success); margin-bottom: 10px;">آفرین قهرمان!</h3>
+                        <p style="color:var(--text-muted); font-size: 14px; line-height: 1.8;">
+                            تیک تمام کارهای ${renderDayFa === todayNameFa ? 'امروز' : 'این روز'} رو زدی و دیگه چیزی برای انجام نمونده. 
+                            حالا می‌تونی با خیال راحت استراحت کنی.
+                        </p>
+                    </div>`;
+                updateProgressBar();
+                return;
+            }
+
+            if (todaysBlocks.length === 0) { 
+                container.innerHTML = `<div style="text-align:center;color:var(--text-muted); padding:40px;">امروز مأموریتی نداشتی! 🏖️</div>`; 
                 updateProgressBar(); 
                 return; 
             }
 
             todaysBlocks.forEach((part) => {
-                if(part.status === 'shifted') return; // تو نمای روزانه مخفی میشه، اما تو هفتگی میمونه
+                if(part.status === 'shifted') return; 
                 let cardClass = part.status === 'completed' ? 'completed' : '';
                 container.innerHTML += `
                     <div class="quest-card type-${part.type || 'default'} ${cardClass}" id="card_${part.block_id}">
@@ -436,16 +450,22 @@
             isInitialLoad = false;
         }
 
-        async function savePlanToDB() { await supabaseClient.from('ai_schedules').update({ raw_plan: currentScheduleObj.raw_plan }).eq('id', currentScheduleObj.id); }
-
-        function toggleQuest(blockId) {
-            let block = currentScheduleObj.raw_plan.find(p => p.block_id === blockId); if(!block) return;
-            block.status = block.status === 'completed' ? 'pending' : 'completed';
-            updateProgressBar(); savePlanToDB();
-            renderTodayTab(); // 🌟 رفرش خودکار ظاهر
+        async function savePlanToDB() { 
+            await supabaseClient.from('ai_schedules').update({ raw_plan: currentScheduleObj.raw_plan }).eq('id', currentScheduleObj.id); 
         }
 
-        function shiftQuest(blockId) {
+        // 🌟 اضافه شدن await برای جلوگیری از پریدن تیک‌ها
+        async function toggleQuest(blockId) {
+            let block = currentScheduleObj.raw_plan.find(p => p.block_id === blockId); if(!block) return;
+            block.status = block.status === 'completed' ? 'pending' : 'completed';
+            
+            await savePlanToDB(); // صبر میکنه تا تو دیتابیس ذخیره بشه
+            
+            updateProgressBar(); 
+            renderTodayTab(); 
+        }
+
+        async function shiftQuest(blockId) {
             let planArr = currentScheduleObj.raw_plan;
             let origIdx = planArr.findIndex(p => p.block_id === blockId);
             let origBlock = planArr[origIdx];
@@ -465,12 +485,11 @@
                 }
             }
 
-            // 🌟 تغییر وضعیت (حل مشکل تقویم هفتگی: روز عوض نمیشه تا تو تقویم قرمز نشون داده بشه)
             origBlock.status = 'shifted'; 
 
             if(availableMakeups.length < neededMakeups) { 
                 alert(`متاسفانه جبرانی خالی نمونده! این درس رفت رو «نیمکت» برای هفته‌ی بعد.`); 
-                origBlock.is_benched = true; // علامت‌گذاری برای هوش مصنوعیِ هفته بعد
+                origBlock.is_benched = true; 
             } else {
                 for(let i=0; i<neededMakeups; i++) {
                     let mIdx = availableMakeups[i];
@@ -480,9 +499,9 @@
                 }
             }
 
-            savePlanToDB();
+            await savePlanToDB();
             updateProgressBar();
-            renderTodayTab(); // 🌟 رفرش خودکار باکس‌های جدید تو همون صفحه
+            renderTodayTab(); 
         }
 
         function updateProgressBar() {
@@ -506,7 +525,6 @@
                     triggerConfetti(); 
                     hasCelebratedToday = true;
                     
-                    // 🌟 انتقال خودکار به روزِ بعدی بعد از ۳ ثانیه
                     setTimeout(() => {
                         document.getElementById('celebrationModal').style.display = 'none';
                         determineRenderDay(); 
@@ -517,90 +535,107 @@
         }
 
         // ==========================================
-        // 🎵 سیستم تایمر، تنفس بادکنکی و موسیقی
+        // 🎵 سیستم تایمر، تنفس بادکنکی و موسیقی (کاملاً پایدار)
         // ==========================================
         let timerInterval;
-        let breathInterval;
+        let startTimeout;
         
-        // لیست موسیقی‌های آرامش‌بخش
+        // 🌟 لینک‌های رسمی و معتبر گوگل برای توسعه‌دهندگان (بدون فیلتر و بدون ارور)
         const playlist = [
-            { name: '🌧️ باران و طبیعت', url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=rain-and-birds-nature-sounds-8164.mp3' },
-            { name: '🌊 امواج آرام دریا', url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_291136b63f.mp3?filename=ocean-waves-112906.mp3' },
-            { name: '🎧 لوفای تمرکز عمیق', url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_82c0f214b6.mp3?filename=lofi-study-112191.mp3' }
+            { name: '🌧️ باران شدید', url: 'https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg' },
+            { name: '🌊 امواج ساحل', url: 'https://actions.google.com/sounds/v1/water/ocean_waves_pebbles.ogg' },
+            { name: '🍃 طبیعت آرام', url: 'https://actions.google.com/sounds/v1/ambiences/relaxing_beach.ogg' }
         ];
+        
         let currentTrack = 0;
         let audioPlayer = new Audio();
         audioPlayer.loop = true;
 
-        function toggleMusic() {
+        async function toggleMusic() {
             if(audioPlayer.src === "") changeTrack(false);
+            
             if(audioPlayer.paused) { 
-                audioPlayer.play(); 
-                document.getElementById('playPauseBtn').innerText = '⏸️'; 
+                try {
+                    await audioPlayer.play(); 
+                    document.getElementById('playPauseBtn').innerText = '⏸️'; 
+                } catch(e) {
+                    console.log("پخش خودکار صوتی متوقف شد:", e);
+                }
             } else { 
                 audioPlayer.pause(); 
                 document.getElementById('playPauseBtn').innerText = '▶️'; 
             }
         }
+
         function nextMusic() { currentTrack = (currentTrack + 1) % playlist.length; changeTrack(true); }
         function prevMusic() { currentTrack = (currentTrack - 1 + playlist.length) % playlist.length; changeTrack(true); }
         
         function changeTrack(autoPlay = false) {
             audioPlayer.src = playlist[currentTrack].url;
             document.getElementById('musicTrackName').innerText = `موسیقی: ${playlist[currentTrack].name}`;
-            if(autoPlay && document.getElementById('playPauseBtn').innerText === '⏸️') audioPlayer.play();
+            if(autoPlay) {
+                audioPlayer.play().then(() => document.getElementById('playPauseBtn').innerText = '⏸️').catch(e => console.log(e));
+            } else {
+                document.getElementById('playPauseBtn').innerText = '▶️';
+            }
         }
 
         function openTimer(subject, startTime, endTime) {
             document.getElementById('timerModal').style.display = 'flex';
-            document.getElementById('timerSubjectName').innerText = `ماموریت: ${subject}`;
-            changeTrack(false); // لود موسیقی اول بدون پخش
-            document.getElementById('playPauseBtn').innerText = '▶️';
-
-            let t = (timeStrToMins(endTime) - timeStrToMins(startTime)) * 60;
-            if(t <= 0) t = 90 * 60;
-
-            let display = document.getElementById('timerDisplay');
+            
+            // ریست کردن ظاهر مودال برای شروع جدید
+            document.getElementById('breathContainer').style.display = 'flex';
+            document.getElementById('timerDisplay').style.display = 'none';
+            
+            let sName = localStorage.getItem('student_name') ? localStorage.getItem('student_name').split(' ')[0] : 'قهرمان';
+            document.getElementById('timerSubjectName').innerHTML = `${sName} جان، قبل از شروع چند ثانیه ذهنت رو آزاد کن...`;
+            
+            changeTrack(false); 
+            
             let circle = document.getElementById('breathCircle');
             let bText = document.getElementById('breathText');
             
-            // 🌟 شروع انیمیشن تنفس بادکنکی (دم و بازدم ۳ ثانیه‌ای)
-            let isBreathIn = true;
+            // 🌟 انیمیشن تنفس فقط برای ۶ ثانیه اجرا میشه
             bText.innerText = 'دم...';
             circle.style.transform = 'scale(1.5)';
             
-            breathInterval = setInterval(() => {
-                isBreathIn = !isBreathIn;
-                if(isBreathIn) {
-                    circle.style.transform = 'scale(1.5)';
-                    bText.innerText = 'دم...';
-                } else {
-                    circle.style.transform = 'scale(0.8)';
-                    bText.innerText = 'بازدم...';
-                }
+            setTimeout(() => {
+                circle.style.transform = 'scale(0.8)';
+                bText.innerText = 'بازدم...';
             }, 3000);
 
-            // شروع تایمر اصلی
-            timerInterval = setInterval(() => {
-                t--; 
-                display.innerText = `${Math.floor(t/60).toString().padStart(2,'0')}:${(t%60).toString().padStart(2,'0')}`;
-                if(t <= 0) { 
-                    alert("⏰ خسته نباشی! پارت تموم شد."); 
-                    closeTimer(); 
-                }
-            }, 1000);
+            // بعد از ۶ ثانیه انیمیشن تنفس محو و تایمر اصلی ظاهر میشه
+            startTimeout = setTimeout(() => {
+                document.getElementById('breathContainer').style.display = 'none';
+                document.getElementById('timerDisplay').style.display = 'block';
+                document.getElementById('timerSubjectName').innerHTML = `درحال تمرکز روی<br><span style="color:var(--gold); font-size: 20px;">${subject}</span>`;
+                
+                // پخش خودکار موسیقی با شروع تایمر
+                if(audioPlayer.paused) toggleMusic();
+
+                let t = (timeStrToMins(endTime) - timeStrToMins(startTime)) * 60;
+                if(t <= 0) t = 90 * 60; // دیفالت ۹۰ دقیقه
+
+                timerInterval = setInterval(() => {
+                    t--; 
+                    document.getElementById('timerDisplay').innerText = `${Math.floor(t/60).toString().padStart(2,'0')}:${(t%60).toString().padStart(2,'0')}`;
+                    if(t <= 0) { 
+                        clearInterval(timerInterval); 
+                        alert("⏰ خسته نباشی! پارت تموم شد."); 
+                        closeTimer(); 
+                    }
+                }, 1000);
+            }, 6000);
         }
 
         function closeTimer() { 
+            clearTimeout(startTimeout);
             clearInterval(timerInterval); 
-            clearInterval(breathInterval);
             audioPlayer.pause();
-            audioPlayer.currentTime = 0; // ریست موزیک
+            audioPlayer.currentTime = 0; 
             
-            // بازگرداندن تنظیمات اولیه تنفس
+            // برگرداندن تنظیمات به حالت اولیه
             document.getElementById('breathCircle').style.transform = 'scale(1)';
-            document.getElementById('breathText').innerText = 'آماده...';
-            document.getElementById('timerDisplay').innerText = '00:00';
             document.getElementById('timerModal').style.display = 'none'; 
         }
     </script>
