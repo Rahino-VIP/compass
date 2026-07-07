@@ -172,7 +172,7 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); 
         
         // 💡 اصلاح شد: خواندن کد ملی به عنوان آیدی اصلی
-        const userId = localStorage.getItem('qotbnama_user_id') || '999999';
+        const userId = localStorage.getItem('qotbnama_user_id');
         
         const todayNameFa = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(new Date());
         let currentScheduleObj = null;
@@ -197,25 +197,29 @@
         // ==========================================
         async function checkVipSetup(userId) {
             try {
-                // می‌گرده ببینه تو جدول vip-setting کدملی این شخص ثبت شده یا نه
+                // 💡 اصلاح ۱: اسم جدول دقیقاً شد همونی که گفتی
                 const { data, error } = await supabaseClient
-                    .from('vip_settings') // 💡 نکته: اگر اسم جدولت تو سوپابیس آنلاین خط فاصله نداره (مثلاً vip_setting هست)، اینجا تغییرش بده
-                    .select('id')
+                    .from('vip_settings') 
+                    .select('*') // 💡 اصلاح ۲: گذاشتیم روی * که اگر ستون id رو نساخته بودی ارور نده
                     .eq('national_id', String(userId))
                     .maybeSingle(); 
 
-                // اگر هیچ دیتایی پیدا نکرد یعنی فرم پر نشده!
+                // 💡 برای اینکه دقیقاً بفهمیم دردش چیه، ارور رو تو کنسول چاپ می‌کنیم
+                if (error) {
+                    console.error("ارور امنیتی یا ارتباطی سوپابیس:", error);
+                }
+
+                // اگر هیچ دیتایی پیدا نکرد یعنی فرم پر نشده یا RLS روشنه
                 if (!data) {
                     alert("⚠️ رفیق! هنوز فرم استراتژی، کلاس‌ها و آزمون‌هات رو تکمیل نکردی!\nبدون این اطلاعات که نمی‌تونیم برات برنامه خفن بچینیم. اول این فرم رو پر کن.");
-                    // با replace می‌فرستیمش که نتونه با دکمه Back مرورگر برگرده!
                     window.location.replace('vip-setup.html');
                     return false;
                 }
                 
-                return true; // اگر فرم پر شده بود، درها باز میشه!
+                return true; 
             } catch (err) {
                 console.error("خطا در بررسی دروازه VIP:", err);
-                return true; // اگر اینترنت لحظه‌ای قطع شد، سخت نمی‌گیریم که بچه پشت در نمونه
+                return true; // اگر اینترنت قطع بود، گیر نده
             }
         }
 
