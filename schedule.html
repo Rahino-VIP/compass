@@ -459,6 +459,7 @@
         }
 
         // 🌟 ذخیره ایمن دیتابیس (جلوگیری از پریدن تیک موقع رفرش سریع)
+        // 🌟 ذخیره ایمن دیتابیس (جدا شدن بخش دیتابیس از خطاهای احتمالی گرافیکی)
         async function savePlanToDB() { 
             const { error } = await supabaseClient.from('ai_schedules')
                 .update({ raw_plan: currentScheduleObj.raw_plan })
@@ -470,22 +471,31 @@
             let block = currentScheduleObj.raw_plan.find(p => p.block_id === blockId); 
             if(!block) return;
             
-            // جلوگیری از کلیک اسپم و باگ رفرش
             const btn = event.currentTarget;
             btn.style.pointerEvents = 'none';
             btn.innerText = '⏳';
 
             block.status = block.status === 'completed' ? 'pending' : 'completed';
             
+            // ۱. اول فقط دیتابیس رو آپدیت می‌کنیم
             try {
-                await savePlanToDB(); // صبر میکنه تا واقعاً ذخیره بشه
-                updateProgressBar(); 
-                renderTodayTab(); 
+                await savePlanToDB(); 
             } catch (err) {
+                console.error(err);
                 alert("❌ مشکل در ذخیره‌سازی! لطفاً اینترنت را چک کنید.");
-                block.status = block.status === 'completed' ? 'pending' : 'completed'; // برگرداندن به حالت قبل
+                // اگر واقعا اینترنت قطع بود، تیک رو برگردون
+                block.status = block.status === 'completed' ? 'pending' : 'completed'; 
                 btn.style.pointerEvents = 'auto';
                 btn.innerText = '✅';
+                return;
+            }
+
+            // ۲. آپدیت ظاهر سایت (خارج از محدوده خطای دیتابیس)
+            try {
+                updateProgressBar(); 
+                renderTodayTab(); 
+            } catch(uiErr) {
+                console.error("خطای گرافیکی نادیده گرفته شد:", uiErr);
             }
         }
 
@@ -509,12 +519,14 @@
                 }
             }
 
-            origBlock.status = 'shifted'; 
-
+            // 🌟 منطق هوشمند جبرانی و نیمکت
             if(availableMakeups.length < neededMakeups) { 
-                alert(`متاسفانه جبرانی خالی نمونده! این درس رفت رو «نیمکت» برای هفته‌ی بعد.`); 
+                alert(`متاسفانه جبرانی خالی نمونده! این درس به عنوان بدهی رفت رو «نیمکت» برای هفته‌ی بعد.`); 
+                origBlock.status = 'pending'; // باید پندینگ بمونه تا هفته بعد دیده بشه
+                origBlock.day = 'bench';      // کلمه کلیدی برای ربات برنامه‌ریز
                 origBlock.is_benched = true; 
             } else {
+                origBlock.status = 'shifted'; 
                 for(let i=0; i<neededMakeups; i++) {
                     let mIdx = availableMakeups[i];
                     planArr[mIdx].subject = origBlock.subject + (neededMakeups > 1 ? ` (بخش ${i+1})` : " (جبرانی)");
@@ -523,9 +535,13 @@
                 }
             }
 
-            await savePlanToDB();
-            updateProgressBar();
-            renderTodayTab(); 
+            try {
+                await savePlanToDB();
+                updateProgressBar();
+                renderTodayTab(); 
+            } catch(err) {
+                alert("❌ مشکل در انتقال! لطفاً اینترنت را چک کنید.");
+            }
         }
 
         function updateProgressBar() {
@@ -535,7 +551,8 @@
                 !p.subject.includes('ناهار') && 
                 !p.subject.includes('شام') && 
                 (p.type !== 'class' || p.topic === 'کلاس آنلاین') && 
-                p.status !== 'shifted'
+                p.status !== 'shifted' &&
+                p.day !== 'bench' // روی نیمکتی‌ها تو درصد امروز حساب نمیشن
             );
             const completedToday = activeToday.filter(p => p.status === 'completed');
             let percent = activeToday.length > 0 ? Math.round((completedToday.length / activeToday.length) * 100) : 0;
@@ -545,19 +562,21 @@
             
             if(percent === 100 && activeToday.length > 0) { 
                 if (!isInitialLoad && !hasCelebratedToday) {
-                    document.getElementById('celebrationModal').style.display = 'flex'; 
-                    triggerConfetti(); 
                     hasCelebratedToday = true;
+                    const celebModal = document.getElementById('celebrationModal');
+                    if (celebModal) celebModal.style.display = 'flex'; 
+                    
+                    // 🛡️ گارد محافظ برای ارور گرافیکی کاغذ رنگی
+                    try { triggerConfetti(); } catch(e) {} 
                     
                     setTimeout(() => {
-                        document.getElementById('celebrationModal').style.display = 'none';
+                        if (celebModal) celebModal.style.display = 'none';
                         determineRenderDay(); 
                         renderTodayTab(); 
                     }, 3500);
                 }
             } else { hasCelebratedToday = false; }
         }
-
         // ==========================================
         // 🎵 سیستم تایمر، تنفس بادکنکی و موسیقی (نسخه پایدار و نهایی)
         // ==========================================
