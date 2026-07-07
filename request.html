@@ -107,13 +107,16 @@
         const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
 
         async function requestNewSchedule() {
-            // دریافت دقیق کد ملی از حافظه مرورگر
-            const userId = localStorage.getItem('national_id'); 
+            // 🛡️ سیستم هوشمند استخراج آیدی (تمام کلیدهای احتمالی پروژه‌ات رو می‌گرده)
+            const userId = localStorage.getItem('national_id') || 
+                           localStorage.getItem('qotbnama_user_id') || 
+                           localStorage.getItem('student_id') || 
+                           localStorage.getItem('chat_id');
             
-            // 🛡️ سیستم امنیتی: جلوگیری از تداخل حساب‌ها
-            if (!userId) {
-                alert("❌ خطای احراز هویت: سیستم نمی‌تواند هویت شما را تشخیص دهد. لطفاً یک بار از حساب خارج شده و مجدداً وارد شوید.");
-                window.location.href = 'index.html'; // هدایت به صفحه لاگین
+            // اگر بعد از گشتنِ همه این کلیدها بازم چیزی پیدا نکرد، یعنی واقعاً لاگین نیست
+            if (!userId || userId === 'null' || userId === 'undefined') {
+                alert("❌ خطای احراز هویت: لطفاً یک بار از حساب خارج شده و مجدداً وارد شوید.");
+                window.location.href = 'index.html';
                 return;
             }
 
@@ -132,7 +135,7 @@
             }
 
             try {
-                // ارسال ریکوئست به سرور با کد ملی قطعی و مطمئن
+                // ارسال ریکوئست به سرور
                 const response = await fetch(GAS_WEBAPP_URL, {
                     method: 'POST', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
