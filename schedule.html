@@ -88,10 +88,15 @@
     </div>
 
     <div class="modal-overlay" id="timerModal">
-        <div class="modal-box">
-            <div id="timerSubjectName" style="font-size:20px;color:white;font-weight:bold;">آماده‌سازی ذهن...</div>
-            <div class="timer-display" id="timerDisplay" style="font-size: 70px; font-weight: 900; color: var(--gold); font-family: monospace; margin: 20px 0;">🧘‍♂️</div>
-            <button class="btn-outline" onclick="closeTimer()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); width: 100%; padding: 15px; border-radius: 12px;">توقف</button>
+        <div class="modal-box" style="text-align: center;">
+            <div id="timerSubjectName" style="font-size:18px; color:white; font-weight:bold; line-height: 1.8;">آماده‌سازی ذهن...</div>
+            <div class="timer-display" id="timerDisplay" style="font-size: 70px; font-weight: 900; color: var(--gold); font-family: monospace; margin: 20px 0; transition: 0.5s;">🧘‍♂️</div>
+            
+            <audio id="focusAudio" loop>
+                <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=rain-and-birds-nature-sounds-8164.mp3" type="audio/mpeg">
+            </audio>
+
+            <button class="btn-outline" onclick="closeTimer()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); width: 100%; padding: 15px; border-radius: 12px; cursor: pointer; font-weight: bold;">توقف و خروج</button>
         </div>
     </div>
 
@@ -314,27 +319,76 @@
                 document.getElementById('wakeupModal').style.display = 'none';
             }
         }
+        const daysArr = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+        let renderDayFa = todayNameFa; // روزی که قراره رو صفحه نشون داده بشه
+
+        function timeStrToMins(timeStr) {
+            if(!timeStr) return 0;
+            let parts = timeStr.split(':');
+            return (parseInt(parts[0]) * 60) + parseInt(parts[1]);
+        }
+
         async function loadCurrentSchedule() {
-            // 💡 اصلاح شد: جستجو با national_id
             const { data, error } = await supabaseClient.from('ai_schedules').select('*')
                 .eq('national_id', String(userId)).eq('status', 'approved').order('created_at', { ascending: false }).limit(1);
-            if (data && data.length > 0) { currentScheduleObj = data[0]; renderTodayTab(); } 
-            else { document.getElementById('questsContainer').innerHTML = '<div style="text-align:center;color:var(--text-muted);">برنامه‌ای یافت نشد.</div>'; }
+            
+            if (data && data.length > 0) { 
+                currentScheduleObj = data[0]; 
+                determineRenderDay(); // 🌟 پیدا کردن روزِ عقب‌افتاده
+                renderTodayTab(); 
+            } else { 
+                document.getElementById('questsContainer').innerHTML = '<div style="text-align:center;color:var(--text-muted);">برنامه‌ای یافت نشد.</div>'; 
+            }
+        }
+
+        // 🌟 تابع هوشمند برای گیر دادن به روزهای انجام‌نشده!
+        function determineRenderDay() {
+            let todayIdx = daysArr.indexOf(todayNameFa);
+            if(todayIdx === -1) todayIdx = 6; 
+
+            // از شنبه تا امروز رو می‌گرده
+            for (let i = 0; i <= todayIdx; i++) {
+                let dayTasks = currentScheduleObj.raw_plan.filter(p => 
+                    p.day === daysArr[i] && 
+                    p.status === 'pending' && 
+                    p.subject !== 'بانک جبرانی' && 
+                    !p.subject.includes('ناهار') && 
+                    !p.subject.includes('شام') && 
+                    (p.type !== 'class' || p.topic === 'کلاس آنلاین') // کلاس‌های آنلاین رو هم حساب می‌کنه
+                );
+
+                if (dayTasks.length > 0) {
+                    renderDayFa = daysArr[i];
+                    break; // اولین روزی که کارِ نکرده داره رو قفل می‌کنه
+                }
+            }
+
+            // آپدیت هدر برای اینکه دانش‌آموز بدونه تو کدوم روزه
+            if (renderDayFa !== todayNameFa) {
+                document.getElementById('todayDateLabel').innerText = `⚠️ در حال تکمیل عقب‌افتادگی‌های ${renderDayFa}`;
+                document.getElementById('todayDateLabel').style.color = 'var(--danger)';
+            }
         }
 
         function renderTodayTab() {
             const planArr = currentScheduleObj.raw_plan || [];
-            const motivations = currentScheduleObj.ai_motivations || {};
-            
-            if (motivations.daily_motivations && motivations.daily_motivations[todayNameFa]) {
-                document.getElementById('dailyNoteBox').style.display = 'block';
-                document.getElementById('dailyNoteContent').innerText = motivations.daily_motivations[todayNameFa];
-            }
-
-            const todaysBlocks = planArr.filter(p => p.day === todayNameFa && p.subject !== 'بانک جبرانی' && !p.subject.includes('ناهار') && !p.subject.includes('شام') && p.type !== 'class');
             const container = document.getElementById('questsContainer'); container.innerHTML = '';
 
-            if (todaysBlocks.length === 0) { container.innerHTML = '<div style="text-align:center;color:var(--text-muted);">امروز مأموریتی نداری! 🏖️</div>'; updateProgressBar(); return; }
+            // 🌟 فیلتر جدید: شامل کلاس‌های آنلاین هم میشه
+            const todaysBlocks = planArr.filter(p => 
+                p.day === renderDayFa && 
+                p.subject !== 'بانک جبرانی' && 
+                !p.subject.includes('ناهار') && 
+                !p.subject.includes('شام') && 
+                (p.type !== 'class' || p.topic === 'کلاس آنلاین')
+            );
+
+            if (todaysBlocks.filter(p => p.status === 'pending').length === 0) { 
+                let msg = renderDayFa === todayNameFa ? 'امروز مأموریتی نداری! 🏖️' : `مأموریت‌های ${renderDayFa} تکمیل شد! صفحه را رفرش کن.`;
+                container.innerHTML = `<div style="text-align:center;color:var(--text-muted);">${msg}</div>`; 
+                updateProgressBar(); 
+                return; 
+            }
 
             todaysBlocks.forEach((part) => {
                 if(part.status === 'shifted') return; 
@@ -347,8 +401,8 @@
                             <div class="quest-desc">${part.topic || ''}</div>
                         </div>
                         <div class="quest-actions">
-                            <div class="action-circle" onclick="shiftQuest('${part.block_id}')" title="انتقال">🔄</div>
-                            <div class="action-circle" onclick="openTimer('${part.subject}', '${part.start_time}', '${part.end_time}')" title="تایمر">▶️</div>
+                            <div class="action-circle" onclick="shiftQuest('${part.block_id}')" title="انتقال به جبرانی">🔄</div>
+                            ${part.type !== 'class' ? `<div class="action-circle" onclick="openTimer('${part.subject}', '${part.start_time}', '${part.end_time}')" title="تایمر تمرکز">▶️</div>` : ''}
                             <div class="action-circle btn-check" onclick="toggleQuest('${part.block_id}')" title="انجام شد">✅</div>
                         </div>
                     </div>
@@ -367,25 +421,59 @@
             updateProgressBar(); savePlanToDB();
         }
 
+        // 🌟 سیستم انتقال به جبرانی تکامل‌یافته
         function shiftQuest(blockId) {
             let planArr = currentScheduleObj.raw_plan;
             let origIdx = planArr.findIndex(p => p.block_id === blockId);
             let origBlock = planArr[origIdx];
-            let isOnlineClass = (origBlock.type === 'class_online');
-            
-            if(!confirm(isOnlineClass ? "آیا در کلاس غیبت داشتی؟ (به دو پارت تقسیم می‌شود)" : "انتقال به اولین جبرانی خالی؟")) return;
+            let isOnlineClass = (origBlock.type === 'class' && origBlock.topic === 'کلاس آنلاین');
 
-            let makeupIdx = planArr.findIndex((p, idx) => idx > origIdx && p.subject === "بانک جبرانی" && p.status === 'pending');
-            if(makeupIdx === -1) { alert("ظرفیت بانک جبرانی هفته پر شده است!"); return; }
+            if(!confirm(isOnlineClass ? "کلاس آنلاین رو از دست دادی؟ (به تایم جبرانی منتقل می‌شود)" : "این پارت به اولین جبرانی خالی منتقل شود؟")) return;
 
-            planArr[makeupIdx].subject = origBlock.subject + " (جبرانی)";
-            planArr[makeupIdx].topic = origBlock.topic; planArr[makeupIdx].type = origBlock.type;
-            origBlock.status = 'shifted'; document.getElementById('card_' + blockId).style.display = 'none';
+            let duration = timeStrToMins(origBlock.end_time) - timeStrToMins(origBlock.start_time);
+            let neededMakeups = (isOnlineClass && duration > 150) ? 2 : 1;
+            let blockDayIdx = daysArr.indexOf(origBlock.day);
+
+            // 🌟 جستجوی جبرانی خالی از همون روز به بعد
+            let availableMakeups = [];
+            for (let i = 0; i < planArr.length; i++) {
+                let p = planArr[i];
+                if (p.subject === "بانک جبرانی" && p.status === 'pending' && daysArr.indexOf(p.day) >= blockDayIdx) {
+                    availableMakeups.push(i);
+                }
+            }
+
+            if(availableMakeups.length < neededMakeups) { 
+                alert(`متاسفانه ${neededMakeups} پارت جبرانی خالی در ادامه‌ی هفته باقی نمانده است! این درس به نیمکت منتقل می‌شود.`); 
+                origBlock.status = 'shifted';
+                origBlock.day = 'bench';
+                origBlock.start_time = ''; origBlock.end_time = '';
+                document.getElementById('card_' + blockId).style.display = 'none';
+                updateProgressBar(); savePlanToDB();
+                return; 
+            }
+
+            for(let i=0; i<neededMakeups; i++) {
+                let mIdx = availableMakeups[i];
+                planArr[mIdx].subject = origBlock.subject + (neededMakeups > 1 ? ` (بخش ${i+1} جبرانی)` : " (جبرانی)");
+                planArr[mIdx].topic = origBlock.topic; 
+                planArr[mIdx].type = origBlock.type;
+            }
+
+            origBlock.status = 'shifted'; 
+            document.getElementById('card_' + blockId).style.display = 'none';
             updateProgressBar(); savePlanToDB();
         }
 
         function updateProgressBar() {
-            const activeToday = currentScheduleObj.raw_plan.filter(p => p.day === todayNameFa && p.type !== 'break' && p.type !== 'class' && !p.subject.includes('ناهار') && !p.subject.includes('شام') && p.status !== 'shifted' && p.subject !== 'بانک جبرانی');
+            const activeToday = currentScheduleObj.raw_plan.filter(p => 
+                p.day === renderDayFa && 
+                p.subject !== 'بانک جبرانی' && 
+                !p.subject.includes('ناهار') && 
+                !p.subject.includes('شام') && 
+                (p.type !== 'class' || p.topic === 'کلاس آنلاین') && 
+                p.status !== 'shifted'
+            );
             const completedToday = activeToday.filter(p => p.status === 'completed');
             let percent = activeToday.length > 0 ? Math.round((completedToday.length / activeToday.length) * 100) : 0;
             
@@ -410,19 +498,54 @@
             }());
         }
 
+        // 🌟 تایمر ادایی با تنفس عمیق و موزیک
         let timerInterval;
         function openTimer(subject, startTime, endTime) {
             document.getElementById('timerModal').style.display = 'flex';
-            document.getElementById('timerSubjectName').innerText = subject;
-            let t = ((parseInt(endTime.split(':')[0])*60 + parseInt(endTime.split(':')[1])) - (parseInt(startTime.split(':')[0])*60 + parseInt(startTime.split(':')[1]))) * 60;
-            if(t <= 0) t = 90 * 60;
+            
+            // گرفتن اسم دانش‌آموز از دیتابیس لوکال
+            let sName = localStorage.getItem('student_name') ? localStorage.getItem('student_name').split(' ')[0] : 'قهرمان';
+            
+            document.getElementById('timerSubjectName').innerHTML = `${sName} جان، ذهنت رو آزاد کن...<br><span style="color:var(--text-muted); font-size:14px;">ماموریت: ${subject}</span>`;
+            
+            let display = document.getElementById('timerDisplay');
+            display.style.fontSize = '22px';
+            display.innerText = "نفس عمیــــق بکش... (دم) 🌬️";
 
-            timerInterval = setInterval(() => {
-                t--; document.getElementById('timerDisplay').innerText = `${Math.floor(t/60).toString().padStart(2,'0')}:${(t%60).toString().padStart(2,'0')}`;
-                if(t <= 0) { clearInterval(timerInterval); alert("⏰ پایان پارت!"); closeTimer(); }
-            }, 1000);
+            // فاز تنفس (ادایی و جذاب)
+            setTimeout(() => { display.innerText = "حالا نگهش دار... 🧘‍♂️"; }, 4000);
+            setTimeout(() => { display.innerText = "آروم رها کن... (بازدم) 🍃"; }, 7000);
+
+            // شروع تایمر اصلی و پخش موزیک
+            setTimeout(() => {
+                display.style.fontSize = '70px';
+                document.getElementById('timerSubjectName').innerHTML = `درحال تمرکز روی<br><span style="color:var(--gold);">${subject}</span>`;
+                
+                let audio = document.getElementById('focusAudio');
+                audio.volume = 0.4; // صدای ملایم
+                audio.play().catch(e => console.log("مرورگر اجازه پخش خودکار نداد."));
+
+                let t = (timeStrToMins(endTime) - timeStrToMins(startTime)) * 60;
+                if(t <= 0) t = 90 * 60;
+
+                timerInterval = setInterval(() => {
+                    t--; 
+                    display.innerText = `${Math.floor(t/60).toString().padStart(2,'0')}:${(t%60).toString().padStart(2,'0')}`;
+                    if(t <= 0) { 
+                        clearInterval(timerInterval); 
+                        alert("⏰ خسته نباشی! پارت تموم شد."); 
+                        closeTimer(); 
+                    }
+                }, 1000);
+            }, 10000); // بعد از ۱۰ ثانیه تنفس شروع میشه
         }
-        function closeTimer() { clearInterval(timerInterval); document.getElementById('timerModal').style.display = 'none'; }
+
+        function closeTimer() { 
+            clearInterval(timerInterval); 
+            document.getElementById('focusAudio').pause(); // قطع موزیک
+            document.getElementById('timerDisplay').innerText = '🧘‍♂️';
+            document.getElementById('timerModal').style.display = 'none'; 
+        }
     </script>
 </body>
 </html>
