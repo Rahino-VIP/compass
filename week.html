@@ -64,7 +64,7 @@
         </div>
 
         <div id="aiWeeklyMotivationBox" style="display: none; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1)); border: 1px solid var(--success); border-radius: 16px; padding: 15px; margin-bottom: 20px; position: relative; animation: fadeIn 0.5s;">
-            <button onclick="this.parentElement.style.display='none'" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.05); border: none; width: 24px; height: 24px; border-radius: 50%; font-size: 10px; color: var(--text-muted); cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s;">❌</button>
+            <button onclick="dismissWeeklyMotivation()" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.05); border: none; width: 24px; height: 24px; border-radius: 50%; font-size: 10px; color: var(--text-muted); cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s;">❌</button>
             
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                 <span style="font-size: 20px;">🎯</span>
@@ -153,6 +153,7 @@
 
         function renderGCal() {
             // 🌟 نمایش پیام انگیزشی کل هفته
+            // 🌟 نمایش پیام انگیزشی کل هفته (با سیستم حافظه)
             const weeklyMotivationBox = document.getElementById('aiWeeklyMotivationBox');
             const weeklyMotivationText = document.getElementById('aiWeeklyMotivationText');
             
@@ -164,8 +165,13 @@
                 let weeklyMessage = aiMotivations.weekly_motivation;
 
                 if (weeklyMessage) {
-                    weeklyMotivationText.innerText = weeklyMessage;
-                    weeklyMotivationBox.style.display = 'block';
+                    let dismissedMsg = localStorage.getItem(`dismissed_weekly_${userId}`);
+                    if (dismissedMsg === weeklyMessage) {
+                        weeklyMotivationBox.style.display = 'none';
+                    } else {
+                        weeklyMotivationText.innerText = weeklyMessage;
+                        weeklyMotivationBox.style.display = 'block';
+                    }
                 } else {
                     weeklyMotivationBox.style.display = 'none';
                 }
@@ -223,6 +229,12 @@
                 });
                 container.innerHTML += dayHtml + `</div></div>`;
             });
+        }
+        // 🔒 تابع مخفی کردن و ذخیره در حافظه
+        function dismissWeeklyMotivation() {
+            const msgText = document.getElementById('aiWeeklyMotivationText').innerText;
+            localStorage.setItem(`dismissed_weekly_${userId}`, msgText);
+            document.getElementById('aiWeeklyMotivationBox').style.display = 'none';
         }
     </script>
 </body>
