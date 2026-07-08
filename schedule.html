@@ -148,10 +148,14 @@
             <a href="request.html" class="tab-btn">🎁 اتاق فکر</a>
         </div>
 
-        <div class="daily-note" id="dailyNoteBox" style="display: none;">
-            <div class="daily-note-icon">👨‍🏫</div>
-            <div class="daily-note-title">پیام مشاور شما:</div>
-            <div class="daily-note-text" id="dailyNoteContent">...</div>
+        <div id="aiMotivationBox" style="display: none; background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1)); border: 1px solid var(--purple); border-radius: 16px; padding: 15px; margin-bottom: 20px; position: relative; animation: fadeIn 0.5s;">
+            <button onclick="this.parentElement.style.display='none'" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.05); border: none; width: 24px; height: 24px; border-radius: 50%; font-size: 10px; color: var(--text-muted); cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s;">❌</button>
+            
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="font-size: 20px;">✨</span>
+                <span style="font-size: 13px; font-weight: 900; color: var(--purple);">انرژیِ امروزت:</span>
+            </div>
+            <p id="aiMotivationText" style="font-size: 12px; color: var(--text-main); line-height: 1.8; margin-right: 28px; font-weight: 500;"></p>
         </div>
 
         <div class="progress-box">
@@ -450,6 +454,28 @@
             const planArr = currentScheduleObj.raw_plan || [];
             const container = document.getElementById('questsContainer'); 
             container.innerHTML = '';
+            // 🌟 نمایش پیام انگیزشی مخصوص همین روز
+            const motivationBox = document.getElementById('aiMotivationBox');
+            const motivationText = document.getElementById('aiMotivationText');
+            
+            if (currentScheduleObj && currentScheduleObj.ai_motivations) {
+                // تبدیل متن جیسون به آبجکت (اگر از دیتابیس متنی اومده باشه)
+                let aiMotivations = typeof currentScheduleObj.ai_motivations === 'string' 
+                    ? JSON.parse(currentScheduleObj.ai_motivations) 
+                    : currentScheduleObj.ai_motivations;
+
+                // پیدا کردن پیامِ مخصوص این روز
+                let todaysMessage = aiMotivations.daily_motivations ? aiMotivations.daily_motivations[renderDayFa] : null;
+
+                if (todaysMessage) {
+                    motivationText.innerText = todaysMessage;
+                    motivationBox.style.display = 'block'; // نمایش باکس
+                } else {
+                    motivationBox.style.display = 'none'; // مخفی کردن در صورت نبود پیام
+                }
+            } else {
+                motivationBox.style.display = 'none';
+            }
 
             let todaysBlocks = planArr.filter(p => 
                 p.day === renderDayFa && 
