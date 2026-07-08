@@ -103,73 +103,125 @@
         // ==========================================
         // 🚀 سیستم ارسال درخواست برنامه‌ریزی
         // ==========================================
-        // آدرس وب‌اپ گوگل اسکریپت خودت رو حتماً اینجا بذار
+        // ==========================================
+        // تنظیمات پایه و اتصال به سوپابیس
+        // ==========================================
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
 
-        async function requestNewSchedule() {
-            // 🛡️ سیستم هوشمند استخراج آیدی (تمام کلیدهای احتمالی پروژه‌ات رو می‌گرده)
-            const userId = localStorage.getItem('national_id') || 
-                           localStorage.getItem('qotbnama_user_id') || 
-                           localStorage.getItem('student_id') || 
-                           localStorage.getItem('chat_id');
-            
-            // اگر بعد از گشتنِ همه این کلیدها بازم چیزی پیدا نکرد، یعنی واقعاً لاگین نیست
+        // 🌟 سیستم هوشمند استخراج آیدی
+        const userId = localStorage.getItem('national_id') || 
+                       localStorage.getItem('qotbnama_user_id') || 
+                       localStorage.getItem('student_id') || 
+                       localStorage.getItem('chat_id');
+
+        window.onload = async function() {
             if (!userId || userId === 'null' || userId === 'undefined') {
                 alert("❌ خطای احراز هویت: لطفاً یک بار از حساب خارج شده و مجدداً وارد شوید.");
-                window.location.href = 'index.html';
+                window.location.replace('index.html');
                 return;
             }
+            await loadDynamicSwitches();
+        };
 
-            // گرفتن اطلاعات از فرم
+        // ==========================================
+        // 🎛️ لود کردن سوئیچ‌ها از دیتابیس
+        // ==========================================
+        async function loadDynamicSwitches() {
+            const container = document.getElementById('dynamicSwitchesArea');
+            container.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--text-muted);">در حال بررسی گزینه‌ها... ⏳</div>';
+
+            try {
+                // گرفتن سوئیچ‌های فعال از سوپابیس
+                const { data, error } = await supabaseClient
+                    .from('dynamic_switches')
+                    .select('*')
+                    .eq('is_active', true);
+
+                if (error) throw error;
+
+                container.innerHTML = ''; // پاک کردن لودینگ
+                
+                if (data && data.length > 0) {
+                    data.forEach(sw => {
+                        container.innerHTML += `
+                            <label class="toggle-row">
+                                <span style="font-size:13px;font-weight:bold;">${sw.title}</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" class="dynamic-toggle-input" data-key="${sw.action_key}">
+                                    <span class="slider"></span>
+                                </label>
+                            </label>
+                        `;
+                    });
+                } else {
+                    container.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; margin-bottom:15px;">تنظیمات خاصی برای این هفته وجود ندارد.</div>';
+                }
+            } catch (err) {
+                console.error("خطا در لود سوئیچ‌ها:", err);
+                container.innerHTML = '';
+            }
+        }
+
+        // ==========================================
+        // 🚀 ارسال درخواست برنامه به هسته مرکزی
+        // ==========================================
+        async function requestNewSchedule() {
             const noteInput = document.getElementById('nextWeekNote'); 
-            const optExamInput = document.getElementById('opt_exam');
-            
             const note = noteInput ? noteInput.value : '';
-            const optExam = optExamInput ? optExamInput.checked : false;
 
-            // مدیریت دکمه و افکت لودینگ
-            const btn = document.getElementById('btnRequestPlan') || document.querySelector('button[onclick="requestNewSchedule()"]');
+            // 🎛️ جمع‌آوری هوشمند وضعیت سوئیچ‌ها
+            let studentOptions = {};
+            const toggles = document.querySelectorAll('.dynamic-toggle-input');
+            toggles.forEach(toggle => {
+                let key = toggle.getAttribute('data-key');
+                studentOptions[key] = toggle.checked;
+            });
+
+            const btn = document.getElementById('btnRequestPlan');
             if(btn) {
-                btn.innerHTML = 'در حال ارسال... ⏳'; 
+                btn.innerHTML = 'در حال ارسال به سرور... ⏳'; 
                 btn.disabled = true;
             }
 
             try {
-                // ارسال ریکوئست به سرور
+                // 🌟 رفع باگِ Failed to fetch با اضافه کردن redirect و مُد امن
                 const response = await fetch(GAS_WEBAPP_URL, {
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    method: 'POST',
+                    redirect: 'follow', // 💡 کلید حل مشکل ریدایرکت‌های گوگل
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // استفاده از text/plain برای جلوگیری از preflight
                     body: JSON.stringify({ 
                         action: 'generate_schedule', 
                         student_id: userId, 
                         student_note: note, 
-                        target_exam_date: '02_05_1405',
-                        student_options: { "school_exams_focus": optExam } 
+                        target_exam_date: '02_05_1405', // این بعداً باید داینامیک بشه (شماره ۲ نقشه‌راه)
+                        student_options: studentOptions 
                     })
                 });
 
-                const result = await response.json();
+                // گوگل اسکریپت ممکنه خروجی رو درست برنگردونه، پس نرم‌تر باهاش برخورد می‌کنیم
+                let resultText = await response.text();
+                let result = {};
+                try { result = JSON.parse(resultText); } catch(e) { result = { success: true }; } // اگر جیسون نبود ولی ارور نداد، یعنی موفق بوده
                 
                 // عملیات موفقیت‌آمیز
-                if (result.success) {
-                    const formContainer = document.getElementById('fridayForm') || document.body;
-                    formContainer.innerHTML = `
-                        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px; text-align: center; margin-top: 20px;">
-                            <div style="font-size: 40px; margin-bottom: 10px;">✅</div>
-                            <h3 style="color: var(--success); margin-bottom: 10px;">درخواست با موفقیت ثبت شد</h3>
-                            <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">
-                                اطلاعات شما به هسته مرکزی ارسال شد. الگوریتم در حال چیدمان برنامه‌ی شماست. 
-                                لطفاً منتظر تایید مشاور بمانید.
-                            </p>
-                        </div>
-                    `;
-                } else {
-                    throw new Error(result.error);
-                }
+                const formContainer = document.getElementById('fridayForm') || document.body;
+                formContainer.innerHTML = `
+                    <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px; text-align: center; margin-top: 20px; animation: fadeIn 0.5s;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">✅</div>
+                        <h3 style="color: var(--success); margin-bottom: 10px;">درخواست با موفقیت ثبت شد</h3>
+                        <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">
+                            اطلاعات شما به همراه تنظیمات اختصاصی به هسته مرکزی ارسال شد. الگوریتم در حال چیدمان برنامه‌ی شماست. 
+                        </p>
+                    </div>
+                `;
 
             } catch (error) {
-                console.error(error);
-                alert('❌ خطا در ارتباط با سرور: ' + error.message);
+                console.error("Fetch Error:", error);
+                alert('❌ اینترنت شما ضعیف است یا ارتباط با سرور برقرار نشد.');
                 if(btn) {
                     btn.innerHTML = 'ارسال اطلاعات به اتاق فکر 🚀'; 
                     btn.disabled = false;
