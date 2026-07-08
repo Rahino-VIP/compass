@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>درخواست استراتژی | قطب‌نما</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
-
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         :root { --vip-bg: #f8fafc; --vip-surface: #ffffff; --vip-border: #e2e8f0; --gold: #d97706; --success: #10b981; --text-main: #0f172a; --text-muted: #64748b; }
         [data-theme="dark"] { --vip-bg: #0f172a; --vip-surface: #1e293b; --vip-border: #334155; --gold: #f59e0b; --success: #10b981; --text-main: #f8fafc; --text-muted: #94a3b8; }
@@ -65,12 +66,7 @@
             <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">اولویت‌های خود را مشخص کنید تا مشاوران بهترین برنامه را تدوین کنند.</p>
             
             <div id="fridayForm">
-                <div id="dynamicSwitchesArea">
-                    <label class="toggle-row">
-                        <span style="font-size:13px;font-weight:bold;">این هفته درگیر امتحانات مدرسه هستم</span>
-                        <label class="toggle-switch"><input type="checkbox" id="opt_exam"><span class="slider"></span></label>
-                    </label>
-                </div>
+                <div id="dynamicSwitchesArea"></div>
                 
                 <textarea class="modern-input" id="nextWeekNote" rows="3" placeholder="یادداشت برای مشاور (مثلاً: سه‌شنبه تا دیروقت مدرسه‌ام یا این هفته حسابی خسته‌ام...)"></textarea>
                 <button class="btn-gold" id="btnRequestPlan" onclick="requestNewSchedule()">ارسال اطلاعات به اتاق فکر 🚀</button>
@@ -125,17 +121,16 @@
                 return;
             }
 
-            // ۱. اول می‌ریم اطلاعات پایه و آزمون دانش‌آموز رو از دیتابیس می‌کشیم بیرون
             let studentGrade = 'all';
             let studentExams = [];
 
             try {
                 // استخراج پایه
-                const { data: stData } = await supabaseClient.from('students').select('grade').eq('national_id', String(userId)).single();
+                const { data: stData, error: stErr } = await supabaseClient.from('students').select('grade').eq('national_id', String(userId)).maybeSingle();
                 if (stData && stData.grade) studentGrade = stData.grade;
 
                 // استخراج آزمون‌ها
-                const { data: vipData } = await supabaseClient.from('vip_settings').select('exam_type').eq('national_id', String(userId)).single();
+                const { data: vipData, error: vipErr } = await supabaseClient.from('vip_settings').select('exam_type').eq('national_id', String(userId)).maybeSingle();
                 if (vipData && vipData.exam_type) {
                     studentExams = typeof vipData.exam_type === 'string' ? JSON.parse(vipData.exam_type) : vipData.exam_type;
                 }
@@ -143,7 +138,7 @@
                 console.warn("خطا در دریافت اطلاعات پایه دانش‌آموز", e);
             }
 
-            // ۲. حالا اطلاعات رو می‌دیم به تابع سوئیچ‌ها تا فیلترشون کنه
+            // اجرا کردن تابع لود سوئیچ‌ها
             await loadDynamicSwitches(studentGrade, studentExams);
         };
 
