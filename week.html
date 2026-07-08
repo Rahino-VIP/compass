@@ -63,6 +63,16 @@
             <a href="request.html" class="tab-btn">🎁 اتاق فکر</a>
         </div>
 
+        <div id="aiWeeklyMotivationBox" style="display: none; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1)); border: 1px solid var(--success); border-radius: 16px; padding: 15px; margin-bottom: 20px; position: relative; animation: fadeIn 0.5s;">
+            <button onclick="this.parentElement.style.display='none'" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.05); border: none; width: 24px; height: 24px; border-radius: 50%; font-size: 10px; color: var(--text-muted); cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s;">❌</button>
+            
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="font-size: 20px;">🎯</span>
+                <span style="font-size: 13px; font-weight: 900; color: var(--success);">استراتژیِ این هفته:</span>
+            </div>
+            <p id="aiWeeklyMotivationText" style="font-size: 12px; color: var(--text-main); line-height: 1.8; margin-right: 28px; font-weight: 500;"></p>
+        </div>
+
         <div class="gcal-wrapper">
             <div class="gcal-container" id="gcalGrid"></div>
         </div>
@@ -142,6 +152,27 @@
         }
 
         function renderGCal() {
+            // 🌟 نمایش پیام انگیزشی کل هفته
+            const weeklyMotivationBox = document.getElementById('aiWeeklyMotivationBox');
+            const weeklyMotivationText = document.getElementById('aiWeeklyMotivationText');
+            
+            if (currentScheduleObj && currentScheduleObj.ai_motivations) {
+                let aiMotivations = typeof currentScheduleObj.ai_motivations === 'string' 
+                    ? JSON.parse(currentScheduleObj.ai_motivations) 
+                    : currentScheduleObj.ai_motivations;
+
+                let weeklyMessage = aiMotivations.weekly_motivation;
+
+                if (weeklyMessage) {
+                    weeklyMotivationText.innerText = weeklyMessage;
+                    weeklyMotivationBox.style.display = 'block';
+                } else {
+                    weeklyMotivationBox.style.display = 'none';
+                }
+            } else {
+                weeklyMotivationBox.style.display = 'none';
+            }
+            
             const container = document.getElementById('gcalGrid'); container.innerHTML = '';
             const daysArr = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
             
