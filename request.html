@@ -191,47 +191,78 @@
         // ==========================================
         // 🚀 ارسال درخواست برنامه به هسته مرکزی
         // ==========================================
+        // ==========================================
+        // 🚀 ارسال درخواست برنامه به هسته مرکزی (نسخه هوشمند با محاسبه میانگین)
+        // ==========================================
         async function requestNewSchedule() {
             const noteInput = document.getElementById('nextWeekNote'); 
             const note = noteInput ? noteInput.value : '';
 
+            // 🎛️ جمع‌آوری هوشمند وضعیت سوئیچ‌ها
             let studentOptions = {};
-            let activeSwitchTitles = []; // 🌟 این آرایه عناوین فارسی رو برای جمینای جمع می‌کنه
-            
+            let activeSwitchTitles = []; 
             const toggles = document.querySelectorAll('.dynamic-toggle-input');
             toggles.forEach(toggle => {
                 let key = toggle.getAttribute('data-key');
                 let title = toggle.getAttribute('data-title');
-                
-                studentOptions[key] = toggle.checked; // برای ذخیره ماشینی تو دیتابیس
-                if (toggle.checked) {
-                    activeSwitchTitles.push(title); // برای فرستادن به هوش مصنوعی
-                }
+                studentOptions[key] = toggle.checked; 
+                if (toggle.checked) activeSwitchTitles.push(title); 
             });
 
             const btn = document.getElementById('btnRequestPlan');
             if(btn) {
-                btn.innerHTML = 'در حال ارسال به سرور... ⏳'; 
+                btn.innerHTML = 'در حال محاسبه توان مطالعاتی و ارسال... ⏳'; 
                 btn.disabled = true;
             }
 
+            // 📊 محاسبه میانگین مطالعه و تست از گزارش‌های روزانه دانش‌آموز
+            let avgStudyHours = 0;
+            let avgTestCount = 0;
             try {
-                // 🌟 استفاده از mode: 'no-cors' برای مسدود کردن ارور امنیتی گوگل
+                // دریافت گزارش‌های قبلی (دقیقاً مثل منطق داشبورد)
+                const { data: reports } = await supabaseClient
+                    .from('daily_reports')
+                    .select('courses')
+                    // در داشبورد با chat_id ذخیره شده، پس اینجا هم همون کلید رو چک می‌کنیم
+                    .eq('chat_id', String(localStorage.getItem('qotbnama_user_id') || userId));
+
+                if (reports && reports.length > 0) {
+                    let totalTime = 0;
+                    let totalTests = 0;
+                    reports.forEach(r => {
+                        if(r.courses) {
+                            r.courses.forEach(c => {
+                                totalTime += (c.edu || 0) + (c.study || 0);
+                                totalTests += (c.tests || 0);
+                            });
+                        }
+                    });
+                    // گرد کردن اعداد
+                    avgStudyHours = Math.round((totalTime / reports.length) * 10) / 10;
+                    avgTestCount = Math.round(totalTests / reports.length);
+                }
+            } catch(e) {
+                console.warn("خطا در محاسبه میانگین گزارش‌ها:", e);
+            }
+
+            try {
+                // 🌟 ارسال تمامی اطلاعات + میانگین‌ها به سرور گوگل
                 await fetch(GAS_WEBAPP_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // 💡 این کلید طلایی، ارور Failed to fetch رو از بین می‌بره
+                    mode: 'no-cors', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ 
                         action: 'generate_schedule', 
                         student_id: userId, 
                         student_note: note, 
                         target_exam_date: '02_05_1405', 
-                        student_options: studentOptions, // کلیدهای انگلیسی برای دیتابیس
-                        active_switch_titles: activeSwitchTitles // 🧠 عناوین فارسی برای فهمیدن هوش مصنوعی
+                        student_options: studentOptions, 
+                        active_switch_titles: activeSwitchTitles,
+                        avg_study_hours: avgStudyHours, // 🎯 میانگین ساعت مطالعه ارسال شد
+                        avg_test_count: avgTestCount    // 🎯 میانگین تعداد تست ارسال شد
                     })
                 });
 
-                // در حالت no-cors نمی‌تونیم جواب سرور رو بخونیم، اما چون می‌دونیم کار می‌کنه، مستقیم موفقیت می‌دیم
                 const formContainer = document.getElementById('fridayForm') || document.body;
                 formContainer.innerHTML = `
                     <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px; text-align: center; margin-top: 20px; animation: fadeIn 0.5s;">
@@ -244,7 +275,7 @@
                 `;
 
             } catch (error) {
-                console.error("ارور ناشناخته:", error);
+                console.error("Fetch Error:", error);
                 alert('❌ اینترنت شما ضعیف است یا ارتباط برقرار نشد.');
                 if(btn) {
                     btn.innerHTML = 'ارسال اطلاعات به اتاق فکر 🚀'; 
