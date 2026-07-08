@@ -66,10 +66,20 @@
             <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">اولویت‌های خود را مشخص کنید تا مشاوران بهترین برنامه را تدوین کنند.</p>
             
             <div id="fridayForm">
-                <div id="dynamicSwitchesArea"></div>
-                
-                <textarea class="modern-input" id="nextWeekNote" rows="3" placeholder="یادداشت برای مشاور (مثلاً: سه‌شنبه تا دیروقت مدرسه‌ام یا این هفته حسابی خسته‌ام...)"></textarea>
-                <button class="btn-gold" id="btnRequestPlan" onclick="requestNewSchedule()">ارسال اطلاعات به اتاق فکر 🚀</button>
+                <div id="timeLockMessage" style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); padding: 20px; border-radius: 16px; margin-bottom: 20px;">
+                    <div style="font-size: 30px; margin-bottom: 10px;">🔒</div>
+                    <h3 style="color: var(--danger); font-size: 15px; margin-bottom: 5px;">پنجره استراتژی بسته است!</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">فرم درخواست برنامه فقط از <strong style="color:var(--text-main);">پنجشنبه ساعت ۲۲:۰۰</strong> تا <strong style="color:var(--text-main);">جمعه ساعت ۲۰:۰۰</strong> باز می‌شود.</p>
+                </div>
+
+                <div id="requestFormContent" style="display: none;">
+                    <div id="dynamicSwitchesArea"></div>
+                    <textarea class="modern-input" id="nextWeekNote" rows="3" placeholder="یادداشت برای مشاور (مثلاً: سه‌شنبه تا دیروقت مدرسه‌ام...)"></textarea>
+                    <button class="btn-gold" id="btnRequestPlan" onclick="requestNewSchedule()">تایید استراتژی و ساخت برنامه 🚀</button>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: center;">
+                        ⚠️ فقط یک‌بار فرصت ارسال دارید.
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -114,32 +124,49 @@
                        localStorage.getItem('student_id') || 
                        localStorage.getItem('chat_id');
 
+        let globalStudentGrade = 'all';
+        let globalStudentMajor = 'all';
+
         window.onload = async function() {
             if (!userId || userId === 'null' || userId === 'undefined') {
-                alert("❌ خطای احراز هویت: لطفاً یک بار از حساب خارج شده و مجدداً وارد شوید.");
-                window.location.replace('index.html');
-                return;
+                alert("❌ خطای احراز هویت!"); return;
             }
 
-            let studentGrade = 'all';
+            // 🌟 ۱. بررسی قفل زمانی (Time Lock)
+            const now = new Date();
+            const dayOfWeek = now.getDay(); // 0 = یکشنبه, ... , 4 = پنجشنبه, 5 = جمعه, 6 = شنبه
+            const hour = now.getHours();
+
+            // شرط باز بودن: یا (پنجشنبه است و ساعت >= 22) یا (جمعه است و ساعت < 20)
+            const isWindowOpen = (dayOfWeek === 4 && hour >= 22) || (dayOfWeek === 5 && hour < 20);
+
+            if (!isWindowOpen) {
+                // اگر تو زمان مجاز نیستیم، فرم رو قفل کن و پیام نشون بده
+                document.getElementById('timeLockMessage').style.display = 'block';
+                document.getElementById('requestFormContent').style.display = 'none';
+                return; // عملیات همینجا متوقف میشه
+            } else {
+                // پنجره بازه!
+                document.getElementById('timeLockMessage').style.display = 'none';
+                document.getElementById('requestFormContent').style.display = 'block';
+            }
+
+            // 🌟 ۲. اگر پنجره باز بود، اطلاعات رو لود کن
             let studentExams = [];
-
             try {
-                // استخراج پایه
-                const { data: stData, error: stErr } = await supabaseClient.from('students').select('grade').eq('national_id', String(userId)).maybeSingle();
-                if (stData && stData.grade) studentGrade = stData.grade;
+                const { data: stData } = await supabaseClient.from('students').select('grade, major').eq('national_id', String(userId)).maybeSingle();
+                if (stData) {
+                    globalStudentGrade = stData.grade || 'all';
+                    globalStudentMajor = stData.major || 'all';
+                }
 
-                // استخراج آزمون‌ها
-                const { data: vipData, error: vipErr } = await supabaseClient.from('vip_settings').select('exam_type').eq('national_id', String(userId)).maybeSingle();
+                const { data: vipData } = await supabaseClient.from('vip_settings').select('exam_type').eq('national_id', String(userId)).maybeSingle();
                 if (vipData && vipData.exam_type) {
                     studentExams = typeof vipData.exam_type === 'string' ? JSON.parse(vipData.exam_type) : vipData.exam_type;
                 }
-            } catch (e) {
-                console.warn("خطا در دریافت اطلاعات پایه دانش‌آموز", e);
-            }
+            } catch (e) { console.warn(e); }
 
-            // اجرا کردن تابع لود سوئیچ‌ها
-            await loadDynamicSwitches(studentGrade, studentExams);
+            await loadDynamicSwitches(globalStudentGrade, studentExams);
         };
 
         // ==========================================
@@ -249,20 +276,20 @@
                 // 🌟 ارسال تمامی اطلاعات + میانگین‌ها به سرور گوگل
                 await fetch(GAS_WEBAPP_URL, {
                     method: 'POST',
-                    mode: 'no-cors', 
+                    redirect: 'follow', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ 
-                        action: 'generate_schedule', 
+                        action: 'generate_schedule_auto', // 🎯 اسم اکشن رو تغییر دادیم تا بک‌اند بفهمه این معماری جدیده
                         student_id: userId, 
                         student_note: note, 
-                        target_exam_date: '02_05_1405', 
+                        // target_exam_date رو حذف کردیم چون سرور خودش پیداش می‌کنه
                         student_options: studentOptions, 
                         active_switch_titles: activeSwitchTitles,
-                        avg_study_hours: avgStudyHours, // 🎯 میانگین ساعت مطالعه ارسال شد
-                        avg_test_count: avgTestCount    // 🎯 میانگین تعداد تست ارسال شد
+                        avg_study_hours: avgStudyHours, 
+                        avg_test_count: avgTestCount    
                     })
                 });
-
+                
                 const formContainer = document.getElementById('fridayForm') || document.body;
                 formContainer.innerHTML = `
                     <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px; text-align: center; margin-top: 20px; animation: fadeIn 0.5s;">
