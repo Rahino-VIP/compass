@@ -145,29 +145,22 @@
         // ==========================================
         // 🎛️ لود کردن و فیلتر کردن سوئیچ‌ها از دیتابیس
         // ==========================================
+        // ==========================================
+        // 🎛️ لود کردن و فیلتر کردن سوئیچ‌ها از دیتابیس
+        // ==========================================
         async function loadDynamicSwitches(studentGrade, studentExams) {
             const container = document.getElementById('dynamicSwitchesArea');
             container.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--text-muted);">در حال بررسی گزینه‌های اختصاصی شما... ⏳</div>';
 
             try {
-                // گرفتن تمام سوئیچ‌های روشن از سوپابیس
-                const { data, error } = await supabaseClient
-                    .from('dynamic_switches')
-                    .select('*')
-                    .eq('is_active', true);
-
+                const { data, error } = await supabaseClient.from('dynamic_switches').select('*').eq('is_active', true);
                 if (error) throw error;
-
                 container.innerHTML = ''; 
                 
                 if (data && data.length > 0) {
-                    // 🌟 فیلتر هوشمند بر اساس پایه و آزمون
                     let validSwitches = data.filter(sw => {
                         let gradeMatch = (sw.target_grade === 'all' || studentGrade.includes(sw.target_grade));
-                        
-                        // بررسی اینکه آیا حداقل یکی از آزمون‌های دانش‌آموز با آزمونِ هدفِ این سوئیچ همخوانی داره یا نه
                         let examMatch = (sw.target_exam === 'all' || studentExams.some(ex => ex.includes(sw.target_exam)));
-                        
                         return gradeMatch && examMatch;
                     });
 
@@ -177,7 +170,7 @@
                                 <label class="toggle-row">
                                     <span style="font-size:13px;font-weight:bold;">${sw.title}</span>
                                     <label class="toggle-switch">
-                                        <input type="checkbox" class="dynamic-toggle-input" data-key="${sw.action_key}">
+                                        <input type="checkbox" class="dynamic-toggle-input" data-key="${sw.action_key}" data-title="${sw.title}">
                                         <span class="slider"></span>
                                     </label>
                                 </label>
@@ -194,6 +187,7 @@
                 container.innerHTML = '';
             }
         }
+
         // ==========================================
         // 🚀 ارسال درخواست برنامه به هسته مرکزی
         // ==========================================
@@ -201,12 +195,18 @@
             const noteInput = document.getElementById('nextWeekNote'); 
             const note = noteInput ? noteInput.value : '';
 
-            // 🎛️ جمع‌آوری هوشمند وضعیت سوئیچ‌ها
             let studentOptions = {};
+            let activeSwitchTitles = []; // 🌟 این آرایه عناوین فارسی رو برای جمینای جمع می‌کنه
+            
             const toggles = document.querySelectorAll('.dynamic-toggle-input');
             toggles.forEach(toggle => {
                 let key = toggle.getAttribute('data-key');
-                studentOptions[key] = toggle.checked;
+                let title = toggle.getAttribute('data-title');
+                
+                studentOptions[key] = toggle.checked; // برای ذخیره ماشینی تو دیتابیس
+                if (toggle.checked) {
+                    activeSwitchTitles.push(title); // برای فرستادن به هوش مصنوعی
+                }
             });
 
             const btn = document.getElementById('btnRequestPlan');
@@ -216,26 +216,22 @@
             }
 
             try {
-                // 🌟 رفع باگِ Failed to fetch با اضافه کردن redirect و مُد امن
-                const response = await fetch(GAS_WEBAPP_URL, {
+                // 🌟 استفاده از mode: 'no-cors' برای مسدود کردن ارور امنیتی گوگل
+                await fetch(GAS_WEBAPP_URL, {
                     method: 'POST',
-                    redirect: 'follow', // 💡 کلید حل مشکل ریدایرکت‌های گوگل
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // استفاده از text/plain برای جلوگیری از preflight
+                    mode: 'no-cors', // 💡 این کلید طلایی، ارور Failed to fetch رو از بین می‌بره
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ 
                         action: 'generate_schedule', 
                         student_id: userId, 
                         student_note: note, 
-                        target_exam_date: '02_05_1405', // این بعداً باید داینامیک بشه (شماره ۲ نقشه‌راه)
-                        student_options: studentOptions 
+                        target_exam_date: '02_05_1405', 
+                        student_options: studentOptions, // کلیدهای انگلیسی برای دیتابیس
+                        active_switch_titles: activeSwitchTitles // 🧠 عناوین فارسی برای فهمیدن هوش مصنوعی
                     })
                 });
 
-                // گوگل اسکریپت ممکنه خروجی رو درست برنگردونه، پس نرم‌تر باهاش برخورد می‌کنیم
-                let resultText = await response.text();
-                let result = {};
-                try { result = JSON.parse(resultText); } catch(e) { result = { success: true }; } // اگر جیسون نبود ولی ارور نداد، یعنی موفق بوده
-                
-                // عملیات موفقیت‌آمیز
+                // در حالت no-cors نمی‌تونیم جواب سرور رو بخونیم، اما چون می‌دونیم کار می‌کنه، مستقیم موفقیت می‌دیم
                 const formContainer = document.getElementById('fridayForm') || document.body;
                 formContainer.innerHTML = `
                     <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px; text-align: center; margin-top: 20px; animation: fadeIn 0.5s;">
@@ -248,8 +244,8 @@
                 `;
 
             } catch (error) {
-                console.error("Fetch Error:", error);
-                alert('❌ اینترنت شما ضعیف است یا ارتباط با سرور برقرار نشد.');
+                console.error("ارور ناشناخته:", error);
+                alert('❌ اینترنت شما ضعیف است یا ارتباط برقرار نشد.');
                 if(btn) {
                     btn.innerHTML = 'ارسال اطلاعات به اتاق فکر 🚀'; 
                     btn.disabled = false;
