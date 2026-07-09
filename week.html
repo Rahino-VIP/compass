@@ -148,7 +148,6 @@
             // (بخش نمایش پیام انگیزشی)
             const weeklyMotivationBox = document.getElementById('aiWeeklyMotivationBox');
             const weeklyMotivationText = document.getElementById('aiWeeklyMotivationText');
-            
             if (currentScheduleObj && currentScheduleObj.ai_motivations) {
                 let aiMotivations = typeof currentScheduleObj.ai_motivations === 'string' ? JSON.parse(currentScheduleObj.ai_motivations) : currentScheduleObj.ai_motivations;
                 let weeklyMessage = aiMotivations.weekly_motivation;
@@ -170,28 +169,37 @@
 
             const planArr = currentScheduleObj.raw_plan || [];
             
-            // 🌟 تبدیل تاریخ شروع برنامه (بامداد شنبه) به فرمت قابل محاسبه
-            let baseStartDate = null;
-            if (currentScheduleObj && currentScheduleObj.target_start_date) {
-                baseStartDate = new Date(currentScheduleObj.target_start_date);
+            // 🌟 موتور ضدبامبول و هوشمند تاریخ!
+            let baseStartDate = new Date(); // پیش‌فرض: امروز
+            if (currentScheduleObj) {
+                // اولویت با تاریخ شروع است؛ اگر برنامه‌ی قدیمی بود، تاریخ ساخته شدنش رو می‌گیریم
+                let validDateStr = currentScheduleObj.target_start_date || currentScheduleObj.created_at;
+                if (validDateStr) {
+                    let parsedDate = new Date(validDateStr);
+                    if (!isNaN(parsedDate)) {
+                        baseStartDate = parsedDate;
+                    }
+                }
+                
+                // 🌟 پیدا کردن روز شنبه: 
+                // مهم نیست برنامه وسط هفته ساخته شده باشه، ما تاریخ رو برمی‌گردونیم به شنبه‌ی همون هفته!
+                let dayOfWeek = baseStartDate.getDay(); // (0 = یکشنبه، 6 = شنبه)
+                let daysFromSaturday = (dayOfWeek + 1) % 7; 
+                baseStartDate.setDate(baseStartDate.getDate() - daysFromSaturday);
             }
 
-            // فقط یک بار حلقه forEach می‌زنیم
             daysArr.forEach((day, index) => {
                 let dayBlocks = planArr.filter(p => p.day === day);
                 
-                // 🌟 ماشین‌حساب هوشمند تاریخ: محاسبه تاریخ دقیقِ این ستون
-                let actualDateShamsi = "تاریخ نامعلوم";
-                if (baseStartDate) {
-                    let targetDate = new Date(baseStartDate);
-                    targetDate.setDate(baseStartDate.getDate() + index); // شنبه +0, یکشنبه +1 و ...
-                    
-                    // تبدیل به تاریخ زیبای شمسی (مثلاً: ۱۵ تیر)
-                    actualDateShamsi = new Intl.DateTimeFormat('fa-IR', { 
-                        month: 'long', 
-                        day: 'numeric' 
-                    }).format(targetDate);
-                }
+                // کپی از تاریخ شنبه و اضافه کردن روزها (+0 برای شنبه، +1 برای یکشنبه و...)
+                let targetDate = new Date(baseStartDate);
+                targetDate.setDate(baseStartDate.getDate() + index); 
+                
+                // تبدیل به تاریخ زیبای شمسی
+                let actualDateShamsi = new Intl.DateTimeFormat('fa-IR', { 
+                    month: 'long', 
+                    day: 'numeric' 
+                }).format(targetDate);
 
                 let dayHtml = `<div class="gcal-day-col">
                                 <div class="gcal-day-header">${day}<span class="gcal-day-date" style="display:block; font-size:10px; color:var(--text-muted); font-weight:normal; margin-top:3px;">${actualDateShamsi}</span></div>
@@ -220,8 +228,8 @@
                                 </div>`;
                 });
                 container.innerHTML += dayHtml + `</div></div>`;
-            }); // پایان حلقه forEach
-        } // پایان تابع renderGCal
+            });
+        }
         function getShamsiDateStr(isoDateStr) {
             if(!isoDateStr) return "";
             let parts = isoDateStr.split('-');
