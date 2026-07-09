@@ -82,13 +82,13 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); 
         
-        // 🌟 سیستم هوشمند استخراج آیدی (بدون هیچ آیدی پیش‌فرضی که باعث تداخل بشه)
+        // 🌟 سیستم هوشمند استخراج آیدی
         const userId = localStorage.getItem('national_id') || 
                        localStorage.getItem('qotbnama_user_id') || 
                        localStorage.getItem('student_id') || 
                        localStorage.getItem('chat_id');
 
-        // 🛡️ اگر هیچ آیدی پیدا نشد، به جای نشون دادن دیتای بقیه، کاربر رو پرت کن بیرون
+        // 🛡️ بررسی هویت
         if (!userId || userId === 'null' || userId === 'undefined') {
             alert("❌ سیستم نمی‌تواند هویت شما را تشخیص دهد. لطفاً مجدداً وارد شوید.");
             window.location.href = 'index.html';
@@ -96,6 +96,9 @@
         
         let currentScheduleObj = null;
 
+        // ==========================================
+        // 🌓 سیستم تم (Dark/Light)
+        // ==========================================
         const themeBtn = document.getElementById('themeBtn');
         const currentTheme = localStorage.getItem('theme') || 'dark'; 
         if (currentTheme === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); themeBtn.innerText = '☀️'; } else { themeBtn.innerText = '🌙'; }
@@ -106,36 +109,47 @@
             else { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); themeBtn.innerText = '☀️'; }
         }
 
+        // ==========================================
+        // 🚀 لود اولیه
+        // ==========================================
         window.onload = async function() { await fetchAndRender(); };
+
+        // 📭 نمایش وضعیت خالی یا ارور
+        function showEmptyState(msg) {
+            const container = document.getElementById('gcalGrid');
+            if (container) {
+                container.innerHTML = `
+                    <div style="padding: 60px 20px; text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <span style="font-size: 50px; margin-bottom: 15px; opacity: 0.5;">🗓️</span>
+                        <h3 style="color: var(--text-muted); font-size: 14px;">${msg}</h3>
+                    </div>`;
+            }
+        }
 
         async function fetchAndRender() {
             try {
-                // ۱. گرفتن زمان دقیق همین الان به فرمت استاندارد
                 const nowIso = new Date().toISOString();
 
-                // ۲. جادوی سوپابیس: فیلتر کردن هوشمندِ برنامه
+                // دریافت برنامه این هفته
                 const { data: schData, error: schErr } = await supabaseClient
                     .from('ai_schedules')
                     .select('*')
                     .eq('national_id', String(userId))
                     .eq('status', 'approved')
-                    .lte('target_start_date', nowIso) // 🌟 کلید طلایی: فقط برنامه‌ای که زمان شروعش رسیده یا گذشته!
-                    .order('target_start_date', { ascending: false }) // از جدیدترین به قدیمی
+                    .lte('target_start_date', nowIso) 
+                    .order('target_start_date', { ascending: false }) 
                     .limit(1)
                     .single();
 
-                // اگر کلاً هیچ برنامه‌ای برای گذشته یا الان نداشت
                 if (schErr || !schData) {
-                    showEmptyState("هنوز برنامه‌ی فعالی برای شما آغاز نشده است.");
+                    showEmptyState("هنوز برنامه‌ی فعالی برای این هفته آغاز نشده است.");
                     return;
                 }
 
                 currentScheduleObj = schData;
                 
-                // آپدیت تیتر صفحه با لیبل برنامه
                 document.getElementById('mainPageTitle').innerHTML = `قطب‌نمای راهینو<br><span style="font-size:11px; color:var(--text-muted);">${schData.week_label || 'برنامه جاری'}</span>`;
 
-                // ۳. تزریق تاریخ‌ها و رندر تقویم 
                 renderGCal();
 
             } catch (err) {
@@ -144,8 +158,11 @@
             }
         }
 
+        // ==========================================
+        // 📅 موتور رندر تقویم (حالت مینیمال بدون تاریخ)
+        // ==========================================
         function renderGCal() {
-            // (بخش نمایش پیام انگیزشی)
+            // بخش پیام انگیزشی
             const weeklyMotivationBox = document.getElementById('aiWeeklyMotivationBox');
             const weeklyMotivationText = document.getElementById('aiWeeklyMotivationText');
             if (currentScheduleObj && currentScheduleObj.ai_motivations) {
@@ -158,22 +175,21 @@
                 } else { weeklyMotivationBox.style.display = 'none'; }
             } else { weeklyMotivationBox.style.display = 'none'; }
             
-            // شروع رندر تقویم
             const container = document.getElementById('gcalGrid'); 
             container.innerHTML = '';
             const daysArr = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
             
+            // ساخت ستون ساعت‌ها
             let timeColHtml = `<div class="gcal-time-col"><div class="gcal-time-header">ساعت</div>`;
             for(let i=6; i<=23; i++) { timeColHtml += `<div class="gcal-time-slot">${i.toString().padStart(2,'0')}:00</div>`; }
             container.innerHTML += timeColHtml + `</div>`;
 
             const planArr = currentScheduleObj.raw_plan || [];
 
-            // رندر کردن ستون‌های روز بدون تاریخ
+            // ساخت ستون روزها
             daysArr.forEach((day) => {
                 let dayBlocks = planArr.filter(p => p.day === day);
                 
-                // هدر ساده و مینیمال (فقط اسم روز)
                 let dayHtml = `<div class="gcal-day-col">
                                 <div class="gcal-day-header">${day}</div>
                                 <div class="gcal-day-grid">`;
@@ -203,93 +219,8 @@
                 container.innerHTML += dayHtml + `</div></div>`;
             });
         }
-        function getShamsiDateStr(isoDateStr) {
-            if(!isoDateStr) return "";
-            let parts = isoDateStr.split('-');
-            let dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
-            return new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' }).format(dateObj);
-        }
 
-        function renderGCal() {
-            // 🌟 نمایش پیام انگیزشی کل هفته
-            // 🌟 نمایش پیام انگیزشی کل هفته (با سیستم حافظه)
-            const weeklyMotivationBox = document.getElementById('aiWeeklyMotivationBox');
-            const weeklyMotivationText = document.getElementById('aiWeeklyMotivationText');
-            
-            if (currentScheduleObj && currentScheduleObj.ai_motivations) {
-                let aiMotivations = typeof currentScheduleObj.ai_motivations === 'string' 
-                    ? JSON.parse(currentScheduleObj.ai_motivations) 
-                    : currentScheduleObj.ai_motivations;
-
-                let weeklyMessage = aiMotivations.weekly_motivation;
-
-                if (weeklyMessage) {
-                    let dismissedMsg = localStorage.getItem(`dismissed_weekly_${userId}`);
-                    if (dismissedMsg === weeklyMessage) {
-                        weeklyMotivationBox.style.display = 'none';
-                    } else {
-                        weeklyMotivationText.innerText = weeklyMessage;
-                        weeklyMotivationBox.style.display = 'block';
-                    }
-                } else {
-                    weeklyMotivationBox.style.display = 'none';
-                }
-            } else {
-                weeklyMotivationBox.style.display = 'none';
-            }
-            
-            const container = document.getElementById('gcalGrid'); container.innerHTML = '';
-            const daysArr = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
-            
-            let timeColHtml = `<div class="gcal-time-col"><div class="gcal-time-header">ساعت</div>`;
-            for(let i=6; i<=23; i++) { timeColHtml += `<div class="gcal-time-slot">${i.toString().padStart(2,'0')}:00</div>`; }
-            container.innerHTML += timeColHtml + `</div>`;
-
-            const planArr = currentScheduleObj.raw_plan || [];
-            
-            daysArr.forEach(day => {
-                // 🌟 فیلتر حذف شد: حالا بانک جبرانی هم تو لیست روزها باقی می‌مونه
-                let dayBlocks = planArr.filter(p => p.day === day);
-                
-                let actualDateShamsi = "تاریخ نامعلوم";
-                if(dayBlocks.length > 0 && dayBlocks[0].actual_date) {
-                    actualDateShamsi = getShamsiDateStr(dayBlocks[0].actual_date);
-                }
-
-                let dayHtml = `<div class="gcal-day-col">
-                                <div class="gcal-day-header">${day}<span class="gcal-day-date">${actualDateShamsi}</span></div>
-                                <div class="gcal-day-grid">`;
-                
-                dayBlocks.forEach(part => {
-                    let startMins = (parseInt(part.start_time.split(':')[0])*60) + parseInt(part.start_time.split(':')[1]);
-                    let endMins = (parseInt(part.end_time.split(':')[0])*60) + parseInt(part.end_time.split(':')[1]);
-                    let topPx = Math.max(0, startMins - 360); let heightPx = endMins - startMins;
-
-                    let bgColor = "#64748b"; // رنگ پیش‌فرض برای جبرانی و دروس عادی
-                    
-                    // 🌟 رنگ‌بندی تفکیک‌شده
-                    if(part.type === 'class') bgColor = "#334155"; 
-                    else if(part.type === 'online_debt') bgColor = "#ef4444";
-                    else if(part.subject.includes("زیست")) bgColor = "#10b981"; 
-                    else if(part.subject.includes("ریاضی") || part.subject.includes("فیزیک")) bgColor = "#f59e0b";
-                    else if(part.subject.includes("شیمی")) bgColor = "#3b82f6"; 
-                    else if(part.type === 'general') bgColor = "#8b5cf6";
-                    else if(part.subject.includes("جبرانی")) bgColor = "#475569"; // رنگ مخصوص باکس‌های جبرانی
-
-                    let statusClass = part.status === 'completed' ? 'completed' : (part.status === 'shifted' ? 'shifted' : '');
-                    
-                    // 🌟 اگر درس شیفت شده بود، روی اسمش خط کشیده میشه
-                    let textDecoration = part.status === 'shifted' ? 'text-decoration: line-through;' : '';
-
-                    dayHtml += `<div class="gcal-event ${statusClass}" style="top: ${topPx}px; height: ${heightPx}px; background: ${bgColor};" title="${part.subject}">
-                                    <div style="font-weight:900;font-size:11px; ${textDecoration}">${part.subject}</div>
-                                    <div style="font-size:9px;font-family:monospace;">${part.start_time}-${part.end_time}</div>
-                                </div>`;
-                });
-                container.innerHTML += dayHtml + `</div></div>`;
-            });
-        }
-        // 🔒 تابع مخفی کردن و ذخیره در حافظه
+        // 🔒 مخفی کردن پیام انگیزشی
         function dismissWeeklyMotivation() {
             const msgText = document.getElementById('aiWeeklyMotivationText').innerText;
             localStorage.setItem(`dismissed_weekly_${userId}`, msgText);
