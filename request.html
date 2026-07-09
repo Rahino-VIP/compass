@@ -274,15 +274,14 @@
 
             try {
                 // 🌟 ارسال تمامی اطلاعات + میانگین‌ها به سرور گوگل
-                await fetch(GAS_WEBAPP_URL, {
+                const response = await fetch(GAS_WEBAPP_URL, {
                     method: 'POST',
                     redirect: 'follow', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ 
-                        action: 'generate_schedule_auto', // 🎯 اسم اکشن رو تغییر دادیم تا بک‌اند بفهمه این معماری جدیده
+                        action: 'generate_schedule_auto', 
                         student_id: userId, 
                         student_note: note, 
-                        // target_exam_date رو حذف کردیم چون سرور خودش پیداش می‌کنه
                         student_options: studentOptions, 
                         active_switch_titles: activeSwitchTitles,
                         avg_study_hours: avgStudyHours, 
@@ -290,26 +289,34 @@
                     })
                 });
                 
-                const formContainer = document.getElementById('fridayForm') || document.body;
-                formContainer.innerHTML = `
-                    <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px; text-align: center; margin-top: 20px; animation: fadeIn 0.5s;">
-                        <div style="font-size: 40px; margin-bottom: 10px;">✅</div>
-                        <h3 style="color: var(--success); margin-bottom: 10px;">درخواست با موفقیت ثبت شد</h3>
-                        <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">
-                            اطلاعات شما به همراه تنظیمات اختصاصی به هسته مرکزی ارسال شد. الگوریتم در حال چیدمان برنامه‌ی شماست. 
-                        </p>
-                    </div>
-                `;
+                // 🌟 خواندن جواب واقعیِ سرور گوگل
+                const result = await response.json();
+                
+                if (result.success) {
+                    // فقط در صورتی که سرور گفت موفقیت‌آمیز بود، پیام سبز رو نشون بده
+                    const formContainer = document.getElementById('fridayForm') || document.body;
+                    formContainer.innerHTML = `
+                        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px; text-align: center; margin-top: 20px; animation: fadeIn 0.5s;">
+                            <div style="font-size: 40px; margin-bottom: 10px;">✅</div>
+                            <h3 style="color: var(--success); margin-bottom: 10px;">درخواست با موفقیت ثبت شد</h3>
+                            <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">
+                                اطلاعات شما به همراه تنظیمات اختصاصی به هسته مرکزی ارسال شد. الگوریتم در حال چیدمان برنامه‌ی شماست. 
+                            </p>
+                        </div>
+                    `;
+                } else {
+                    // اگر سرور ارور داد (مثل همون ارورِ تاریخ)، پرتش کن به بخش catch
+                    throw new Error(result.error || result.message || "خطای ناشناخته از سمت سرور");
+                }
 
             } catch (error) {
                 console.error("Fetch Error:", error);
-                alert('❌ اینترنت شما ضعیف است یا ارتباط برقرار نشد.');
+                alert('❌ خطا در سیستم برنامه‌ریزی:\n' + error.message);
                 if(btn) {
-                    btn.innerHTML = 'ارسال اطلاعات به اتاق فکر 🚀'; 
+                    btn.innerHTML = 'ارسال مجدد اطلاعات 🚀'; 
                     btn.disabled = false;
                 }
             }
-        }
     </script>
 </body>
 </html>
