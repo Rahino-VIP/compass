@@ -169,33 +169,23 @@
 
             const planArr = currentScheduleObj.raw_plan || [];
             
-            // 🌟 موتور ضدبامبول و هوشمند تاریخ!
-            let baseStartDate = new Date(); // پیش‌فرض: امروز
-            if (currentScheduleObj) {
-                // اولویت با تاریخ شروع است؛ اگر برنامه‌ی قدیمی بود، تاریخ ساخته شدنش رو می‌گیریم
-                let validDateStr = currentScheduleObj.target_start_date || currentScheduleObj.created_at;
-                if (validDateStr) {
-                    let parsedDate = new Date(validDateStr);
-                    if (!isNaN(parsedDate)) {
-                        baseStartDate = parsedDate;
-                    }
-                }
-                
-                // 🌟 پیدا کردن روز شنبه: 
-                // مهم نیست برنامه وسط هفته ساخته شده باشه، ما تاریخ رو برمی‌گردونیم به شنبه‌ی همون هفته!
-                let dayOfWeek = baseStartDate.getDay(); // (0 = یکشنبه، 6 = شنبه)
-                let daysFromSaturday = (dayOfWeek + 1) % 7; 
-                baseStartDate.setDate(baseStartDate.getDate() - daysFromSaturday);
-            }
+            // 🌟 ماشین‌حساب هوشمند تقویم واقعی (بدون نیاز به دیتابیس!)
+            let today = new Date(); // گرفتن تاریخ همین الانِ گوشی/سیستم
+            let jsDay = today.getDay(); // تو جاوااسکریپت: 0 میشه یکشنبه، 6 میشه شنبه
+            let daysFromSaturday = (jsDay + 1) % 7; // تبدیل به فرمت ایرانی (شنبه میشه 0، جمعه میشه 6)
+            
+            // پیدا کردن تاریخ دقیق شنبه‌ی همین هفته
+            let thisSaturday = new Date(today);
+            thisSaturday.setDate(today.getDate() - daysFromSaturday);
 
             daysArr.forEach((day, index) => {
                 let dayBlocks = planArr.filter(p => p.day === day);
                 
-                // کپی از تاریخ شنبه و اضافه کردن روزها (+0 برای شنبه، +1 برای یکشنبه و...)
-                let targetDate = new Date(baseStartDate);
-                targetDate.setDate(baseStartDate.getDate() + index); 
+                // تاریخِ این ستون = شنبه‌ی همین هفته + ایندکسِ روز (0 تا 6)
+                let targetDate = new Date(thisSaturday);
+                targetDate.setDate(thisSaturday.getDate() + index); 
                 
-                // تبدیل به تاریخ زیبای شمسی
+                // تبدیل به تاریخ زیبای شمسی (مثلاً: ۱۶ تیر)
                 let actualDateShamsi = new Intl.DateTimeFormat('fa-IR', { 
                     month: 'long', 
                     day: 'numeric' 
