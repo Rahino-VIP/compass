@@ -173,21 +173,32 @@
             let baseDate = new Date(currentScheduleObj.target_start_date);
             
             daysArr.forEach((day, index) => {
+                // 🌟 تبدیل تاریخ شروع برنامه (بامداد شنبه) به فرمت قابل محاسبه
+            let baseStartDate = null;
+            if (currentScheduleObj && currentScheduleObj.target_start_date) {
+                baseStartDate = new Date(currentScheduleObj.target_start_date);
+            }
+
+            daysArr.forEach((day, index) => {
                 let dayBlocks = planArr.filter(p => p.day === day);
                 
-                // 🌟 ماشین حساب تاریخ: به روز شنبه، index روز اضافه می‌کنیم تا تاریخِ دقیقِ این ستون به‌دست بیاد
-                let targetDate = new Date(baseDate);
-                targetDate.setDate(baseDate.getDate() + index);
-                
-                // تبدیل به شمسی زیبا
-                let persianDate = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' }).format(targetDate);
+                // 🌟 ماشین‌حساب هوشمند تاریخ: محاسبه تاریخ دقیقِ این ستون
+                let actualDateShamsi = "تاریخ نامعلوم";
+                if (baseStartDate) {
+                    let targetDate = new Date(baseStartDate);
+                    targetDate.setDate(baseStartDate.getDate() + index); // شنبه +0, یکشنبه +1 و ...
+                    
+                    // تبدیل به تاریخ زیبای شمسی (مثلاً: ۱۵ تیر)
+                    actualDateShamsi = new Intl.DateTimeFormat('fa-IR', { 
+                        month: 'long', 
+                        day: 'numeric' 
+                    }).format(targetDate);
+                }
 
-                // تزریق تاریخ شمسیِ محاسبه شده زیر اسم روز
                 let dayHtml = `<div class="gcal-day-col">
-                                <div class="gcal-day-header">${day}<br><span style="font-size:10px; color:var(--text-muted); font-weight:normal;">${persianDate}</span></div>
+                                <div class="gcal-day-header">${day}<span class="gcal-day-date" style="display:block; font-size:10px; color:var(--text-muted); font-weight:normal; margin-top:3px;">${actualDateShamsi}</span></div>
                                 <div class="gcal-day-grid">`;
                 
-                // رندر کردن باکس‌های داخل این روز (دقیقاً کدهای خودت)
                 dayBlocks.forEach(part => {
                     let startMins = (parseInt(part.start_time.split(':')[0])*60) + parseInt(part.start_time.split(':')[1]);
                     let endMins = (parseInt(part.end_time.split(':')[0])*60) + parseInt(part.end_time.split(':')[1]);
@@ -212,8 +223,6 @@
                 });
                 container.innerHTML += dayHtml + `</div></div>`;
             });
-        }
-
         function getShamsiDateStr(isoDateStr) {
             if(!isoDateStr) return "";
             let parts = isoDateStr.split('-');
