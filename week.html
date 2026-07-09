@@ -145,9 +145,10 @@
         }
 
         function renderGCal() {
-            // (بخش نمایش پیام انگیزشی دقیقاً مثل کدهای خودت باقی می‌مونه...)
+            // (بخش نمایش پیام انگیزشی)
             const weeklyMotivationBox = document.getElementById('aiWeeklyMotivationBox');
             const weeklyMotivationText = document.getElementById('aiWeeklyMotivationText');
+            
             if (currentScheduleObj && currentScheduleObj.ai_motivations) {
                 let aiMotivations = typeof currentScheduleObj.ai_motivations === 'string' ? JSON.parse(currentScheduleObj.ai_motivations) : currentScheduleObj.ai_motivations;
                 let weeklyMessage = aiMotivations.weekly_motivation;
@@ -169,16 +170,13 @@
 
             const planArr = currentScheduleObj.raw_plan || [];
             
-            // 🌟 تبدیل target_start_date به یک آبجکت تاریخ میلادی برای محاسبه
-            let baseDate = new Date(currentScheduleObj.target_start_date);
-            
-            daysArr.forEach((day, index) => {
-                // 🌟 تبدیل تاریخ شروع برنامه (بامداد شنبه) به فرمت قابل محاسبه
+            // 🌟 تبدیل تاریخ شروع برنامه (بامداد شنبه) به فرمت قابل محاسبه
             let baseStartDate = null;
             if (currentScheduleObj && currentScheduleObj.target_start_date) {
                 baseStartDate = new Date(currentScheduleObj.target_start_date);
             }
 
+            // فقط یک بار حلقه forEach می‌زنیم
             daysArr.forEach((day, index) => {
                 let dayBlocks = planArr.filter(p => p.day === day);
                 
@@ -222,7 +220,8 @@
                                 </div>`;
                 });
                 container.innerHTML += dayHtml + `</div></div>`;
-            });
+            }); // پایان حلقه forEach
+        } // پایان تابع renderGCal
         function getShamsiDateStr(isoDateStr) {
             if(!isoDateStr) return "";
             let parts = isoDateStr.split('-');
