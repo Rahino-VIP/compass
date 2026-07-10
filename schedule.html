@@ -401,15 +401,23 @@
         }
 
         async function loadCurrentSchedule() {
+            const nowIso = new Date().toISOString(); // 🌟 گرفتن زمان دقیق سیستم
+            
+            // 🌟 فراخوانی هوشمند با اعمال قفل زمانی
             const { data, error } = await supabaseClient.from('ai_schedules').select('*')
-                .eq('national_id', String(userId)).eq('status', 'approved').order('created_at', { ascending: false }).limit(1);
+                .eq('national_id', String(userId))
+                .eq('status', 'approved')
+                .lte('target_start_date', nowIso) // 🔒 قفل زمانی: نمایش فقط در صورت رسیدن به بامداد شنبه
+                .order('target_start_date', { ascending: false }) // 🎯 مرتب‌سازی بر اساس تاریخ شروع برنامه
+                .limit(1);
             
             if (data && data.length > 0) { 
                 currentScheduleObj = data[0]; 
                 determineRenderDay(); 
                 renderTodayTab(); 
             } else { 
-                document.getElementById('questsContainer').innerHTML = '<div style="text-align:center;color:var(--text-muted);">برنامه‌ای یافت نشد.</div>'; 
+                document.getElementById('questsContainer').innerHTML = '<div style="text-align:center;color:var(--text-muted); padding:40px;">هنوز برنامه‌ی فعالی برای این هفته آغاز نشده است. ⏳</div>'; 
+                updateProgressBar(); // 🌟 برای جلوگیری از باگ‌های احتمالی پر شدن نوار وضعیت
             }
         }
 
