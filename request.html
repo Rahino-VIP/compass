@@ -147,13 +147,6 @@
                 return; // عملیات همینجا متوقف میشه
             } else {
                 // پنجره بازه!
-                if (!isWindowOpen) {
-                // اگر تو زمان مجاز نیستیم، فرم رو قفل کن و پیام نشون بده
-                document.getElementById('timeLockMessage').style.display = 'block';
-                document.getElementById('requestFormContent').style.display = 'none';
-                return; // عملیات همینجا متوقف میشه
-            } else {
-                // پنجره بازه!
                 document.getElementById('timeLockMessage').style.display = 'none';
                 document.getElementById('requestFormContent').style.display = 'block';
             }
