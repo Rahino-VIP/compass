@@ -406,18 +406,24 @@
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
-                    layout: {
-                        padding: 35 // 🎯 این خط جادویی باعث میشه اسم دروس از کادر بیرون نزنه
-                    },
+                    layout: { padding: 35 },
                     scales: { 
                         r: { 
                             angleLines: { color: 'rgba(255,255,255,0.1)' }, 
                             grid: { color: 'rgba(255,255,255,0.1)' }, 
-                            pointLabels: { font: { size: 10, family: 'Vazirmatn' }, color: 'var(--text-muted)' }, 
+                            pointLabels: { 
+                                font: { size: 11, family: 'Vazirmatn', weight: 'bold' }, 
+                                color: '#e2e8f0' // 🎯 رنگ روشن و بسیار واضح برای اسم دروس
+                            }, 
                             ticks: { display: false, max: 100, min: 0 } 
                         } 
                     },
-                    plugins: { legend: { position: 'bottom', labels: { color: 'var(--text-muted)' } } }
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { color: '#e2e8f0', font: { family: 'Vazirmatn', weight: 'bold' } } 
+                        } 
+                    }
                 }
             });
 
@@ -435,14 +441,25 @@
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
-                    layout: {
-                        padding: { bottom: 15, top: 10 } // 🎯 فاصله دادن به لجند و متن‌های محور ایکس
-                    },
+                    layout: { padding: { bottom: 15, top: 10 } },
                     scales: { 
-                        x: { stacked: true, grid: { display: false }, ticks: { color: 'var(--text-muted)', font: {size: 9} } }, 
-                        y: { stacked: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'var(--text-muted)' } } 
+                        x: { 
+                            stacked: true, 
+                            grid: { display: false }, 
+                            ticks: { color: '#e2e8f0', font: { size: 10, family: 'Vazirmatn', weight: 'bold' } } 
+                        }, 
+                        y: { 
+                            stacked: true, 
+                            grid: { color: 'rgba(255,255,255,0.05)' }, 
+                            ticks: { color: '#e2e8f0', font: { family: 'Vazirmatn' } } 
+                        } 
                     },
-                    plugins: { legend: { position: 'bottom', labels: { color: 'var(--text-muted)' } } }
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { color: '#e2e8f0', font: { family: 'Vazirmatn', weight: 'bold' } } 
+                        } 
+                    }
                 }
             });
         }
