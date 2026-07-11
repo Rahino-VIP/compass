@@ -1,0 +1,24 @@
+{
+  "name": "قطب‌نمای راهینو | دستیار هوشمند تحصیلی",
+  "short_name": "قطب‌نما",
+  "description": "سیستم هوشمند برنامه‌ریزی و تحلیل عملکرد تحصیلی",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "https://etlutqwwqeahevsskjih.supabase.co/storage/v1/object/public/photo/Gemini_Generated_Image_j6dhndj6dhndj6dh.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://etlutqwwqeahevsskjih.supabase.co/storage/v1/object/public/photo/Gemini_Generated_Image_j6dhndj6dhndj6dh.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
