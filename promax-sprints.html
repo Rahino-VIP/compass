@@ -291,7 +291,7 @@
                 // ۱. بررسی اینکه آیا قبلاً ثبت شده یا نه (در جدول exam_results که حالا نقش پرونده رو داره)
                 const { data: existingAnalysis } = await supabaseClient
                     .from('exam_results')
-                    .select('status, consultant_analysis, extracted_data')
+                    .select('status, consultant_analysis, extracted_data, lifestyle_snapshot')
                     .eq('chat_id', String(userId))
                     .eq('period_start', startDateStr)
                     .eq('period_end', endDateStr)
@@ -342,8 +342,8 @@
         }
 
         function renderDossierChart(id, extractedData, lifestyleSnapshot) {
-            let examData = typeof extractedData === 'string' ? JSON.parse(extractedData) : extractedData;
-            let lifestyle = typeof lifestyleSnapshot === 'string' ? JSON.parse(lifestyleSnapshot) : lifestyleSnapshot;
+            let examData = typeof extractedData === 'string' ? JSON.parse(extractedData || "[]") : (extractedData || []);
+            let lifestyle = typeof lifestyleSnapshot === 'string' ? JSON.parse(lifestyleSnapshot || "{}") : (lifestyleSnapshot || {});
             
             if (!examData || examData.length === 0) return;
 
