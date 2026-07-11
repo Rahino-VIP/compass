@@ -210,27 +210,53 @@
             return parseInt(parts[2]) + ' ' + monthNames[parseInt(parts[1])];
         }
 
+        // 🌟 دریافت شناسه کاربر با ضریب اطمینان بالا
+        const userId = localStorage.getItem('national_id') || localStorage.getItem('qotbnama_user_id') || localStorage.getItem('chat_id');
+        if (!userId) window.location.href = 'index.html';
+
+        // ... بقیه متغیرهای گلوبال مثل chartColors و monthNames سر جای خودشون می‌مونن ...
+
         async function fetchAllData() {
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
+                let major = "تجربی"; // رشته پیش‌فرض در صورت نبود اطلاعات
                 
-                const userRes = await fetch(`${cleanUrl}/rest/v1/students?chat_id=eq.${userId}&select=major`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
-                const userData = await userRes.json();
-                let major = userData.length > 0 && userData[0].major ? userData[0].major : "تجربی";
+                // ۱. 🛡️ درخواست امن برای اطلاعات کاربر (حذف select=major برای رفع قطعی ارور ۴۰۰)
+                try {
+                    const userRes = await fetch(`${cleanUrl}/rest/v1/students?chat_id=eq.${userId}`, { 
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } 
+                    });
+                    
+                    if (userRes.ok) {
+                        const userData = await userRes.json();
+                        if (userData.length > 0 && userData[0].major) {
+                            major = userData[0].major;
+                        }
+                    }
+                } catch (userError) {
+                    console.log("⚠️ اطلاعات رشته تحصیلی در دیتابیس یافت نشد، ادامه با پیش‌فرض...");
+                }
 
-                const reportRes = await fetch(`${cleanUrl}/rest/v1/daily_reports?chat_id=eq.${userId}&order=report_date.asc`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+                // ۲. دریافت گزارش‌های روزانه
+                const reportRes = await fetch(`${cleanUrl}/rest/v1/daily_reports?chat_id=eq.${userId}&order=report_date.asc`, { 
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } 
+                });
+                
+                if (!reportRes.ok) throw new Error("خطا در ارتباط با جدول گزارش‌ها");
                 const reports = await reportRes.json();
 
+                // ۳. پردازش و رسم نمودارها
                 processAnalytics(reports, major);
                 
                 document.getElementById('mainLoader').style.display = 'none';
                 document.getElementById('appContent').style.display = 'block';
+                
             } catch (error) {
-                alert("⚠️ خطا در پردازش اطلاعات.");
+                console.error("متن دقیق ارور:", error);
+                alert("⚠️ خطا در پردازش اطلاعات داشبورد.");
                 document.getElementById('mainLoader').style.display = 'none';
             }
         }
-
         function processAnalytics(reports, major) {
             if (reports.length === 0) return;
 
