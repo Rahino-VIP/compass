@@ -135,7 +135,7 @@
             let y = parts.find(p => p.type === 'year').value;
             let m = parts.find(p => p.type === 'month').value;
             let d = parts.find(p => p.type === 'day').value;
-            return `${y}-${m}-${d}`; // خروجی: 1405-04-20
+            return `${y}/${m}/${d}`; // خط تیره رو پاک کن و جاش اسلش بذار
         }
 
         window.onload = async function() { 
