@@ -128,7 +128,6 @@
             else { document.documentElement.setAttribute('data-theme', 'light'); localStorage.setItem('theme', 'light'); themeBtn.innerText = '🌙'; }
         }
 
-        // 🌟 مترجم تاریخ میلادی به شمسیِ استاندارد دیتابیس (YYYY-MM-DD)
         // 🌟 مترجم ضدگلوله‌ی تاریخ میلادی به شمسیِ استاندارد دیتابیس (YYYY/MM/DD)
         function getShamsiForDB(dateObj) {
             let formatter = new Intl.DateTimeFormat('en-US-u-ca-persian', { year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -141,7 +140,7 @@
             m = m.toString().padStart(2, '0');
             d = d.toString().padStart(2, '0');
             
-            // ۲. ترکیب با اسلش دقیقاً مثل عکس دیتابیست
+            // ۲. ترکیب با اسلش دقیقاً مثل دیتابیس
             let dateStr = `${y}/${m}/${d}`;
             
             // ۳. فیلتر امنیتی: تبدیل اجباری اعداد فارسی به انگلیسی (برای اطمینان ۱۰۰٪)
@@ -182,10 +181,11 @@
                 let eDate = new Date(sDate);
                 eDate.setDate(sDate.getDate() + 6);
                 
-                let startStr = sDate.toISOString().split('T')[0];
-                let endStr = eDate.toISOString().split('T')[0];
+                // 🎯 جادوی شمسی‌سازی اینجاست! (ارسال به دیتابیس با فرمت YYYY/MM/DD)
+                let startStr = getShamsiForDB(sDate);
+                let endStr = getShamsiForDB(eDate);
 
-                // تبدیل به شمسی برای نمایش
+                // تبدیل به شمسی برای نمایش ظاهری به کاربر
                 let faOpt = { month: 'long', day: 'numeric' };
                 let shamsiStart = new Intl.DateTimeFormat('fa-IR', faOpt).format(sDate);
                 let shamsiEnd = new Intl.DateTimeFormat('fa-IR', faOpt).format(eDate);
