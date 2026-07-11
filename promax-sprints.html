@@ -67,7 +67,7 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         .ai-analysis-box { background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 16px; padding: 20px; margin-top: 15px; line-height: 1.8; font-size: 14px; }
-        .chart-container { position: relative; height: 250px; width: 100%; margin-top: 20px; background: var(--surface-dark); padding: 10px; border-radius: 16px; border: 1px solid var(--border-color); }
+        .chart-container { position: relative; height: 340px; width: 100%; margin-top: 20px; background: var(--surface-dark); padding: 25px 15px; border-radius: 16px; border: 1px solid var(--border-color); }
         
         /* استایل سوئیچ آزمون */
         .toggle-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); cursor: pointer;}
@@ -406,6 +406,9 @@
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
+                    layout: {
+                        padding: 35 // 🎯 این خط جادویی باعث میشه اسم دروس از کادر بیرون نزنه
+                    },
                     scales: { 
                         r: { 
                             angleLines: { color: 'rgba(255,255,255,0.1)' }, 
@@ -432,6 +435,9 @@
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
+                    layout: {
+                        padding: { bottom: 15, top: 10 } // 🎯 فاصله دادن به لجند و متن‌های محور ایکس
+                    },
                     scales: { 
                         x: { stacked: true, grid: { display: false }, ticks: { color: 'var(--text-muted)', font: {size: 9} } }, 
                         y: { stacked: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'var(--text-muted)' } } 
