@@ -129,13 +129,25 @@
         }
 
         // 🌟 مترجم تاریخ میلادی به شمسیِ استاندارد دیتابیس (YYYY-MM-DD)
+        // 🌟 مترجم ضدگلوله‌ی تاریخ میلادی به شمسیِ استاندارد دیتابیس (YYYY/MM/DD)
         function getShamsiForDB(dateObj) {
             let formatter = new Intl.DateTimeFormat('en-US-u-ca-persian', { year: 'numeric', month: '2-digit', day: '2-digit' });
             let parts = formatter.formatToParts(dateObj);
             let y = parts.find(p => p.type === 'year').value;
             let m = parts.find(p => p.type === 'month').value;
             let d = parts.find(p => p.type === 'day').value;
-            return `${y}/${m}/${d}`; // خط تیره رو پاک کن و جاش اسلش بذار
+            
+            // ۱. اجبار به دو رقمی بودن ماه و روز (اگر یک رقمی بود، صفر بچسبون پشتش)
+            m = m.toString().padStart(2, '0');
+            d = d.toString().padStart(2, '0');
+            
+            // ۲. ترکیب با اسلش دقیقاً مثل عکس دیتابیست
+            let dateStr = `${y}/${m}/${d}`;
+            
+            // ۳. فیلتر امنیتی: تبدیل اجباری اعداد فارسی به انگلیسی (برای اطمینان ۱۰۰٪)
+            dateStr = dateStr.replace(/[۰-۹]/g, c => '۰۱۲۳۴۵۶۷۸۹'.indexOf(c));
+            
+            return dateStr;
         }
 
         window.onload = async function() { 
@@ -299,6 +311,8 @@
                     }
                 }
 
+                console.log("🕵️‍♂️ دیتابیس رو بگرد از تاریخ: " + startDateStr + " تا تاریخ: " + endDateStr);
+                
                 // ۲. بررسی قانون 6 روز گزارش
                 const { count, error } = await supabaseClient
                     .from('daily_reports')
