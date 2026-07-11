@@ -252,8 +252,15 @@
                                 </div>
                                 <div class="ai-analysis-box" id="analysis_text_${sch.id}"></div>
                                 
-                                <div id="chartBox_${sch.id}" class="chart-container" style="display:none;">
-                                    <canvas id="chart_${sch.id}"></canvas>
+                                <div id="chartBox_${sch.id}" style="display:none; margin-top:20px;">
+                                    <div class="chart-container" style="margin-bottom:15px;">
+                                        <div style="font-size:12px; font-weight:bold; color:var(--accent); text-align:center; margin-bottom:10px;">⚖️ ترازوی عدالت (تلاش vs نتیجه)</div>
+                                        <canvas id="radarChart_${sch.id}"></canvas>
+                                    </div>
+                                    <div class="chart-container">
+                                        <div style="font-size:12px; font-weight:bold; color:var(--text-muted); text-align:center; margin-bottom:10px;">🎯 مدیریت زمان در جلسه آزمون</div>
+                                        <canvas id="barChart_${sch.id}"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -304,7 +311,7 @@
                         
                         if (existingAnalysis[0].extracted_data) {
                             document.getElementById(`chartBox_${id}`).style.display = 'block';
-                            renderDossierChart(id, existingAnalysis[0].extracted_data);
+                            renderDossierChart(id, existingAnalysis[0].extracted_data, existingAnalysis[0].lifestyle_snapshot);
                         }
                         return; 
                     } else if (status === 'rejected') {
@@ -334,19 +341,86 @@
             }
         }
 
-        function renderDossierChart(id, extractedData) {
-            let parsedData = typeof extractedData === 'string' ? JSON.parse(extractedData) : extractedData;
-            if (!parsedData || parsedData.length === 0) return;
+        function renderDossierChart(id, extractedData, lifestyleSnapshot) {
+            let examData = typeof extractedData === 'string' ? JSON.parse(extractedData) : extractedData;
+            let lifestyle = typeof lifestyleSnapshot === 'string' ? JSON.parse(lifestyleSnapshot) : lifestyleSnapshot;
+            
+            if (!examData || examData.length === 0) return;
 
-            const labels = parsedData.map(l => l.name);
-            const corrects = parsedData.map(l => Number(l.correct || 0));
-            const incorrects = parsedData.map(l => Number(l.incorrect || 0));
-            const unattempteds = parsedData.map(l => Number(l.unattempted || 0));
+            const labels = examData.map(l => l.name);
+            
+            // --- دیتای نمودار مدیریت زمان ---
+            const corrects = examData.map(l => Number(l.correct || 0));
+            const incorrects = examData.map(l => Number(l.incorrect || 0));
+            const unattempteds = examData.map(l => Number(l.unattempted || 0));
 
-            if (chartInstances[id]) chartInstances[id].destroy(); 
+            // --- دیتای نمودار رادار (فرمول نرمال‌سازی شما) ---
+            let rawTaraz = examData.map(l => Number(l.taraz || 0));
+            let maxTaraz = Math.max(...rawTaraz) || 1; // جلوگیری از تقسیم بر صفر
+            let normalizedTaraz = rawTaraz.map(t => Math.round((t / maxTaraz) * 100));
 
-            const ctx = document.getElementById(`chart_${id}`).getContext('2d');
-            chartInstances[id] = new Chart(ctx, {
+            let rawStudyHours = [];
+            let subjectStats = lifestyle.subject_stats || {};
+            
+            // مچ کردن اسم دروس تو کارنامه با اسم دروس تو گزارش‌های روزانه
+            labels.forEach(lessonName => {
+                let foundKey = Object.keys(subjectStats).find(k => lessonName.includes(k) || k.includes(lessonName));
+                if (foundKey) {
+                    rawStudyHours.push(subjectStats[foundKey].study + subjectStats[foundKey].edu);
+                } else {
+                    rawStudyHours.push(0); // اگر دیتایی نداشت یعنی نخونده
+                }
+            });
+
+            let maxStudy = Math.max(...rawStudyHours) || 1;
+            let normalizedStudy = rawStudyHours.map(s => Math.round((s / maxStudy) * 100));
+
+            // پاک کردن نمودارهای قبلی برای جلوگیری از باگِ هاور (Hover)
+            if (chartInstances[`radar_${id}`]) chartInstances[`radar_${id}`].destroy(); 
+            if (chartInstances[`bar_${id}`]) chartInstances[`bar_${id}`].destroy(); 
+
+            // 🌟 رسم نمودار رادار (تلاش vs نتیجه)
+            const ctxRadar = document.getElementById(`radarChart_${id}`).getContext('2d');
+            chartInstances[`radar_${id}`] = new Chart(ctxRadar, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'تلاش (ساعت مطالعه)',
+                            data: normalizedStudy,
+                            backgroundColor: 'rgba(139, 92, 246, 0.2)', // رنگ بنفش
+                            borderColor: '#8b5cf6',
+                            pointBackgroundColor: '#8b5cf6',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'نتیجه (تراز کارنامه)',
+                            data: normalizedTaraz,
+                            backgroundColor: 'rgba(245, 158, 11, 0.2)', // رنگ طلایی
+                            borderColor: '#f59e0b',
+                            pointBackgroundColor: '#f59e0b',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    scales: { 
+                        r: { 
+                            angleLines: { color: 'rgba(255,255,255,0.1)' }, 
+                            grid: { color: 'rgba(255,255,255,0.1)' }, 
+                            pointLabels: { font: { size: 10, family: 'Vazirmatn' }, color: 'var(--text-muted)' }, 
+                            ticks: { display: false, max: 100, min: 0 } 
+                        } 
+                    },
+                    plugins: { legend: { position: 'bottom', labels: { color: 'var(--text-muted)' } } }
+                }
+            });
+
+            // 🌟 رسم نمودار مدیریت زمان (Stacked Bar)
+            const ctxBar = document.getElementById(`barChart_${id}`).getContext('2d');
+            chartInstances[`bar_${id}`] = new Chart(ctxBar, {
                 type: 'bar',
                 data: {
                     labels: labels,
@@ -359,10 +433,10 @@
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
                     scales: { 
-                        x: { stacked: true, grid: { display: false } }, 
-                        y: { stacked: true, grid: { color: 'rgba(255,255,255,0.05)' } } 
+                        x: { stacked: true, grid: { display: false }, ticks: { color: 'var(--text-muted)', font: {size: 9} } }, 
+                        y: { stacked: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'var(--text-muted)' } } 
                     },
-                    plugins: { legend: { position: 'bottom' } }
+                    plugins: { legend: { position: 'bottom', labels: { color: 'var(--text-muted)' } } }
                 }
             });
         }
