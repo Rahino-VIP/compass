@@ -2,7 +2,7 @@
   "name": "قطب‌نمای راهینو | دستیار هوشمند تحصیلی",
   "short_name": "قطب‌نما",
   "description": "سیستم هوشمند برنامه‌ریزی و تحلیل عملکرد تحصیلی",
-  "start_url": "/compass/index.html",
+  "start_url": "https://rahino-vip.github.io/compass/index.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f172a",
