@@ -176,29 +176,30 @@
             container.innerHTML = ''; 
 
             schedules.forEach(sch => {
-                // محاسبه تاریخ پایان هفته (۶ روز بعد از شروع)
                 let sDate = new Date(sch.target_start_date || sch.created_at);
                 let eDate = new Date(sDate);
                 eDate.setDate(sDate.getDate() + 6);
                 
-                // 🎯 جادوی شمسی‌سازی اینجاست! (ارسال به دیتابیس با فرمت YYYY/MM/DD)
                 let startStr = getShamsiForDB(sDate);
                 let endStr = getShamsiForDB(eDate);
 
-                // تبدیل به شمسی برای نمایش ظاهری به کاربر
                 let faOpt = { month: 'long', day: 'numeric' };
                 let shamsiStart = new Intl.DateTimeFormat('fa-IR', faOpt).format(sDate);
                 let shamsiEnd = new Intl.DateTimeFormat('fa-IR', faOpt).format(eDate);
 
-                // آیا تو اسمش نوشته آزمون؟
-                let isLikelyExam = sch.week_label && sch.week_label.includes("آزمون");
-                let badge = isLikelyExam 
-                    ? `<span class="dossier-badge badge-exam">🎯 هدف: آزمون</span>` 
+                // 🧠 تشخیص اتوماتیک هوش مصنوعی: آیا این فازِ منتهی به آزمونه؟
+                let aiMots = typeof sch.ai_motivations === 'string' ? JSON.parse(sch.ai_motivations) : (sch.ai_motivations || {});
+                let weeklyMsg = aiMots.weekly_motivation || "";
+                // اگر تو پیام انگیزشی کلمه "هفته دوم" یا "آزمون" بود، یعنی باید کارنامه بده
+                let isExamWeek = weeklyMsg.includes("هفته دوم") || weeklyMsg.includes("آزمون");
+
+                let badge = isExamWeek 
+                    ? `<span class="dossier-badge badge-exam">🎯 هدف: کالبدشکافی آزمون</span>` 
                     : `<span class="dossier-badge badge-routine">🏃 فاز پیشروی</span>`;
 
                 container.innerHTML += `
                     <div class="dossier-card" id="card_${sch.id}">
-                        <div class="dossier-header" onclick="toggleDossier('${sch.id}', '${startStr}', '${endStr}')">
+                        <div class="dossier-header" onclick="toggleDossier('${sch.id}', '${startStr}', '${endStr}', ${isExamWeek})">
                             <div class="dossier-info">
                                 <h3>${sch.week_label || 'پرونده بدون نام'}</h3>
                                 <div class="dossier-dates">${shamsiStart} الی ${shamsiEnd}</div>
@@ -219,22 +220,25 @@
                             </div>
 
                             <div id="form_${sch.id}" class="surgery-form">
-                                <label class="toggle-row">
-                                    <span style="font-size:13px;font-weight:bold;color:var(--text-main);">در پایان این هفته در آزمون تستی شرکت کردم</span>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="hasExam_${sch.id}" onchange="toggleExamUpload('${sch.id}')" ${isLikelyExam ? 'checked' : ''}>
-                                        <span class="slider"></span>
-                                    </label>
-                                </label>
-
-                                <div id="uploadBox_${sch.id}" class="file-upload-wrapper" style="display: ${isLikelyExam ? 'flex' : 'none'};">
-                                    <div style="font-size: 24px; margin-bottom: 5px;">📥</div>
-                                    <div style="font-size: 11px; font-weight: bold; color: var(--accent);" id="fileName_${sch.id}">کارنامه (PDF یا عکس) را اینجا آپلود کنید</div>
-                                    <input type="file" accept="image/*, application/pdf" onchange="handleFileSelect(this, '${sch.id}')">
-                                </div>
                                 
-                                <textarea class="modern-input" id="reflection_${sch.id}" rows="3" placeholder="اعترافات: در این هفته چه حسی داشتی؟ نقطه قوت و ضعفت چی بود؟"></textarea>
-                                <button class="btn-submit" id="btn_${sch.id}" onclick="submitAnalysis('${sch.id}', '${startStr}', '${endStr}')">🚀 ارسال به آزمایشگاه</button>
+                                <!-- پیام هوشمند تشخیص فاز -->
+                                ${isExamWeek ? `
+                                    <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning); padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 12px; color: var(--warning);">
+                                        🎯 <strong>تشخیص خودکار:</strong> این هفته منتهی به آزمون است. لطفاً کارنامه خود را آپلود کنید تا کل این فاز (۱۴ روز اخیر) ارزیابی شود.
+                                    </div>
+                                    <div id="uploadBox_${sch.id}" class="file-upload-wrapper">
+                                        <div style="font-size: 24px; margin-bottom: 5px;">📥</div>
+                                        <div style="font-size: 11px; font-weight: bold; color: var(--accent);" id="fileName_${sch.id}">کارنامه (PDF یا عکس) را اینجا آپلود کنید</div>
+                                        <input type="file" accept="image/*, application/pdf" onchange="handleFileSelect(this, '${sch.id}')">
+                                    </div>
+                                ` : `
+                                    <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 12px; color: var(--success);">
+                                        🏃 <strong>تشخیص خودکار:</strong> این هفته آزمون ندارید. سیستم کیفیت مطالعه و تعهد به برنامه را در این ۷ روز تحلیل می‌کند.
+                                    </div>
+                                `}
+                                
+                                <textarea class="modern-input" id="reflection_${sch.id}" rows="3" placeholder="اعترافات: در این فاز چه حسی داشتی؟ نقطه قوت و ضعفت چی بود؟"></textarea>
+                                <button class="btn-submit" id="btn_${sch.id}" onclick="submitAnalysis('${sch.id}', '${startStr}', '${endStr}', ${isExamWeek})">🚀 ارسال به آزمایشگاه</button>
                             </div>
                             
                             <div id="pending_${sch.id}" style="display:none; text-align:center; padding:20px; background:rgba(59,130,246,0.1); border:1px solid #3b82f6; border-radius:12px; margin-top:10px;">
@@ -252,19 +256,17 @@
                                     <canvas id="chart_${sch.id}"></canvas>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 `;
             });
-        }
 
         function toggleExamUpload(id) {
             const isChecked = document.getElementById(`hasExam_${id}`).checked;
             document.getElementById(`uploadBox_${id}`).style.display = isChecked ? 'flex' : 'none';
         }
 
-        async function toggleDossier(id, startDateStr, endDateStr) {
+        async function toggleDossier(id, startDateStr, endDateStr, isExamWeek) {
             const card = document.getElementById(`card_${id}`);
             const isOpen = card.classList.contains('open');
             
@@ -377,7 +379,7 @@
             }
         }
 
-        async function submitAnalysis(id, startDate, endDate) {
+        async function submitAnalysis(id, startDate, endDate, isExamWeek) {
             const hasExam = document.getElementById(`hasExam_${id}`).checked;
             const reflection = document.getElementById(`reflection_${id}`).value.trim();
             
