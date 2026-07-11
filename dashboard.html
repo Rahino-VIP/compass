@@ -220,7 +220,7 @@
                 
                 // ۱. 🛡️ درخواست امن برای اطلاعات کاربر (حذف select=major برای رفع قطعی ارور ۴۰۰)
                 try {
-                    const userRes = await fetch(`${cleanUrl}/rest/v1/students?chat_id=eq.${userId}`, { 
+                    const userRes = await fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, {
                         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } 
                     });
                     
