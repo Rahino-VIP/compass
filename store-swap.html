@@ -173,6 +173,8 @@
             <div class="invoice-row highlight" id="row_tradein" style="display:none; color: var(--accent);">
                 <span>🔄 ارزش بازخرید طرح‌های لغوشده:</span><span id="inv_tradein">+ 0 تومان</span>
             </div>
+            <!-- باکس گزارش شفاف محاسبات بازخرید -->
+            <div id="tradeinBreakdown" style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px; display: none;"></div>
             
             <div class="invoice-row" id="row_pan_new" style="display:none;"><span>هزینه پانسیون جدید:</span><span id="inv_pan_new">0 تومان</span></div>
             <div class="invoice-row" id="row_con_new" style="display:none;"><span>هزینه مشاوره جدید:</span><span id="inv_con_new">0 تومان</span></div>
@@ -436,7 +438,7 @@
 
         // ==========================================
         // 🧮 موتور عظیم معاوضه و حسابداری (Trade-in Engine)
-        // آپدیت شده با منطق ضد سوءاستفاده مالی 
+        // دارای ترازنامه شفاف و ضد باگِ اعشاری
         // ==========================================
         function calculateInvoice() {
             let pDurVal = document.getElementById('newPanDuration').value;
@@ -452,96 +454,119 @@
             updateRules();
 
             let refundAmount = 0;
+            let tradeinBreakdownHtml = ''; // 🌟 متغیر جدید برای ساخت ریزِ گزارش
             let newPanCharge = 0; let newConCharge = 0;
             let basePanPrice = 0; let baseConPrice = 0;
             
             let oldPan = dbData.userSubs.find(s => s.service_category === 'pansion');
             let oldCon = dbData.userSubs.find(s => s.service_category === 'consult');
 
-            // 🧠 تابع کمکی برای تشخیص تخفیف بلندمدت طرح قبلی
             function getLongTermRate(days) {
-                if (days >= 150) return 0.15; // تخفیف کنکوری
-                if (days >= 80) return 0.05;  // تخفیف ۳ ماهه
+                if (days >= 150) return 0.15; 
+                if (days >= 80) return 0.05;  
                 return 0;
             }
 
-            // 🔄 1. محاسبه بازخرید پانسیون (با منطق جدید)
+            // 🔄 1. محاسبه بازخرید پانسیون
             if (state.pansion !== 'no_change' && oldPan) {
                 let consumedDays = Math.max(0, Math.ceil((new Date() - new Date(oldPan.start_date)) / (1000 * 3600 * 24)));
                 let remainDays = Math.max(0, Math.ceil((new Date(oldPan.end_date) - new Date()) / (1000 * 3600 * 24)));
                 let totalDays = consumedDays + remainDays;
+                
+                // 🌟 کلید حل باگ ۳۰۰ تومن: تبدیل دقیق روزها به ماهِ قطعی
+                let totalMonths = Math.round(totalDays / 30) || 1; 
                 
                 let oldSrv = dbData.services.find(s => s.category === 'pansion' && s.type === oldPan.service_type);
                 
                 if (oldSrv && remainDays > 0) {
                     let base_price = parseInt(oldSrv.base_price);
                     let ltRate = getLongTermRate(totalDays);
-                    
-                    // برآورد مبلغی که دانش‌آموز روز اول پرداخت کرده بود
-                    let totalPaidEstimate = (totalDays / 30) * base_price * (1 - ltRate);
+                    let totalPaidEstimate = totalMonths * base_price * (1 - ltRate);
                     
                     let newSrv = dbData.services.find(s => s.id === state.pansion);
                     let new_base_price = newSrv ? parseInt(newSrv.base_price) : 0;
                     
                     let valueConsumed = 0;
+                    let logicLabel = "";
 
                     if (state.pansion === 'none') {
-                        // ❌ لغو کامل: تبدیل به ماه کامل (رو به بالا) + محاسبه با قیمت پایه بدون تخفیف
                         let consumedMonths = Math.ceil(consumedDays / 30);
                         valueConsumed = consumedMonths * base_price;
+                        logicLabel = `قانون لغو (مصرف گرد شد به ${consumedMonths} ماه کامل، بدون تخفیف)`;
+                        // جلوگیری از بازخرید منفی اگر کل مدت مصرف شده باشد
+                        if(consumedMonths >= totalMonths) valueConsumed = totalPaidEstimate; 
                     } else if (new_base_price < base_price) {
-                        // 🔻 تنزیل (مثلا VIP به Plus): روزشمار دقیق اما لغوِ تخفیف بلندمدت!
                         valueConsumed = (consumedDays / 30) * base_price;
+                        logicLabel = `قانون تنزیل (روزشمار دقیق، اما ابطالِ تخفیف بلندمدت)`;
                     } else {
-                        // 🚀 ارتقا: پاداش به کاربر! روزشمار دقیق با احتساب تمام تخفیف‌هایی که داشته
                         valueConsumed = (consumedDays / 30) * base_price * (1 - ltRate);
+                        logicLabel = `پاداش ارتقا (روزشمار دقیق با حفظ تمام تخفیف‌ها)`;
                     }
                     
-                    let refund = totalPaidEstimate - valueConsumed;
-                    refundAmount += Math.max(0, refund);
+                    let refund = Math.max(0, totalPaidEstimate - valueConsumed);
+                    refundAmount += refund;
+
+                    // ساختن متن گزارش برای دانش‌آموز
+                    tradeinBreakdownHtml += `
+                        <div style="margin-top:8px; padding:8px; background:rgba(0,0,0,0.03); border-radius:8px; border-right:3px solid var(--accent);">
+                            <div style="font-weight:bold; color:var(--text-main); margin-bottom:4px;">🏠 پانسیون قبلی (${consumedDays} روز مصرف شده)</div>
+                            <div style="color:var(--danger); margin-bottom:4px; font-weight:bold;">${logicLabel}</div>
+                            <div>تخمین پرداختی اولیه: ${formatMoney(totalPaidEstimate)} تومان</div>
+                            <div>کسر بابت مصرف: ${formatMoney(valueConsumed)} تومان</div>
+                            <div style="color:var(--success); font-weight:bold; margin-top:4px;">مبلغ استرداد: ${formatMoney(refund)} تومان</div>
+                        </div>`;
                 }
             }
 
-            // 🔄 2. محاسبه بازخرید مشاوره (با منطق جدید + حفظ طرح الماس)
+            // 🔄 2. محاسبه بازخرید مشاوره
             if (state.consult !== 'no_change' && oldCon) {
                 let consumedDays = Math.max(0, Math.ceil((new Date() - new Date(oldCon.start_date)) / (1000 * 3600 * 24)));
                 let remainDays = Math.max(0, Math.ceil((new Date(oldCon.end_date) - new Date()) / (1000 * 3600 * 24)));
                 let totalDays = consumedDays + remainDays;
+                let totalMonths = Math.round(totalDays / 30) || 1; 
                 
                 let oldSrv = dbData.services.find(s => s.category === 'consult' && s.type === oldCon.service_type);
                 
                 if (oldSrv && remainDays > 0) {
                     let base_price = parseInt(oldSrv.base_price);
-                    
-                    // حفظ طرح الماس: اگر پانسیون هم‌زمان داشته، قیمت پایه مشاوره‌اش از اول ۶۰٪ ارزون‌تر بوده
-                    let effective_base_price = oldPan ? base_price * 0.4 : base_price; 
+                    let effective_base_price = oldPan ? base_price * 0.4 : base_price; // حفظ طرح الماس
                     
                     let ltRate = getLongTermRate(totalDays);
-                    let totalPaidEstimate = (totalDays / 30) * effective_base_price * (1 - ltRate);
+                    let totalPaidEstimate = totalMonths * effective_base_price * (1 - ltRate);
                     
                     let newSrv = dbData.services.find(s => s.id === state.consult);
                     let new_base_price = newSrv ? parseInt(newSrv.base_price) : 0;
                     
                     let valueConsumed = 0;
+                    let logicLabel = "";
 
                     if (state.consult === 'none') {
-                        // ❌ لغو کامل: رند رو به بالا، قیمت پایه (الماس حفظ میشه چون حقشه)
                         let consumedMonths = Math.ceil(consumedDays / 30);
                         valueConsumed = consumedMonths * effective_base_price;
+                        logicLabel = `قانون لغو (مصرف گرد شد به ${consumedMonths} ماه کامل، بدون تخفیف)`;
+                        if(consumedMonths >= totalMonths) valueConsumed = totalPaidEstimate;
                     } else if (new_base_price < base_price) {
-                        // 🔻 تنزیل
                         valueConsumed = (consumedDays / 30) * effective_base_price;
+                        logicLabel = `قانون تنزیل (روزشمار دقیق، اما ابطالِ تخفیف بلندمدت)`;
                     } else {
-                        // 🚀 ارتقا
                         valueConsumed = (consumedDays / 30) * effective_base_price * (1 - ltRate);
+                        logicLabel = `پاداش ارتقا (روزشمار دقیق با حفظ تمام تخفیف‌ها)`;
                     }
                     
-                    let refund = totalPaidEstimate - valueConsumed;
-                    refundAmount += Math.max(0, refund);
+                    let refund = Math.max(0, totalPaidEstimate - valueConsumed);
+                    refundAmount += refund;
+
+                    tradeinBreakdownHtml += `
+                        <div style="margin-top:8px; padding:8px; background:rgba(0,0,0,0.03); border-radius:8px; border-right:3px solid var(--accent);">
+                            <div style="font-weight:bold; color:var(--text-main); margin-bottom:4px;">🧠 مشاوره قبلی (${consumedDays} روز مصرف شده)</div>
+                            <div style="color:var(--danger); margin-bottom:4px; font-weight:bold;">${logicLabel}</div>
+                            <div>تخمین پرداختی اولیه: ${formatMoney(totalPaidEstimate)} تومان</div>
+                            <div>کسر بابت مصرف: ${formatMoney(valueConsumed)} تومان</div>
+                            <div style="color:var(--success); font-weight:bold; margin-top:4px;">مبلغ استرداد: ${formatMoney(refund)} تومان</div>
+                        </div>`;
                 }
             }
             
-            // رند کردن عدد بازخرید برای زیبایی فاکتور
             refundAmount = Math.floor(refundAmount / 10000) * 10000;
 
             // 🛒 3. محاسبه هزینه‌های خرید جدید
@@ -557,52 +582,40 @@
             let subTotal = newPanCharge + newConCharge;
             let msgEl = document.getElementById('promoMsg');
             
-            // 💎 4. محاسبه دقیق ماه‌های هم‌پوشانی برای طرح الماس (خرید جدید)
+            // 💎 4. محاسبه الماس
             let comboDisc = 0;
             let panMonthsActive = 0;
-            
-            if (state.pansion !== 'no_change' && state.pansion !== 'none') {
-                panMonthsActive = panDur; 
-            } else if (state.pansion === 'no_change' && oldPan) {
-                panMonthsActive = Math.max(0, (new Date(oldPan.end_date) - new Date()) / (1000 * 3600 * 24 * 30));
-            }
+            if (state.pansion !== 'no_change' && state.pansion !== 'none') panMonthsActive = panDur; 
+            else if (state.pansion === 'no_change' && oldPan) panMonthsActive = Math.max(0, (new Date(oldPan.end_date) - new Date()) / (1000 * 3600 * 24 * 30));
             
             if (panMonthsActive > 0 && newConCharge > 0) {
                 let overlapMonths = Math.min(panMonthsActive, conDur);
                 let nonOverlapMonths = Math.max(0, conDur - overlapMonths);
-                
                 comboDisc = (baseConPrice * overlapMonths) * 0.60;
                 subTotal -= comboDisc;
-                
                 msgEl.innerHTML = `💎 طرح الماس فعال است: ۶۰٪ تخفیف روی ${overlapMonths.toFixed(1)} ماه مشترک.`;
                 if (nonOverlapMonths > 0) msgEl.innerHTML += `<br>🎟️ کد تخفیف را می‌توانید برای ${nonOverlapMonths.toFixed(1)} ماه باقیمانده وارد کنید.`;
                 msgEl.style.color = "var(--primary)";
-                
-                if (nonOverlapMonths <= 0) {
-                    document.getElementById('promoCode').disabled = true; state.promoRate = 0;
-                } else {
-                    document.getElementById('promoCode').disabled = false;
-                }
+                document.getElementById('promoCode').disabled = (nonOverlapMonths <= 0);
             } else {
                 document.getElementById('promoCode').disabled = false;
                 if (msgEl.innerText.includes('الماس')) msgEl.innerText = '';
             }
 
-            // 🎟️ 5. اعمال کد تخفیف (فقط روی ماه‌های غیرمشترک)
+            // 🎟️ 5. کد تخفیف
             let promoDisc = 0;
             if (state.promoRate > 0 && newConCharge > 0) {
                 let panMonthsAct = (state.pansion !== 'no_change' && state.pansion !== 'none') ? panDur : ((state.pansion === 'no_change' && oldPan) ? Math.max(0, (new Date(oldPan.end_date) - new Date()) / (1000 * 3600 * 24 * 30)) : 0);
                 let overlapM = Math.min(panMonthsAct, conDur);
                 let nonOverlapM = Math.max(0, conDur - overlapM);
-
                 if (nonOverlapM > 0) {
                     promoDisc = (baseConPrice * nonOverlapM) * state.promoRate;
                     subTotal -= promoDisc;
-                    msgEl.innerHTML += `<br>✅ کد تخفیف با موفقیت روی ماه‌های آزاد اعمال شد.`;
+                    msgEl.innerHTML += `<br>✅ کد تخفیف با موفقیت اعمال شد.`;
                 }
             }
 
-            // 💳 6. کنترل اقساط و تخفیف زمانی (مجزا)
+            // 💳 6. تخفیف زمانی و اقساط
             const switchCont = document.getElementById('paySwitchContainer');
             let maxDur = Math.max(
                 (state.pansion !== 'no_change' && state.pansion !== 'none') ? panDur : 0, 
@@ -621,18 +634,13 @@
             let timeDisc = (newPanCharge * panTimeRate) + (Math.max(0, conNetForTimeDisc) * conTimeRate); 
             subTotal -= timeDisc;
 
-            // 🔄 7. کسر بازخرید (Trade-in) از فاکتور جدید
+            // 🔄 7. تهاتر و کیف پول
             let transferredToWallet = 0;
             if (refundAmount > 0) {
-                if (refundAmount > subTotal) {
-                    transferredToWallet = refundAmount - subTotal; // بستانکار شد
-                    subTotal = 0;
-                } else {
-                    subTotal -= refundAmount;
-                }
+                if (refundAmount > subTotal) { transferredToWallet = refundAmount - subTotal; subTotal = 0; } 
+                else { subTotal -= refundAmount; }
             }
 
-            // 🎁 8. کسر از کیف پول موجود
             financeData.newWalletBalance = (studentData.wallet_balance || 0) + transferredToWallet;
             let walletUsed = 0;
             if (subTotal > 0 && financeData.newWalletBalance > 0) {
@@ -641,16 +649,20 @@
                 financeData.newWalletBalance -= walletUsed;
             }
 
-            financeData.tradeInValue = refundAmount;
-            financeData.newCharge = newPanCharge + newConCharge;
-            financeData.discount = comboDisc + promoDisc + timeDisc;
-            financeData.walletUsed = walletUsed;
-            financeData.final = subTotal;
-            financeData.walletNetChange = transferredToWallet - walletUsed;
+            financeData.tradeInValue = refundAmount; financeData.newCharge = newPanCharge + newConCharge;
+            financeData.discount = comboDisc + promoDisc + timeDisc; financeData.walletUsed = walletUsed;
+            financeData.final = subTotal; financeData.walletNetChange = transferredToWallet - walletUsed;
             financeData.installments = [];
 
-            // 📊 نمایش در فاکتور
-            document.getElementById('row_tradein').style.display = refundAmount > 0 ? 'flex' : 'none'; document.getElementById('inv_tradein').innerText = '+ ' + formatMoney(refundAmount) + ' تومان';
+            // 📊 نمایش نتایج در رابط کاربری
+            document.getElementById('row_tradein').style.display = refundAmount > 0 ? 'flex' : 'none'; 
+            document.getElementById('inv_tradein').innerText = '+ ' + formatMoney(refundAmount) + ' تومان';
+            
+            // 🌟 نمایش باکس شفاف‌سازی
+            let breakdownDiv = document.getElementById('tradeinBreakdown');
+            breakdownDiv.innerHTML = tradeinBreakdownHtml;
+            breakdownDiv.style.display = tradeinBreakdownHtml ? 'block' : 'none';
+
             document.getElementById('row_pan_new').style.display = newPanCharge > 0 ? 'flex' : 'none'; document.getElementById('inv_pan_new').innerText = formatMoney(newPanCharge) + ' تومان';
             document.getElementById('row_con_new').style.display = newConCharge > 0 ? 'flex' : 'none'; document.getElementById('inv_con_new').innerText = formatMoney(newConCharge) + ' تومان';
             document.getElementById('row_combo_disc').style.display = comboDisc > 0 ? 'flex' : 'none'; document.getElementById('inv_combo_disc').innerText = '- ' + formatMoney(comboDisc) + ' تومان';
