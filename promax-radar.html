@@ -6,15 +6,25 @@
     <title>رادار عملکرد | راهینو VIP</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+    <style>
         :root { 
             --bg-dark: #0f172a; --surface-dark: #1e293b; --surface-light: #334155; --border-color: #475569;
             --accent: #8b5cf6; --accent-glow: rgba(139, 92, 246, 0.2); --gold: #f59e0b;
             --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
             --text-main: #f8fafc; --text-muted: #94a3b8;
+            --chart-grid: rgba(255, 255, 255, 0.05);
         }
 
-        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        /* 🌓 متغیرهای لایت مود */
+        [data-theme="light"] {
+            --bg-dark: #f8fafc; --surface-dark: #ffffff; --surface-light: #e2e8f0; --border-color: #cbd5e1;
+            --text-main: #0f172a; --text-muted: #64748b;
+            --chart-grid: rgba(0, 0, 0, 0.05);
+        }
+
+        /* اضافه کردن انیمیشن نرم برای تغییر رنگ‌ها */
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
         body { background: var(--bg-dark); color: var(--text-main); line-height: 1.6; padding-bottom: 90px; }
         
         .app-container { max-width: 800px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s; }
@@ -22,7 +32,7 @@
 
         /* هدر و تب‌ها (مشترک) */
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn-back { background: var(--surface-light); border: 1px solid var(--border-color); color: var(--text-main); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 20px; }
+        .btn-back { background: var(--surface-light); border: 1px solid var(--border-color); color: var(--text-main); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 20px; cursor: pointer; }
         .page-title { font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
         .pro-badge { background: linear-gradient(135deg, var(--accent), #6d28d9); color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
 
@@ -37,6 +47,8 @@
         .stat-title { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
         .stat-value { font-size: 22px; font-weight: 900; text-shadow: 0 0 10px rgba(255,255,255,0.1); }
         
+        [data-theme="light"] .stat-value { text-shadow: none; }
+
         .val-gold { color: var(--gold); }
         .val-success { color: var(--success); }
         .val-danger { color: var(--danger); }
@@ -61,7 +73,8 @@
         <div class="nav-header">
             <a href="menu.html" class="btn-back">🔙</a>
             <div class="page-title">آزمایشگاه <span class="pro-badge">PROMAX</span></div>
-            <div style="width: 45px;"></div>
+            <!-- دکمه تغییر تم -->
+            <button class="btn-back" onclick="toggleTheme()" id="themeBtn">☀️</button>
         </div>
 
         <div class="tabs-container">
@@ -123,23 +136,76 @@
     </div>
 
     <script>
-        const userId = localStorage.getItem('qotbnama_user_id') || '999999';
+        const userId = localStorage.getItem('national_id') || localStorage.getItem('qotbnama_user_id') || localStorage.getItem('chat_id');
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // تنظیمات گلوبال Chart.js برای دارک مود
-        Chart.defaults.color = '#94a3b8';
+        let appCharts = []; // آرایه برای نگهداری نمودارها جهت آپدیت تم
+
+        // 🌓 سیستم تم
+        const themeBtn = document.getElementById('themeBtn');
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        
+        if (currentTheme === 'light') { 
+            document.documentElement.setAttribute('data-theme', 'light'); 
+            themeBtn.innerText = '🌙'; 
+        } else {
+            themeBtn.innerText = '☀️';
+        }
+
+        function toggleTheme() {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            if (isLight) { 
+                document.documentElement.removeAttribute('data-theme'); 
+                localStorage.setItem('theme', 'dark'); 
+                themeBtn.innerText = '☀️'; 
+                updateChartsTheme('dark');
+            } else { 
+                document.documentElement.setAttribute('data-theme', 'light'); 
+                localStorage.setItem('theme', 'light'); 
+                themeBtn.innerText = '🌙'; 
+                updateChartsTheme('light');
+            }
+        }
+
+        // تابع آپدیت رنگ نمودارها موقع تغییر تم
+        function updateChartsTheme(theme) {
+            const textColor = theme === 'light' ? '#64748b' : '#94a3b8';
+            const gridColor = theme === 'light' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+            
+            Chart.defaults.color = textColor;
+            Chart.defaults.scale.grid.color = gridColor;
+
+            appCharts.forEach(chart => {
+                if (chart.options.scales.x) {
+                    chart.options.scales.x.ticks.color = textColor;
+                    if (chart.options.scales.x.grid) chart.options.scales.x.grid.color = gridColor;
+                }
+                if (chart.options.scales.y) {
+                    chart.options.scales.y.ticks.color = textColor;
+                    if (chart.options.scales.y.grid) chart.options.scales.y.grid.color = gridColor;
+                }
+                if (chart.options.scales.y1) {
+                    chart.options.scales.y1.ticks.color = textColor;
+                    if (chart.options.scales.y1.grid) chart.options.scales.y1.grid.color = gridColor;
+                }
+                chart.update();
+            });
+        }
+
+        // تنظیمات گلوبال اولیه Chart.js بر اساس تم فعلی
+        Chart.defaults.color = currentTheme === 'light' ? '#64748b' : '#94a3b8';
         Chart.defaults.font.family = 'Vazirmatn';
-        Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
+        Chart.defaults.scale.grid.color = currentTheme === 'light' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
 
         window.onload = async function() {
+            if(!userId) { alert('خطای احراز هویت'); return; }
             await fetchAndRenderData();
         };
 
         async function fetchAndRenderData() {
             try {
-                // دریافت تمام آزمون‌های تایید شده دانش‌آموز (به ترتیب زمان)
                 const { data: exams, error } = await supabaseClient
                     .from('exam_results')
                     .select('*')
@@ -165,15 +231,11 @@
             let labels = [];
             let tarazTrend = [];
             
-            // برای مدیریت زمان
             let correctData = [];
             let incorrectData = [];
             let unattemptedData = [];
 
-            // برای نمودار ROI (تست و تراز)
             let totalTestsData = [];
-
-            // برای پیدا کردن بهترین/بدترین درس
             let subjectAvgMap = {}; 
             let subjectCountMap = {};
 
@@ -181,11 +243,9 @@
                 let examLabel = `آزمون ${index + 1}`;
                 labels.push(examLabel);
                 
-                // تراز
                 let t = Number(ex.total_taraz || 0);
                 tarazTrend.push(t);
 
-                // مدیریت زمان (درست/غلط/نزده کل آزمون)
                 let parsedLessons = typeof ex.extracted_data === 'string' ? JSON.parse(ex.extracted_data || "[]") : (ex.extracted_data || []);
                 let sumC = 0, sumI = 0, sumU = 0;
                 
@@ -194,7 +254,6 @@
                     sumI += Number(lesson.incorrect || 0);
                     sumU += Number(lesson.unattempted || 0);
 
-                    // ثبت تراز درس برای محاسبه بهترین/بدترین
                     let lName = lesson.name;
                     let lTaraz = Number(lesson.taraz || 0);
                     if(lTaraz > 0) {
@@ -208,19 +267,16 @@
                 incorrectData.push(sumI);
                 unattemptedData.push(sumU);
 
-                // استخراج مجموع تست از اسنپ‌شات لایف‌استایل
                 let snap = typeof ex.lifestyle_snapshot === 'string' ? JSON.parse(ex.lifestyle_snapshot || "{}") : (ex.lifestyle_snapshot || {});
                 totalTestsData.push(Number(snap.total_tests || 0));
             });
 
-            // --- آپدیت کارت‌های آماری بالای صفحه ---
             let maxTaraz = Math.max(...tarazTrend);
             let avgTaraz = tarazTrend.length > 0 ? Math.round(tarazTrend.reduce((a, b) => a + b, 0) / tarazTrend.length) : 0;
             
             document.getElementById('statMaxTaraz').innerText = maxTaraz > 0 ? maxTaraz : '-';
             document.getElementById('statAvgTaraz').innerText = avgTaraz > 0 ? avgTaraz : '-';
 
-            // محاسبه بهترین و بدترین درس
             let bestSubject = "-", worstSubject = "-";
             let highestAvg = -1, lowestAvg = 999999;
 
@@ -233,12 +289,11 @@
             document.getElementById('statBestSubject').innerText = highestAvg !== -1 ? bestSubject : '-';
             document.getElementById('statWorstSubject').innerText = lowestAvg !== 999999 ? worstSubject : '-';
 
-            // نمایش بدنه اصلی
             document.getElementById('loadingArea').style.display = 'none';
             document.getElementById('contentArea').style.display = 'block';
 
-            // --- رسم نمودار ۱: نبض پیشرفت (Line Chart) ---
-            new Chart(document.getElementById('trendChart').getContext('2d'), {
+            // --- رسم نمودار ۱: نبض پیشرفت ---
+            const chart1 = new Chart(document.getElementById('trendChart').getContext('2d'), {
                 type: 'line',
                 data: {
                     labels: labels,
@@ -253,8 +308,8 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } }
             });
 
-            // --- رسم نمودار ۲: تکامل مدیریت زمان (Stacked Bar) ---
-            new Chart(document.getElementById('timeMgmtChart').getContext('2d'), {
+            // --- رسم نمودار ۲: تکامل مدیریت زمان ---
+            const chart2 = new Chart(document.getElementById('timeMgmtChart').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: labels,
@@ -271,8 +326,8 @@
                 }
             });
 
-            // --- رسم نمودار ۳: ترازوی عدالت / تست در برابر تراز (Combo Chart) ---
-            new Chart(document.getElementById('roiChart').getContext('2d'), {
+            // --- رسم نمودار ۳: ترازوی عدالت ---
+            const chart3 = new Chart(document.getElementById('roiChart').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: labels,
@@ -285,12 +340,15 @@
                     responsive: true, maintainAspectRatio: false, 
                     scales: { 
                         y: { type: 'linear', position: 'right', grid: { display: false }, ticks: { color: '#3b82f6' } },
-                        y1: { type: 'linear', position: 'left', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#f59e0b' } },
+                        y1: { type: 'linear', position: 'left', ticks: { color: '#f59e0b' } },
                         x: { grid: { display: false } }
                     },
                     plugins: { legend: { position: 'bottom' } }
                 }
             });
+
+            // اضافه کردن به آرایه برای سیستم تم
+            appCharts.push(chart1, chart2, chart3);
         }
     </script>
 </body>
