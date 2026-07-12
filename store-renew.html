@@ -102,37 +102,39 @@
         .btn:disabled { opacity: 0.7; cursor: not-allowed; }
 
         /* ========================================== */
-        /* 📱 بهینه‌سازی چیدمان برای صفحه‌های موبایل */
+        /* 📱 چکشِ ریسپانسیو (ضدگلوله برای موبایل) */
         /* ========================================== */
         @media (max-width: 768px) {
-            /* کاهش حاشیه‌های اضافی بدنه و باکس اصلی */
-            body { padding: 15px 10px; }
-            .auth-box { padding: 20px 15px; border-radius: 24px; }
+            body { padding: 10px 5px !important; }
             
-            /* کوچک کردن هدر */
-            .header-title h1 { font-size: 16px; }
-            .back-btn { font-size: 11px; padding: 6px 10px; }
-
-            /* اصلاح کارت بانکی (زیر هم قرار گرفتن عناصر) */
-            .payment-card { padding: 15px; }
-            .pc-header { flex-direction: column; align-items: flex-start; gap: 8px; }
-            .pc-row { flex-direction: column; align-items: flex-start; gap: 10px; padding: 10px; }
-            .pc-label { font-size: 12px; }
-            .pc-value { font-size: 16px; }
-            .pc-value.shaba { font-size: 12px; letter-spacing: 0; } /* جلوگیری از بیرون زدن شماره شبا */
-            .btn-copy-mini { width: 100%; padding: 10px; font-size: 13px; } /* دکمه کپی تمام‌عرض برای کلیک راحت‌تر */
-
-            /* یک‌ستونه کردن کارت‌های انتخاب پلن */
-            .selection-grid { grid-template-columns: 1fr; }
-
-            /* اصلاح فاکتور و کد تخفیف */
-            .promo-group { flex-direction: column; gap: 10px; }
-            .promo-btn { width: 100%; padding: 12px; }
-            .invoice-row { flex-direction: column; align-items: flex-start; gap: 5px; background: rgba(0,0,0,0.02); padding: 10px; border-radius: 8px; }
-            .invoice-total { flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+            /* 🎯 رفع باگ تداخل: هل دادن باکس به پایین و کوچک کردن دکمه تم */
+            .theme-toggle { top: 10px !important; left: 10px !important; width: 38px !important; height: 38px !important; font-size: 18px !important; }
+            .auth-box { padding: 20px 12px !important; border-radius: 20px !important; margin-top: 45px !important; }
             
-            /* تنظیم دکمه‌های پرداخت نقدی/اقساطی */
-            .pay-method-switch { flex-direction: column; }
+            .header-title { flex-direction: column; gap: 15px; text-align: center; }
+            .header-title h1 { font-size: 16px !important; margin-top: 5px !important; }
+            .back-btn { font-size: 12px !important; width: 100%; text-align: center; }
+
+            /* اصلاح کارت بانکی */
+            .payment-card { padding: 15px !important; }
+            .pc-header { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+            .pc-row { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; padding: 10px !important; }
+            .pc-label { font-size: 12px !important; }
+            .pc-value { font-size: 15px !important; width: 100%; text-align: left; }
+            .pc-value.shaba { font-size: 11px !important; letter-spacing: 0 !important; } 
+            .btn-copy-mini { width: 100% !important; padding: 12px !important; font-size: 14px !important; margin-top: 5px; }
+
+            /* کارت‌ها زیر هم */
+            .selection-grid { grid-template-columns: 1fr !important; }
+            
+            /* فاکتور */
+            .promo-group { flex-direction: column !important; gap: 10px !important; }
+            .promo-btn { width: 100% !important; padding: 12px !important; }
+            .invoice-row { flex-direction: column !important; align-items: flex-start !important; gap: 5px !important; padding: 10px 0 !important; border-bottom: 1px dashed var(--border); }
+            .invoice-row.wallet { padding: 10px !important; }
+            .invoice-total { flex-direction: column !important; align-items: center !important; gap: 8px !important; text-align: center !important; font-size: 16px !important; }
+            
+            .pay-method-switch { flex-direction: column !important; }
         }
     </style>
 </head>
