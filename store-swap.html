@@ -622,24 +622,53 @@
             let subTotal = newPanCharge + newConCharge + debtFromOldPlan;
             let msgEl = document.getElementById('promoMsg');
             
-            // 💎 4. محاسبه الماس
+            // 💎 4. محاسبه الماس روی خرید جدید (یا پاداش ارتقا)
             let comboDisc = 0;
+            let msgEl = document.getElementById('promoMsg');
+            
             let panMonthsActive = 0;
             if (state.pansion !== 'no_change' && state.pansion !== 'none') panMonthsActive = panDur; 
             else if (state.pansion === 'no_change' && oldPan) panMonthsActive = Math.max(0, (new Date(oldPan.end_date) - new Date()) / (1000 * 3600 * 24 * 30));
-            
-            if (panMonthsActive > 0 && newConCharge > 0) {
-                let overlapMonths = Math.min(panMonthsActive, conDur);
-                let nonOverlapMonths = Math.max(0, conDur - overlapMonths);
-                comboDisc = (baseConPrice * overlapMonths) * 0.60;
-                subTotal -= comboDisc;
-                msgEl.innerHTML = `💎 طرح الماس فعال است: ۶۰٪ تخفیف روی ${overlapMonths.toFixed(1)} ماه مشترک.`;
-                if (nonOverlapMonths > 0) msgEl.innerHTML += `<br>🎟️ کد تخفیف را می‌توانید برای ${nonOverlapMonths.toFixed(1)} ماه باقیمانده وارد کنید.`;
-                msgEl.style.color = "var(--primary)";
-                document.getElementById('promoCode').disabled = (nonOverlapMonths <= 0);
+
+            let conMonthsActive = 0;
+            if (state.consult !== 'no_change' && state.consult !== 'none') conMonthsActive = conDur;
+            else if (state.consult === 'no_change' && oldCon) conMonthsActive = Math.max(0, (new Date(oldCon.end_date) - new Date()) / (1000 * 3600 * 24 * 30));
+
+            if (state.consult !== 'no_change' && state.consult !== 'none') {
+                // حالت اول: دانش‌آموز در حال خرید مشاوره جدید است
+                if (panMonthsActive > 0 && newConCharge > 0) {
+                    let overlapMonths = Math.min(panMonthsActive, conDur);
+                    let nonOverlapMonths = Math.max(0, conDur - overlapMonths);
+                    comboDisc = (baseConPrice * overlapMonths) * 0.60;
+                    subTotal -= comboDisc;
+                    msgEl.innerHTML = `💎 طرح الماس فعال است: ۶۰٪ تخفیف روی ${overlapMonths.toFixed(1)} ماه مشترک.`;
+                    if (nonOverlapMonths > 0) msgEl.innerHTML += `<br>🎟️ کد تخفیف را می‌توانید برای ${nonOverlapMonths.toFixed(1)} ماه باقیمانده وارد کنید.`;
+                    msgEl.style.color = "var(--primary)";
+                    document.getElementById('promoCode').disabled = (nonOverlapMonths <= 0);
+                } else {
+                    document.getElementById('promoCode').disabled = false;
+                    if (msgEl.innerText.includes('الماس')) msgEl.innerText = '';
+                }
+            } else if (state.pansion !== 'no_change' && state.pansion !== 'none' && state.consult === 'no_change' && oldCon) {
+                // 🎯 حالت دوم (پاداش ارتقا): ارتقای پانسیون در حالی که مشاوره از قبل وجود دارد
+                let oldPanRemainMonths = oldPan ? Math.max(0, (new Date(oldPan.end_date) - new Date()) / (1000 * 3600 * 24 * 30)) : 0;
+                let oldOverlap = Math.min(oldPanRemainMonths, conMonthsActive);
+                let newOverlap = Math.min(panDur, conMonthsActive);
+                let additionalOverlap = Math.max(0, newOverlap - oldOverlap);
+
+                if (additionalOverlap > 0) {
+                    let oldSrv = dbData.services.find(s => s.category === 'consult' && s.type === oldCon.service_type);
+                    let oldConBasePrice = oldSrv ? parseInt(oldSrv.base_price) : 0;
+                    
+                    comboDisc = (oldConBasePrice * additionalOverlap) * 0.60;
+                    subTotal -= comboDisc; // کسر مستقیم از فاکتور پانسیون
+                    msgEl.innerHTML = `💎 پاداش الماس: با ارتقای پانسیون، ${additionalOverlap.toFixed(1)} ماه از مشاوره فعلی شما نیز شامل ۶۰٪ تخفیف شد!`;
+                    msgEl.style.color = "var(--success)";
+                }
+                document.getElementById('promoCode').disabled = true; // روی مشاوره قبلی نمی‌توان کد وارد کرد
             } else {
-                document.getElementById('promoCode').disabled = false;
-                if (msgEl.innerText.includes('الماس')) msgEl.innerText = '';
+                 document.getElementById('promoCode').disabled = false;
+                 if (msgEl.innerText.includes('الماس')) msgEl.innerText = '';
             }
 
             // 🎟️ 5. کد تخفیف
