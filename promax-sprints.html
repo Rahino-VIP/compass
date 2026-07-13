@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>آزمایشگاه قطب‌نما | راهینو VIP</title>
+    <title>آزمایشگاه قطب‌نما VIP</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
@@ -94,7 +94,7 @@
         </div>
 
         <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; text-align: center; background: var(--surface-dark); padding: 10px; border-radius: 10px; border: 1px solid var(--border-color);">
-            برای انجام تحلیل توسط هوش مصنوعی، باید حداقل <span style="color:var(--gold); font-weight:bold;">۶ گزارش شبانه</span> در آن هفته ثبت کرده باشید.
+            برای بررسی دقیق پرونده و تحلیل حرفه ای توسط تیم مشاوره، باید حداقل <span style="color:var(--gold); font-weight:bold;">۶ گزارش شبانه</span> در آن هفته ثبت کرده باشید.
         </p>
 
         <div class="dossier-list" id="dossiersContainer">
@@ -103,6 +103,15 @@
     </div>
 
     <script>
+        // ==========================================
+        // 🔒 لایه‌های امنیتی (جلوگیری از کپی و Inspect)
+        // ==========================================
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false; 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
+        };
         const userId = localStorage.getItem('national_id') || localStorage.getItem('qotbnama_user_id') || localStorage.getItem('chat_id');
         
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
@@ -248,7 +257,7 @@
 
                             <div id="approved_result_${sch.id}" style="display:none;">
                                 <div style="display:flex; align-items:center; gap:8px; margin-bottom: 10px; color:var(--success); font-weight:bold;">
-                                    <span>✅</span> نتیجه جراحی هوش مصنوعی:
+                                    <span>✅</span> نتیجه بررسی و تحلیل مشاور:
                                 </div>
                                 <div class="ai-analysis-box" id="analysis_text_${sch.id}"></div>
                                 
@@ -336,7 +345,7 @@
                     document.getElementById(`form_${id}`).style.display = 'block';
                 } else {
                     document.getElementById(`lock_${id}`).style.display = 'block';
-                    document.getElementById(`lock_msg_${id}`).innerText = `شما در این هفته تنها ${count || 0} گزارش شبانه ثبت کرده‌اید. برای آنالیز دقیق و جلوگیری از خطای هوش مصنوعی، نیاز به حداقل ۶ روز دیتا است.`;
+                    document.getElementById(`lock_msg_${id}`).innerText = `شما در این هفته تنها ${count || 0} گزارش شبانه ثبت کرده‌اید. برای آنالیز دقیق و جلوگیری از خطای تحلیل، نیاز به حداقل ۶ روز دیتا است.`;
                 }
             }
         }
@@ -508,7 +517,8 @@
                 document.getElementById(`pending_${id}`).style.display = 'block';
                 
             } catch (err) {
-                alert("خطا در ارتباط با سرور!");
+                console.error("System Error (Submit Analysis):", err);
+                alert("⚠️ در ارتباط با سرور مشکلی پیش آمده است. لطفاً چند لحظه دیگر مجدداً تلاش کنید.");
                 btn.innerHTML = '🚀 ارسال مجدد'; btn.disabled = false;
             }
         }
