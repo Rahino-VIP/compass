@@ -41,7 +41,7 @@
         .sub-card { border-radius: 20px; padding: 20px; color: white; position: relative; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.15); transition: 0.3s; }
         .sub-card.pansion { background: linear-gradient(135deg, var(--primary), #312e81); }
         .sub-card.consult { background: linear-gradient(135deg, #b45309, #d97706); }
-        .sub-card.inactive { background: var(--surface); border: 2px dashed var(--border); color: var(--text-muted); box-shadow: none; display: flex; justify-content: center; align-items: center; min-height: 100px; cursor: pointer; }
+        .sub-card.inactive { background: var(--surface); border: 2px dashed var(--border); color: var(--text-muted); box-shadow: none; display: flex; justify-content: center; align-items: center; min-height: 100px; cursor: pointer; text-align: center; }
         .sub-card.inactive:hover { border-color: var(--primary); color: var(--primary); background: rgba(59, 130, 246, 0.05); }
 
         .sub-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
@@ -54,11 +54,15 @@
         .progress-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.2); border-radius: 10px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--success); transition: 1s ease-out; }
 
-        .btn-upgrade-main { background: var(--primary-light); color: white; width: 100%; padding: 14px; border-radius: 16px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: var(--shadow); transition: 0.2s; margin-bottom: 25px; }
-        .btn-upgrade-main:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        /* 🛒 دکمه‌های اقدام (یکدست شده) */
+        .action-buttons-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px; }
+        .btn-action { width: 100%; padding: 14px; border-radius: 16px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: var(--shadow); transition: 0.2s; color: white; }
+        .btn-action:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn-action.primary { background: var(--primary-light); }
+        .btn-action.accent { background: var(--accent); box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3); }
 
         /* 💳 استایل کارت بانکی حرفه‌ای */
-        .payment-card { background: linear-gradient(135deg, #0f172a, #1e3a8a); border-radius: 20px; padding: 25px; color: white; position: relative; overflow: hidden; box-shadow: 0 15px 30px rgba(30, 58, 138, 0.3); margin-bottom: 30px; }
+        .payment-card { background: linear-gradient(135deg, #0f172a, #1e3a8a); border-radius: 20px; padding: 25px; color: white; position: relative; overflow: hidden; margin-bottom: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); }
         .payment-card::after { content: '🏦'; position: absolute; left: -10px; top: -10px; font-size: 120px; opacity: 0.05; transform: rotate(-20deg); pointer-events: none; }
         .pc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; opacity: 0.9; font-size: 13px; }
         .pc-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; backdrop-filter: blur(5px); }
@@ -70,7 +74,7 @@
 
         /* ⏳ تایم‌لاین اقساط تعاملی */
         .installments-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: var(--shadow); }
-        .inst-title { font-size: 15px; font-weight: 900; color: var(--text-main); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .inst-title { font-size: 15px; font-weight: 900; color: var(--text-main); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         .timeline { position: relative; padding-right: 20px; border-right: 2px solid var(--border); }
         
         .timeline-item { position: relative; margin-bottom: 25px; background: var(--bg-color); border: 1px solid var(--border); border-radius: 12px; padding: 15px; }
@@ -118,7 +122,7 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body data-theme="dark">
+<body>
 
     <div class="loader-overlay" id="mainLoader">
         <div class="spinner">⏳</div>
@@ -135,17 +139,21 @@
 
         <h3 style="font-size: 15px; color: var(--text-muted); margin-bottom: 15px;">💎 اشتراک‌های فعال شما</h3>
         <div class="sub-grid" id="subscriptionsContainer">
-            </div>
+        </div>
 
-        <button class="btn-upgrade-main" onclick="window.location.href='store-renew.html'">
-            🛒 ورود به فروشگاه (تمدید و خرید طرح جدید)
-        </button>
+        <div class="action-buttons-group">
+            <button class="btn-action primary" onclick="window.location.href='store-renew.html'">
+                🛒 ورود به فروشگاه (تمدید و خرید طرح جدید)
+            </button>
+            <button class="btn-action accent" onclick="window.location.href='store-swap.html'">
+                🔄 تعویض و ارتقای طرح (Trade-in)
+            </button>
+        </div>
 
-        <button onclick="window.location.href='store-swap.html'" style="background: var(--accent); color: white; padding: 10px 20px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);">
-            🔄 تعویض و ارتقای طرح (Trade-in)
-        </button>
-
-        <div class="payment-card">
+        <div class="installments-box" id="installmentsBox" style="display: none;">
+            <div class="inst-title">💳 اقساط و فیش‌های پرداختی شما</div>
+            
+            <div class="payment-card">
                 <div class="pc-header">
                     <div>صاحب حساب: <b>ارشاد شفیعی فرد</b></div>
                     <div>بانک سامان</div>
@@ -164,10 +172,8 @@
                     </div>
                     <button class="btn-copy-mini" onclick="copyText('txtSheba')">کپی</button>
                 </div>
-        </div>
+            </div>
 
-        <div class="installments-box" id="installmentsBox" style="display: none;">
-            <div class="inst-title">💳 اقساط و فیش‌های پرداختی شما</div>
             <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 20px;">تصویر فیش واریزی هر قسط را در موعد مقرر از همین بخش آپلود کنید.</p>
             
             <div class="timeline" id="installmentsTimeline"></div>
@@ -252,12 +258,13 @@
         let subscriptions = [];
         let installments = [];
         let currentUploadingInstId = null; 
-        // 👇 این دو خط اضافه شود:
         let selectedReceiptBase64 = null; 
         let selectedReceiptMime = null;
+        
         function copyText(id) { 
             navigator.clipboard.writeText(document.getElementById(id).innerText).then(()=>alert("✅ کپی شد.")); 
         }
+        
         window.onload = async function() { await fetchProfileData(); };
 
         function formatMoney(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
@@ -269,7 +276,6 @@
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
                 
-                // دریافت همزمان اطلاعات دانش‌آموز، اشتراک‌های فعال، و اقساط
                 const [stRes, subRes, instRes] = await Promise.all([
                     fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
                     fetch(`${cleanUrl}/rest/v1/subscriptions?student_nid=eq.${userId}&status=eq.active`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
@@ -281,7 +287,10 @@
                 
                 studentData = stJson[0];
                 subscriptions = await subRes.json() || [];
-                installments = await instRes.json() || [];
+                
+                // فیلتر کردن اقساط کنسل شده یا باطل شده
+                let allInst = await instRes.json() || [];
+                installments = allInst.filter(i => i.status !== 'cancelled' && i.status !== 'void');
 
                 renderSettingsAndWallet();
                 renderSubscriptions();
@@ -345,19 +354,17 @@
                 `;
             });
 
-            // اگر هیچ اشتراکی نداشت
             if (subscriptions.length === 0) {
                 html = `
-                    <div class="sub-card inactive" onclick="window.location.href='upgrade.html'">
+                    <div class="sub-card inactive" onclick="window.location.href='store-renew.html'">
                         <div>شما در حال حاضر اشتراک فعالی ندارید. <br><b style="color:var(--primary);">جهت ثبت‌نام کلیک کنید.</b></div>
                     </div>`;
             } else {
-                // نمایش کارت غیرفعال برای سرویسی که ندارد (Up-sell هوشمند)
                 if (!hasPansion) {
-                    html += `<div class="sub-card inactive" onclick="window.location.href='upgrade.html'">➕ افزودن طرح پانسیون به اکانت</div>`;
+                    html += `<div class="sub-card inactive" onclick="window.location.href='store-renew.html'">➕ افزودن طرح پانسیون به اکانت</div>`;
                 }
                 if (!hasConsult) {
-                    html += `<div class="sub-card inactive" onclick="window.location.href='upgrade.html'">➕ افزودن مربی و مشاوره به اکانت</div>`;
+                    html += `<div class="sub-card inactive" onclick="window.location.href='store-renew.html'">➕ افزودن مربی و مشاوره به اکانت</div>`;
                 }
             }
 
@@ -369,7 +376,10 @@
         // ==========================================
         function renderInstallments() {
             const container = document.getElementById('installmentsBox');
-            if (installments.length === 0) { container.style.display = 'none'; return; }
+            if (installments.length === 0) { 
+                container.style.display = 'none'; 
+                return; 
+            }
             
             container.style.display = 'block';
             let html = '';
@@ -392,13 +402,11 @@
                     actionHtml = `<div style="font-size:12px; color:var(--warning); font-weight:bold;">⏳ فیش ارسال شده (در انتظار تایید مدیر)</div>`;
                 }
                 else {
-                    // pending_upload (منتظر پرداخت)
                     if (diffDays <= 7) stateClass = 'danger';
                     else stateClass = 'pending';
                     
                     let dayText = diffDays < 0 ? `❌ ${Math.abs(diffDays)} روز تاخیر` : (diffDays === 0 ? 'امروز' : `${diffDays} روز مانده`);
                     
-                    // 👇 دکمه آپلود به یک باکس تبدیل شد تا دو مرحله‌ای شود
                     actionHtml = `
                         <div style="font-size:11px; color:var(--danger); margin-bottom:8px; font-weight:bold;">موعد: ${dayText}</div>
                         <div id="action_box_${inst.id}">
@@ -421,29 +429,7 @@
             document.getElementById('installmentsTimeline').innerHTML = html;
         }
 
-        // توابع مربوط به آپلود فیش قسط در دیتابیس
-        function triggerUpload(instId) {
-            currentUploadingInstId = instId;
-            document.getElementById('hiddenReceiptInput').click();
-        }
-
-// ==========================================
-        // 🔄 توابع آپلود دو مرحله‌ای اقساط
         // ==========================================
-        function triggerUpload(instId) {
-            currentUploadingInstId = instId;
-            document.getElementById('hiddenReceiptInput').click();
-        }
-
-        // ==========================================
-        // 🔄 توابع آپلود دو مرحله‌ای اقساط
-        // ==========================================
-        function triggerUpload(instId) {
-            currentUploadingInstId = instId;
-            document.getElementById('hiddenReceiptInput').click();
-        }
-
-// ==========================================
         // 🔄 توابع آپلود دو مرحله‌ای اقساط
         // ==========================================
         function triggerUpload(instId) {
@@ -456,13 +442,11 @@
             let file = input.files[0];
             if(file.size > 5 * 1024 * 1024) return alert("حجم عکس نباید بیشتر از ۵ مگابایت باشد.");
 
-            // مرحله اول: فقط عکس رو می‌خونیم و نگه می‌داریم
             const reader = new FileReader();
             reader.onload = function(e) { 
                 selectedReceiptBase64 = e.target.result.split(',')[1];
                 selectedReceiptMime = file.type;
                 
-                // تغییر ظاهر دکمه به "ارسال نهایی"
                 document.getElementById('action_box_' + currentUploadingInstId).innerHTML = `
                     <div style="font-size:11px; color:var(--success); font-weight:bold; margin-bottom:8px;">✅ تصویر فیش انتخاب شد</div>
                     <button class="btn-upload-inst" style="background:var(--success); color:white; border:none; margin-bottom:5px;" onclick="submitFinalReceipt('${currentUploadingInstId}')">🚀 ۲. ارسال فیش برای تایید</button>
@@ -479,10 +463,8 @@
             document.getElementById('mainLoader').innerHTML = '<div class="spinner">⏳</div><h3 style="color:var(--primary); font-size:14px;">در حال ارسال فیش به مدیریت...</h3>';
 
             try {
-                // استخراج اطلاعات این قسط برای ارسال به پیام‌رسان بله
                 let instObj = installments.find(i => i.id === instId);
 
-                // ساخت بسته‌ی اطلاعات دقیقاً مطابق با چیزی که گوگل اسکریپت انتظار دارد
                 const payload = {
                     action: 'web_auth',
                     sub_action: 'upload_installment',
@@ -494,7 +476,6 @@
                     mime_type: selectedReceiptMime
                 };
 
-                // ارسال درخواست به گوگل اسکریپت (که مستقیماً به بله هم وصل است)
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify(payload)
@@ -515,7 +496,7 @@
         }
 
         // ==========================================
-        // ⚙️ تنظیمات و اطلاعات (آپدیت شده با شماره والدین)
+        // ⚙️ تنظیمات و اطلاعات
         // ==========================================
         function renderSettingsAndWallet() {
             let balance = studentData.wallet_balance || 0;
@@ -525,7 +506,6 @@
             document.getElementById('uiRefCode').innerText = refCode;
             document.getElementById('previewCode').innerText = refCode;
 
-            // نمایش اطلاعات در فیلدها
             document.getElementById('inpName').value = studentData.full_name || '';
             document.getElementById('inpGrade').value = studentData.grade || '';
             document.getElementById('inpMajor').value = studentData.major || '';
@@ -540,7 +520,6 @@
             const btn = document.getElementById('btnSave');
             btn.innerText = "در حال ذخیره... ⏳"; btn.disabled = true;
             
-            // فقط فیلدهای مجاز ذخیره می‌شوند (پایه و رشته قفل است)
             const updateData = { 
                 phone_number: document.getElementById('inpPhone').value, 
                 father_phone: document.getElementById('inpFather').value,
@@ -568,22 +547,28 @@
             let textToCopy = `سلام! ✋ من تو قطب‌نمای راهینو ثبت‌نام کردم.\n\nاگر موقع ثبت‌نام از کد معرف من استفاده کنی، همون اول ۱۰۰ هزار تومن تخفیف می‌گیری!\n\nکد معرف من: ${refCode}\nلینک: https://rahino-edu.ir`;
             navigator.clipboard.writeText(textToCopy).then(() => alert("✅ متن کپی شد."));
         }
+        
         // ==========================================
-        // 🌓 سیستم دارک مود
+        // 🌓 سیستم دارک مود (باگ‌گیری شده)
         // ==========================================
         const themeBtn = document.getElementById('themeBtn');
-        if ((localStorage.getItem('theme') || 'dark') === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        
+        if (currentTheme === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
             if(themeBtn) themeBtn.innerText = '☀️';
+        } else {
+            document.body.removeAttribute('data-theme');
+            if(themeBtn) themeBtn.innerText = '🌙';
         }
 
         function toggleTheme() {
-            if (document.documentElement.getAttribute('data-theme') === 'dark') {
-                document.documentElement.removeAttribute('data-theme');
+            if (document.body.getAttribute('data-theme') === 'dark') {
+                document.body.removeAttribute('data-theme');
                 localStorage.setItem('theme', 'light');
                 if(themeBtn) themeBtn.innerText = '🌙';
             } else {
-                document.documentElement.setAttribute('data-theme', 'dark');
+                document.body.setAttribute('data-theme', 'dark');
                 localStorage.setItem('theme', 'dark');
                 if(themeBtn) themeBtn.innerText = '☀️';
             }
