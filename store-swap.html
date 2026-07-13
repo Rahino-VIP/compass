@@ -173,6 +173,10 @@
             <div class="invoice-row highlight" id="row_tradein" style="display:none; color: var(--accent);">
                 <span>🔄 ارزش بازخرید طرح‌های لغوشده:</span><span id="inv_tradein">+ 0 تومان</span>
             </div>
+            <!-- 🎯 ردیف جدید برای نمایش بدهی ناشی از اقساط -->
+            <div class="invoice-row" id="row_debt_old" style="display:none; color: var(--danger);">
+                <span>⚠️ انتقال بدهی اقساط قبلی:</span><span id="inv_debt_old">+ 0 تومان</span>
+            </div>
             <!-- باکس گزارش شفاف محاسبات بازخرید -->
             <div id="tradeinBreakdown" style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px; display: none;"></div>
             
@@ -259,14 +263,23 @@
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
                 const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
 
-                const [studentRes, servicesRes, promosRes, mySubsRes, sysRes, rulesRes] = await Promise.all([
+                // (در تابع window.onload)
+                const [studentRes, servicesRes, promosRes, mySubsRes, sysRes, rulesRes, instRes] = await Promise.all([
                     fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/services?is_active=eq.true`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/promo_codes?is_active=eq.true`, { headers }),
-                    fetch(`${cleanUrl}/rest/v1/subscriptions?student_nid=eq.${userId}&status=eq.active`, { headers }),
+                    fetch(`${cleanUrl}/rest/v1/subscriptions?student_nid=eq.${userId}&status=eq.active`, { headers }), // 👈 بدون محدودیت ستون‌ها
                     fetch(`${cleanUrl}/rest/v1/system_settings?select=konkur_date`, { headers }),
-                    fetch(`${cleanUrl}/rest/v1/terms_and_rules`, { headers })
+                    fetch(`${cleanUrl}/rest/v1/terms_and_rules`, { headers }),
+                    fetch(`${cleanUrl}/rest/v1/installments?student_nid=eq.${userId}`, { headers }) 
                 ]);
+
+                // ... (کدهای قبلی) ...
+                dbData.rules = await rulesRes.json() || [];
+                
+                // 🎯 فیلتر کردن فقط اقساطی که هنوز پرداخت نشدند
+                let allInst = await instRes.json() || [];
+                dbData.installments = allInst.filter(i => i.status === 'pending_upload' || i.status === 'pending_approval');
 
                 let sData = await studentRes.json();
                 if (sData && sData.length > 0) {
@@ -565,6 +578,44 @@
             }
             
             refundAmount = Math.floor(refundAmount / 10000) * 10000;
+            // ==========================================
+            // 🚨 موتور تسویه اقساط معوقه (تسویه حساب قطعی)
+            // ==========================================
+            let activeInvoicesBeingModified = new Set();
+            if (state.pansion !== 'no_change' && oldPan && oldPan.invoice_id) activeInvoicesBeingModified.add(oldPan.invoice_id);
+            if (state.consult !== 'no_change' && oldCon && oldCon.invoice_id) activeInvoicesBeingModified.add(oldCon.invoice_id);
+
+            let unpaidInstallmentsSum = 0;
+            let unpaidHtml = '';
+            
+            // جمع زدن تمام اقساط پاس نشده مربوط به فاکتورهای درگیر در این معاوضه
+            activeInvoicesBeingModified.forEach(invId => {
+                let insts = dbData.installments.filter(i => String(i.invoice_id) === String(invId));
+                insts.forEach(inst => {
+                    unpaidInstallmentsSum += parseInt(inst.amount);
+                    unpaidHtml += `<div style="display:flex; justify-content:space-between; color:var(--danger); font-size:11px; margin-bottom:4px;"><span>قسط پاس‌نشده #${inst.installment_number}:</span><span>- ${formatMoney(inst.amount)} تومان</span></div>`;
+                });
+            });
+
+            let netRefund = refundAmount - unpaidInstallmentsSum;
+            let debtFromOldPlan = 0; // پولی که دانش‌آموز بعد از ابطال چک‌ها هنوز بدهکار می‌شود
+
+            if (netRefund < 0) {
+                debtFromOldPlan = Math.abs(netRefund);
+                netRefund = 0; // استرداد صفر می‌شود چون بدهکارتر است
+            }
+
+            if (unpaidInstallmentsSum > 0) {
+                tradeinBreakdownHtml += `
+                    <div style="margin-top:8px; padding:8px; background:rgba(239, 68, 68, 0.05); border-radius:8px; border-right:3px solid var(--danger);">
+                        <div style="font-weight:bold; color:var(--text-main); margin-bottom:6px;">💳 تسویه خودکار اقساط معوقه (ابطال چک‌ها)</div>
+                        ${unpaidHtml}
+                        <div style="margin-top:6px; font-weight:bold; color:var(--danger); border-top:1px dashed rgba(239, 68, 68, 0.3); padding-top:4px;">مجموع بدهی کسر شده از استرداد: ${formatMoney(unpaidInstallmentsSum)} تومان</div>
+                    </div>`;
+            }
+
+            // جایگزین کردن مبلغ استرداد با مبلغ خالص (پس از کسر بدهی)
+            refundAmount = netRefund;
 
             // 🛒 3. محاسبه هزینه‌های خرید جدید
             if (state.pansion !== 'no_change' && state.pansion !== 'none') {
@@ -576,7 +627,7 @@
                 if (newConSrv) { baseConPrice = parseInt(newConSrv.base_price); newConCharge = baseConPrice * conDur; }
             }
 
-            let subTotal = newPanCharge + newConCharge;
+            let subTotal = newPanCharge + newConCharge + debtFromOldPlan;
             let msgEl = document.getElementById('promoMsg');
             
             // 💎 4. محاسبه الماس روی خرید جدید
@@ -665,6 +716,8 @@
             document.getElementById('row_promo_disc').style.display = promoDisc > 0 ? 'flex' : 'none'; document.getElementById('inv_promo_disc').innerText = '- ' + formatMoney(promoDisc) + ' تومان';
             document.getElementById('row_time_disc').style.display = timeDisc > 0 ? 'flex' : 'none'; document.getElementById('inv_time_disc').innerText = '- ' + formatMoney(timeDisc) + ' تومان';
             document.getElementById('row_wallet_used').style.display = walletUsed > 0 ? 'flex' : 'none'; document.getElementById('inv_wallet_used').innerText = '- ' + formatMoney(walletUsed) + ' تومان';
+            document.getElementById('row_debt_old').style.display = debtFromOldPlan > 0 ? 'flex' : 'none';
+            document.getElementById('inv_debt_old').innerText = '+ ' + formatMoney(debtFromOldPlan) + ' تومان';
             
             const instBox = document.getElementById('installmentDetails');
             const fileBox = document.getElementById('boxFile');
@@ -752,6 +805,24 @@
             let cDurStr = cDurVal === 'konkur' ? 'تا کنکور' : cDurVal + ' ماهه';
 
             let invoiceText = `⚠️ عملیات تعویض (Trade-in): اقساط قبلی به قوت خود باقیست. قراردادهای لغوشده به صورت خودکار ابطال می‌شوند.\n\n`;
+
+            // (در تابع submitFinalStep)
+            // ... (ساخت invoiceText) ...
+            
+            // 🎯 پیدا کردن فاکتورهایی که اقساطشان باید باطل شود
+            let activeInvoicesBeingModified = new Set();
+            let oldPan = dbData.userSubs.find(s => s.service_category === 'pansion');
+            let oldCon = dbData.userSubs.find(s => s.service_category === 'consult');
+            if (state.pansion !== 'no_change' && oldPan && oldPan.invoice_id) activeInvoicesBeingModified.add(oldPan.invoice_id);
+            if (state.consult !== 'no_change' && oldCon && oldCon.invoice_id) activeInvoicesBeingModified.add(oldCon.invoice_id);
+
+            let tradeInData = {
+                pansion: { action: state.pansion === 'no_change' ? 'no_change' : (state.pansion === 'none' ? 'cancel' : 'change'), type: state.panType, dur: document.getElementById('newPanDuration').value },
+                consult: { action: state.consult === 'no_change' ? 'no_change' : (state.consult === 'none' ? 'cancel' : 'change'), type: state.conType, dur: document.getElementById('newConDuration').value },
+                walletChange: financeData.walletNetChange,
+                void_invoice_ids: Array.from(activeInvoicesBeingModified) // 👈 این آرایه جدید اضافه شد
+            };
+            invoiceText += `\n[TRADE_IN_DATA: ${JSON.stringify(tradeInData)}]`;
             
             if (state.pansion !== 'no_change') invoiceText += `- پانسیون: ${state.pansion === 'none' ? 'لغو کامل' : 'تغییر به '+state.panType+' ('+pDurStr+')'}\n`;
             else invoiceText += `- پانسیون: بدون تغییر\n`;
