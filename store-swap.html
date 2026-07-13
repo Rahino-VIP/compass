@@ -438,7 +438,7 @@
 
         // ==========================================
         // 🧮 موتور عظیم معاوضه و حسابداری (Trade-in Engine)
-        // دارای ترازنامه شفاف و ضد باگِ اعشاری
+        // آپدیت شده: استفاده از ارزش‌های قطعی و دقیق (بدون هیچ تخمینی)
         // ==========================================
         function calculateInvoice() {
             let pDurVal = document.getElementById('newPanDuration').value;
@@ -454,117 +454,114 @@
             updateRules();
 
             let refundAmount = 0;
-            let tradeinBreakdownHtml = ''; // 🌟 متغیر جدید برای ساخت ریزِ گزارش
+            let tradeinBreakdownHtml = ''; 
             let newPanCharge = 0; let newConCharge = 0;
             let basePanPrice = 0; let baseConPrice = 0;
             
             let oldPan = dbData.userSubs.find(s => s.service_category === 'pansion');
             let oldCon = dbData.userSubs.find(s => s.service_category === 'consult');
 
-            function getLongTermRate(days) {
-                if (days >= 150) return 0.15; 
-                if (days >= 80) return 0.05;  
-                return 0;
-            }
-
-            // 🔄 1. محاسبه بازخرید پانسیون
+            // 🔄 1. محاسبه بازخرید پانسیون (کاملا دقیق بر اساس دیتابیس)
             if (state.pansion !== 'no_change' && oldPan) {
                 let consumedDays = Math.max(0, Math.ceil((new Date() - new Date(oldPan.start_date)) / (1000 * 3600 * 24)));
-                let remainDays = Math.max(0, Math.ceil((new Date(oldPan.end_date) - new Date()) / (1000 * 3600 * 24)));
-                let totalDays = consumedDays + remainDays;
-                
-                // 🌟 کلید حل باگ ۳۰۰ تومن: تبدیل دقیق روزها به ماهِ قطعی
+                let totalDays = Math.max(1, Math.ceil((new Date(oldPan.end_date) - new Date(oldPan.start_date)) / (1000 * 3600 * 24)));
                 let totalMonths = Math.round(totalDays / 30) || 1; 
                 
-                let oldSrv = dbData.services.find(s => s.category === 'pansion' && s.type === oldPan.service_type);
+                // خواندن مقادیر دقیق از دیتابیس (اگر دیتا قدیمی بود و خالی بود، صفر در نظر میگیره)
+                let actualPaid = parseInt(oldPan.actual_paid_value) || 0;
+                let baseValue = parseInt(oldPan.base_total_value) || 0;
                 
-                if (oldSrv && remainDays > 0) {
-                    let base_price = parseInt(oldSrv.base_price);
-                    let ltRate = getLongTermRate(totalDays);
-                    let totalPaidEstimate = totalMonths * base_price * (1 - ltRate);
-                    
-                    let newSrv = dbData.services.find(s => s.id === state.pansion);
-                    let new_base_price = newSrv ? parseInt(newSrv.base_price) : 0;
-                    
-                    let valueConsumed = 0;
-                    let logicLabel = "";
+                // ارزش روزانه (برای ارتقا) و ارزش پایه ماهانه (برای لغو و تنزیل)
+                let dailyActualValue = actualPaid / totalDays;
+                let dailyBaseValue = baseValue / totalDays;
+                let monthlyBaseValue = baseValue / totalMonths;
+                
+                let newSrv = dbData.services.find(s => s.id === state.pansion);
+                let new_base_price = newSrv ? parseInt(newSrv.base_price) : 0;
+                let oldSrv = dbData.services.find(s => s.category === 'pansion' && s.type === oldPan.service_type);
+                let old_base_price = oldSrv ? parseInt(oldSrv.base_price) : 0;
+                
+                let valueConsumed = 0;
+                let logicLabel = "";
 
-                    if (state.pansion === 'none') {
-                        let consumedMonths = Math.ceil(consumedDays / 30);
-                        valueConsumed = consumedMonths * base_price;
-                        logicLabel = `قانون لغو (مصرف گرد شد به ${consumedMonths} ماه کامل، بدون تخفیف)`;
-                        // جلوگیری از بازخرید منفی اگر کل مدت مصرف شده باشد
-                        if(consumedMonths >= totalMonths) valueConsumed = totalPaidEstimate; 
-                    } else if (new_base_price < base_price) {
-                        valueConsumed = (consumedDays / 30) * base_price;
-                        logicLabel = `قانون تنزیل (روزشمار دقیق، اما ابطالِ تخفیف بلندمدت)`;
-                    } else {
-                        valueConsumed = (consumedDays / 30) * base_price * (1 - ltRate);
-                        logicLabel = `پاداش ارتقا (روزشمار دقیق با حفظ تمام تخفیف‌ها)`;
-                    }
-                    
-                    let refund = Math.max(0, totalPaidEstimate - valueConsumed);
-                    refundAmount += refund;
-
-                    // ساختن متن گزارش برای دانش‌آموز
-                    tradeinBreakdownHtml += `
-                        <div style="margin-top:8px; padding:8px; background:rgba(0,0,0,0.03); border-radius:8px; border-right:3px solid var(--accent);">
-                            <div style="font-weight:bold; color:var(--text-main); margin-bottom:4px;">🏠 پانسیون قبلی (${consumedDays} روز مصرف شده)</div>
-                            <div style="color:var(--danger); margin-bottom:4px; font-weight:bold;">${logicLabel}</div>
-                            <div>تخمین پرداختی اولیه: ${formatMoney(totalPaidEstimate)} تومان</div>
-                            <div>کسر بابت مصرف: ${formatMoney(valueConsumed)} تومان</div>
-                            <div style="color:var(--success); font-weight:bold; margin-top:4px;">مبلغ استرداد: ${formatMoney(refund)} تومان</div>
-                        </div>`;
+                if (state.pansion === 'none') {
+                    // ❌ لغو: تبدیل روزها به ماهِ کامل روبه‌بالا * ضربدر قیمت پایه ماهانه (لغو کامل تخفیف)
+                    let consumedMonths = Math.ceil(consumedDays / 30);
+                    valueConsumed = consumedMonths * monthlyBaseValue;
+                    logicLabel = `قانون لغو (مصرف گرد شد به ${consumedMonths} ماه کامل، بدون تخفیف)`;
+                    if(consumedMonths >= totalMonths) valueConsumed = actualPaid; 
+                } else if (new_base_price < old_base_price) {
+                    // 🔻 تنزیل: روزشمار دقیق * قیمت پایه روزانه (لغو تخفیف بلندمدت)
+                    valueConsumed = consumedDays * dailyBaseValue;
+                    logicLabel = `قانون تنزیل (روزشمار دقیق، اما محاسبه با قیمت آزاد)`;
+                } else {
+                    // 🚀 ارتقا: پاداش! روزشمار دقیق * ارزش واقعی پرداختی (حفظ تمام تخفیف‌ها)
+                    valueConsumed = consumedDays * dailyActualValue;
+                    logicLabel = `پاداش ارتقا (روزشمار دقیق با حفظ تمام تخفیف‌ها)`;
                 }
+                
+                let refund = Math.max(0, actualPaid - valueConsumed);
+                refundAmount += refund;
+
+                tradeinBreakdownHtml += `
+                    <div style="margin-top:8px; padding:8px; background:rgba(0,0,0,0.03); border-radius:8px; border-right:3px solid var(--accent);">
+                        <div style="font-weight:bold; color:var(--text-main); margin-bottom:4px;">🏠 پانسیون قبلی (${consumedDays} روز مصرف شده)</div>
+                        <div style="color:var(--danger); margin-bottom:4px; font-weight:bold;">${logicLabel}</div>
+                        <div>پرداختیِ ثبت‌شده شما: ${formatMoney(actualPaid)} تومان</div>
+                        <div>کسر بابت مصرف: ${formatMoney(valueConsumed)} تومان</div>
+                        <div style="color:var(--success); font-weight:bold; margin-top:4px;">مبلغ استرداد: ${formatMoney(refund)} تومان</div>
+                    </div>`;
             }
 
-            // 🔄 2. محاسبه بازخرید مشاوره
+            // 🔄 2. محاسبه بازخرید مشاوره (کاملا دقیق بر اساس دیتابیس)
             if (state.consult !== 'no_change' && oldCon) {
                 let consumedDays = Math.max(0, Math.ceil((new Date() - new Date(oldCon.start_date)) / (1000 * 3600 * 24)));
-                let remainDays = Math.max(0, Math.ceil((new Date(oldCon.end_date) - new Date()) / (1000 * 3600 * 24)));
-                let totalDays = consumedDays + remainDays;
+                let totalDays = Math.max(1, Math.ceil((new Date(oldCon.end_date) - new Date(oldCon.start_date)) / (1000 * 3600 * 24)));
                 let totalMonths = Math.round(totalDays / 30) || 1; 
                 
-                let oldSrv = dbData.services.find(s => s.category === 'consult' && s.type === oldCon.service_type);
+                // اینجا اگر هم‌زمان پانسیون داشته، طرح الماس خودش رو تو actualPaid و baseValue نشون میده!
+                let actualPaid = parseInt(oldCon.actual_paid_value) || 0;
+                let baseValue = parseInt(oldCon.base_total_value) || 0;
                 
-                if (oldSrv && remainDays > 0) {
-                    let base_price = parseInt(oldSrv.base_price);
-                    let effective_base_price = oldPan ? base_price * 0.4 : base_price; // حفظ طرح الماس
-                    
-                    let ltRate = getLongTermRate(totalDays);
-                    let totalPaidEstimate = totalMonths * effective_base_price * (1 - ltRate);
-                    
-                    let newSrv = dbData.services.find(s => s.id === state.consult);
-                    let new_base_price = newSrv ? parseInt(newSrv.base_price) : 0;
-                    
-                    let valueConsumed = 0;
-                    let logicLabel = "";
+                // در مشاوره، چون الماس از اول روی Base اعمال میشه (تخفیف ۶۰ درصدی)، Base رو تعدیل می‌کنیم
+                let effectiveBaseValue = oldPan ? (baseValue * 0.4) : baseValue;
 
-                    if (state.consult === 'none') {
-                        let consumedMonths = Math.ceil(consumedDays / 30);
-                        valueConsumed = consumedMonths * effective_base_price;
-                        logicLabel = `قانون لغو (مصرف گرد شد به ${consumedMonths} ماه کامل، بدون تخفیف)`;
-                        if(consumedMonths >= totalMonths) valueConsumed = totalPaidEstimate;
-                    } else if (new_base_price < base_price) {
-                        valueConsumed = (consumedDays / 30) * effective_base_price;
-                        logicLabel = `قانون تنزیل (روزشمار دقیق، اما ابطالِ تخفیف بلندمدت)`;
-                    } else {
-                        valueConsumed = (consumedDays / 30) * effective_base_price * (1 - ltRate);
-                        logicLabel = `پاداش ارتقا (روزشمار دقیق با حفظ تمام تخفیف‌ها)`;
-                    }
-                    
-                    let refund = Math.max(0, totalPaidEstimate - valueConsumed);
-                    refundAmount += refund;
+                let dailyActualValue = actualPaid / totalDays;
+                let dailyBaseValue = effectiveBaseValue / totalDays;
+                let monthlyBaseValue = effectiveBaseValue / totalMonths;
+                
+                let newSrv = dbData.services.find(s => s.id === state.consult);
+                let new_base_price = newSrv ? parseInt(newSrv.base_price) : 0;
+                let oldSrv = dbData.services.find(s => s.category === 'consult' && s.type === oldCon.service_type);
+                let old_base_price = oldSrv ? parseInt(oldSrv.base_price) : 0;
+                
+                let valueConsumed = 0;
+                let logicLabel = "";
 
-                    tradeinBreakdownHtml += `
-                        <div style="margin-top:8px; padding:8px; background:rgba(0,0,0,0.03); border-radius:8px; border-right:3px solid var(--accent);">
-                            <div style="font-weight:bold; color:var(--text-main); margin-bottom:4px;">🧠 مشاوره قبلی (${consumedDays} روز مصرف شده)</div>
-                            <div style="color:var(--danger); margin-bottom:4px; font-weight:bold;">${logicLabel}</div>
-                            <div>تخمین پرداختی اولیه: ${formatMoney(totalPaidEstimate)} تومان</div>
-                            <div>کسر بابت مصرف: ${formatMoney(valueConsumed)} تومان</div>
-                            <div style="color:var(--success); font-weight:bold; margin-top:4px;">مبلغ استرداد: ${formatMoney(refund)} تومان</div>
-                        </div>`;
+                if (state.consult === 'none') {
+                    let consumedMonths = Math.ceil(consumedDays / 30);
+                    valueConsumed = consumedMonths * monthlyBaseValue;
+                    logicLabel = `قانون لغو (مصرف گرد شد به ${consumedMonths} ماه کامل، بدون تخفیف)`;
+                    if(consumedMonths >= totalMonths) valueConsumed = actualPaid;
+                } else if (new_base_price < old_base_price) {
+                    valueConsumed = consumedDays * dailyBaseValue;
+                    logicLabel = `قانون تنزیل (روزشمار دقیق، اما محاسبه با قیمت آزاد)`;
+                } else {
+                    valueConsumed = consumedDays * dailyActualValue;
+                    logicLabel = `پاداش ارتقا (روزشمار دقیق با حفظ تمام تخفیف‌ها)`;
                 }
+                
+                let refund = Math.max(0, actualPaid - valueConsumed);
+                refundAmount += refund;
+
+                tradeinBreakdownHtml += `
+                    <div style="margin-top:8px; padding:8px; background:rgba(0,0,0,0.03); border-radius:8px; border-right:3px solid var(--accent);">
+                        <div style="font-weight:bold; color:var(--text-main); margin-bottom:4px;">🧠 مشاوره قبلی (${consumedDays} روز مصرف شده)</div>
+                        <div style="color:var(--danger); margin-bottom:4px; font-weight:bold;">${logicLabel}</div>
+                        <div>پرداختیِ ثبت‌شده شما: ${formatMoney(actualPaid)} تومان</div>
+                        <div>کسر بابت مصرف: ${formatMoney(valueConsumed)} تومان</div>
+                        <div style="color:var(--success); font-weight:bold; margin-top:4px;">مبلغ استرداد: ${formatMoney(refund)} تومان</div>
+                    </div>`;
             }
             
             refundAmount = Math.floor(refundAmount / 10000) * 10000;
@@ -582,7 +579,7 @@
             let subTotal = newPanCharge + newConCharge;
             let msgEl = document.getElementById('promoMsg');
             
-            // 💎 4. محاسبه الماس
+            // 💎 4. محاسبه الماس روی خرید جدید
             let comboDisc = 0;
             let panMonthsActive = 0;
             if (state.pansion !== 'no_change' && state.pansion !== 'none') panMonthsActive = panDur; 
@@ -611,7 +608,7 @@
                 if (nonOverlapM > 0) {
                     promoDisc = (baseConPrice * nonOverlapM) * state.promoRate;
                     subTotal -= promoDisc;
-                    msgEl.innerHTML += `<br>✅ کد تخفیف با موفقیت اعمال شد.`;
+                    msgEl.innerHTML += `<br>✅ کد تخفیف با موفقیت روی ماه‌های آزاد اعمال شد.`;
                 }
             }
 
@@ -658,7 +655,6 @@
             document.getElementById('row_tradein').style.display = refundAmount > 0 ? 'flex' : 'none'; 
             document.getElementById('inv_tradein').innerText = '+ ' + formatMoney(refundAmount) + ' تومان';
             
-            // 🌟 نمایش باکس شفاف‌سازی
             let breakdownDiv = document.getElementById('tradeinBreakdown');
             breakdownDiv.innerHTML = tradeinBreakdownHtml;
             breakdownDiv.style.display = tradeinBreakdownHtml ? 'block' : 'none';
