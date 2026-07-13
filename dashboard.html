@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>عملکرد کلی | قطب‌نمای راهینو</title>
+    <title>عملکرد کلی</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -88,7 +88,7 @@
         </div>
 
         <div class="rank-banner">
-            <div class="rank-title">مقام فعلی شما در سیستم:</div>
+            <div class="rank-title">مقام فعلیت در سیستم:</div>
             <div class="rank-name" id="rankName">در حال محاسبه...</div>
             <div style="font-size: 12px; opacity: 0.9;" id="rankSubtitle"></div>
             <div class="rank-progress">
@@ -110,7 +110,7 @@
             <div class="stat-card record-card">
                 <span class="stat-icon">🏆</span>
                 <div class="stat-value" id="val_max_time">0</div>
-                <div class="stat-label">رکورد ساعت در یک روز</div>
+                <div class="stat-label">رکورد ساعت مطالعه در یک روز</div>
             </div>
             <div class="stat-card record-card">
                 <span class="stat-icon">🚀</span>
@@ -119,7 +119,7 @@
             </div>
         </div>
 
-        <div class="section-title">روند پیشرفت شما (عملکرد هفتگی)</div>
+        <div class="section-title">روند پیشرفتت (عملکرد هفتگی)</div>
         <div class="chart-container">
             <div class="combo-box">
                 <canvas id="comboChart"></canvas>
@@ -129,7 +129,7 @@
         <div class="section-title">سهم دروس از کل زمان</div>
         <div class="chart-container" style="text-align: center;">
             <div style="margin-bottom: 15px; font-size: 14px; font-weight: bold; color: var(--primary);">
-                🥇 درس محبوب شما: <span id="favSubject" style="color: var(--accent);">...</span>
+                🥇 درس محبوب : <span id="favSubject" style="color: var(--accent);">...</span>
             </div>
             <div class="pie-box"><canvas id="pieChart"></canvas></div>
         </div>
@@ -146,7 +146,7 @@
 
             <div class="life-card">
                 <div class="life-info">
-                    <h4 id="batteryName">باتری تمرکز</h4>
+                    <h4 id="batteryName">باتری تمرکز(میزان استفاده از گوشی)</h4>
                     <p id="batteryDesc">میانگین گوشی: ...</p>
                 </div>
                 <div id="batterySvgBox" style="width: 50px; height: 50px;"></div>
@@ -413,7 +413,7 @@
 
             document.getElementById('sleepProfileName').innerText = sleepTitle;
             document.getElementById('sleepProfileName').style.color = sleepColor;
-            document.getElementById('sleepProfileDesc').innerHTML = `میانگین به خواب رفتن: <strong style="color:var(--text-main)">${formatTime(avgBedtime)}</strong><br>میانگین بیداری: <strong style="color:var(--text-main)">${formatTime(avgWake)}</strong><br>طول کل خواب (با چرت): <strong style="color:var(--text-main)">${formatTime(avgSleepDuration)}</strong>`;
+            document.getElementById('sleepProfileDesc').innerHTML = `میانگین ساعت خواب : <strong style="color:var(--text-main)">${formatTime(avgBedtime)}</strong><br>میانگین ساعت بیداری: <strong style="color:var(--text-main)">${formatTime(avgWake)}</strong><br>طول کل خواب (با چرت روزانه): <strong style="color:var(--text-main)">${formatTime(avgSleepDuration)}</strong>`;
             document.getElementById('sleepSvgBox').innerText = sleepEmoji;
 
             let avgPhone = totalPhone / daysCount;
@@ -423,7 +423,7 @@
 
             document.getElementById('batteryName').innerText = batteryText;
             document.getElementById('batteryName').style.color = batteryColor;
-            document.getElementById('batteryDesc').innerText = `میانگین: ${avgPhone.toFixed(1)} ساعت`;
+            document.getElementById('batteryDesc').innerText = `میانگین استفاده از گوشی: ${avgPhone.toFixed(1)} ساعت`;
             document.getElementById('batterySvgBox').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="${batteryColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="13"></line><rect x="4" y="9" width="${(batteryFill/100)*12}" height="6" fill="${batteryColor}" stroke="none"></rect></svg>`;
 
             document.getElementById('moodDaysCount').innerText = `بر اساس ${daysCount} روز`;
