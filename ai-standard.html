@@ -97,7 +97,7 @@
         <div class="panel" id="panelForm">
             <span class="panel-icon">📝</span>
             <h2 class="panel-title" id="formWeekTitle">ارزیابی هفته</h2>
-            <p class="panel-desc">قبل از اینکه دستیار هوشمند پرونده‌ت رو باز کنه، به عملکرد این هفته‌ت نمره بده و اگر حرفی داری برامون بنویس.</p>
+            <p class="panel-desc">قبل از اینکه بررسی پرونده‌ات شروع بشه، به عملکرد این هفته‌ت نمره بده و اگر حس یا چالشی داشتی برامون بنویس.</p>
             
             <div class="slider-box">
                 <div class="slider-header">
@@ -108,17 +108,18 @@
             </div>
             <textarea class="modern-input" id="selfNote" rows="4" placeholder="مهم‌ترین مانع یا حسی که این هفته داشتی چی بود؟"></textarea>
             
-            <button class="btn-primary" id="btnSubmitForm" onclick="submitAnalysisRequest()">صدور دستور تحلیل 🚀</button>
+            <button class="btn-primary" id="btnSubmitForm" onclick="submitAnalysisRequest()">ارسال برای تحلیل 🚀</button>
             <button class="btn-outline" onclick="showWeeksView()">انصراف و بازگشت</button>
         </div>
 
         <div class="panel" id="panelPending">
             <span class="panel-icon" style="animation: pulse 2s infinite;">⏳</span>
-            <h2 class="panel-title">پرونده رو میز دستیاره!</h2>
-            <p class="panel-desc">درخواست شما در صف پردازش قرار گرفت. سیستم در حال شخم زدن داده‌هاست.<br><br>این فرآیند ممکن است <b>تا ۱۵ دقیقه</b> طول بکشد.</p>
+            <h2 class="panel-title">پرونده در حال بررسی است...</h2>
+            <p class="panel-desc">درخواست شما با موفقیت ثبت شد و در صف تحلیل قرار گرفت. در حال بررسی دقیق گزارش‌های این هفته هستیم.<br><br>این فرآیند ممکن است <b>تا ۱۵ دقیقه</b> زمان ببرد.</p>
             <button class="btn-outline" onclick="showWeeksView()">بازگشت به لیست</button>
         </div>
 
+        <!-- در بخش result-dashboard -->
         <div class="result-dashboard" id="panelResult">
             <div style="margin-bottom: 20px;">
                 <button class="btn-outline" style="padding: 10px; width: auto; font-size: 12px; margin-top: 0;" onclick="showWeeksView()">🔙 بازگشت به لیست</button>
@@ -131,21 +132,32 @@
             </div>
 
             <div class="ai-chat-box">
-                <div class="ai-avatar">🤖</div>
+                <div class="ai-avatar">💡</div>
                 <div class="ai-text" id="aiResponseText"></div>
             </div>
 
-            <div class="upsell-box">
-                <span style="font-size: 40px; display: block; margin-bottom: 10px;">👑</span>
-                <h3 class="upsell-title">تحلیل کارنامه و بودجه‌بندی!</h3>
-                <p style="font-size: 13px; color: var(--text-main); margin-bottom: 15px;">این فقط تحلیل رفتار و ساعت مطالعه‌ت بود. می‌خوای دستیار <b>کارنامه آزمونت</b> رو هم تحلیل کنه و تله‌های تستیت رو دربیاره؟</p>
-                <button class="btn-gold" onclick="alert('برای ارتقای طرح خود به پشتیبانی پیام دهید.')">ارتقا به طرح VIP (مشاوره)</button>
+            <!-- باکس ارتقا که آیدی بهش اضافه شد -->
+            <div class="upsell-box" id="upsellBox" style="display: none;">
+                <span style="font-size: 40px; display: block; margin-bottom: 10px;">📈</span>
+                <h3 class="upsell-title">یک قدم تا تحلیل حرفه‌ای‌تر!</h3>
+                <p style="font-size: 13px; color: var(--text-main); margin-bottom: 15px;">اینجا فقط ساعت مطالعه و رفتارِ تو رو بررسی کردیم. دوست داری یک مشاور حرفه‌ای <b>کارنامه آزمون‌هات</b> رو هم دقیق تحلیل کنه و تله‌های تستیت رو دربیاره؟</p>
+                <button class="btn-gold" onclick="window.location.href='store-renew.html'">تهیه طرح مشاوره و برنامه‌ریزی</button>
             </div>
         </div>
 
     </div>
 
     <script>
+        // ==========================================
+        // 🔒 لایه‌های امنیتی (جلوگیری از کپی و Inspect)
+        // ==========================================
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false; 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
+        };
+        
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
 
@@ -157,6 +169,7 @@
         let allWeeklyData = {}; 
         let allAnalyses = [];
         let selectedWeekKey = "";
+        let hasConsult = false; // بررسی داشتن مشاور
 
         window.onload = async function() { await fetchSystemData(); };
 
@@ -200,6 +213,13 @@
                 const aiRes = await fetch(`${cleanUrl}/rest/v1/ai_analyses?chat_id=eq.${userId}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
                 allAnalyses = await aiRes.json();
 
+                const subRes = await fetch(`${cleanUrl}/rest/v1/subscriptions?student_nid=eq.${userId}&status=eq.active`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+                    if (subRes.ok) {
+                        let subs = await subRes.json();
+                        hasConsult = subs.some(s => s.service_category === 'consult');
+                    }
+                } catch(e) { console.warn("خطا در دریافت وضعیت اشتراک"); }
+
                 // گروه‌بندی دقیق شنبه تا جمعه
                 reports.forEach(r => {
                     let parts = r.report_date.split('/');
@@ -225,7 +245,8 @@
                 document.getElementById('appContent').style.display = 'block';
 
             } catch (error) {
-                alert("⚠️ خطا در برقراری ارتباط با سرور.");
+                console.error("System Error (Fetch Analytics):", error);
+                alert("⚠️ در برقراری ارتباط با سرور مشکلی پیش آمده است. لطفاً صفحه را رفرش کنید.");
                 window.location.href = 'menu.html';
             }
         }
@@ -331,13 +352,16 @@
                 btn.innerText = "صدور دستور تحلیل 🚀"; btn.disabled = false;
                 renderWeeksList(); // رفرش لیست
             } catch (error) {
-                alert("⚠️ مشکلی در ارسال درخواست پیش آمد.");
-                btn.innerText = "صدور دستور تحلیل 🚀"; btn.disabled = false;
+                console.error("System Error (Submit Analysis):", error);
+                alert("⚠️ مشکلی در ارسال درخواست پیش آمد. لطفاً چند لحظه دیگر مجدداً تلاش کنید.");
+                btn.innerText = "ارسال برای تحلیل 🚀"; btn.disabled = false;
             }
         }
 
         function showResult(weekKey, analysisId) {
             hideWeeksView();
+            // اگر مشاور داره مخفی کن، اگر نداره نشون بده
+            document.getElementById('upsellBox').style.display = hasConsult ? 'none' : 'block';
             
             let analysis = allAnalyses.find(a => a.id == analysisId);
             let reportsData = analysis.reports_data;
