@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>پیکربندی VIP | قطب‌نمای راهینو</title>
+    <title>پیکربندی VIP</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     
     <style>
@@ -95,7 +95,7 @@
         
         <div class="vip-header">
             <h1 class="vip-title">پیکربندی هسته برنامه‌ریز</h1>
-            <p class="vip-desc">اطلاعاتت رو با دقت وارد کن تا هوش مصنوعی سیستم، برنامه هفتگیت رو دقیقاً مثل یک لباس شخصی‌دوزی‌شده برات طراحی کنه.</p>
+            <p class="vip-desc">اطلاعاتت رو با دقت وارد کن تا مشاوران راهینو، برنامه هفتگیت رو دقیقاً مثل یک لباس شخصی‌دوزی‌شده برات طراحی کنند.</p>
         </div>
 
         <div class="section-title">🎯 ۱. استراتژی ذهنی (حداکثر ۳ درس)</div>
@@ -113,14 +113,17 @@
         <button class="btn-add" onclick="addClassCard()">➕ افزودن یک کلاس / تایم مدرسه جدید</button>
 
         <div class="section-title">📊 ۳. ارزیابی سطح دروس</div>
-        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">از <b>۱ (ضعیف و نیاز به کار زیاد)</b> تا <b>۵ (نقطه قوت و مسلط)</b> به خودت نمره بده تا حجم پارت‌ها بالانس بشه.</p>
-        <div id="skillsContainer"></div>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">۳ تا از قوی‌ترین درس‌هات (نقاط قوت) رو انتخاب کن:</p>
+        <div class="chips-container" id="strengthsContainer"></div>
+
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 20px; margin-bottom: 10px;">۳ تا از درس‌هایی که توشون ضعف داری (نیاز به کار بیشتر) رو انتخاب کن:</p>
+        <div class="chips-container" id="weaknessesContainer"></div>
 
         <div class="section-title">📝 ۴. برنامه آزمون‌ها</div>
         <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">در کدام آزمون‌ها شرکت می‌کنی؟ (می‌تونی چند مورد رو انتخاب کنی)</p>
         <div class="chips-container" id="examsContainer">
-            <div class="chip exam-chip" onclick="this.classList.toggle('active')" data-exam="قلم‌چی">قلم‌چی (دوهفته یک‌بار)</div>
-            <div class="chip exam-chip" onclick="this.classList.toggle('active')" data-exam="ماز">ماز (دوهفته یک‌بار)</div>
+            <div class="chip exam-chip" onclick="this.classList.toggle('active')" data-exam="قلم‌چی">قلم‌چی </div>
+            <div class="chip exam-chip" onclick="this.classList.toggle('active')" data-exam="ماز">ماز </div>
             <div class="chip exam-chip" onclick="this.classList.toggle('active')" data-exam="گزینه دو">گزینه دو</div>
         </div>
         <input type="text" id="customExam" class="modern-input" placeholder="آزمون دیگری می‌دهی؟ (مثلاً سنجش یا مرآت) اینجا بنویس...">
@@ -130,6 +133,17 @@
     </div>
 
     <script>
+        // ==========================================
+        // 🔒 لایه‌های امنیتی (جلوگیری از کپی و Inspect)
+        // ==========================================
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; // F12
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; // Ctrl+Shift+I
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false; // Ctrl+Shift+C
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false; // Ctrl+Shift+J
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; // Ctrl+U
+        };
         // ==========================================
         // 🔗 تنظیمات اتصال سوپابیس
         // ==========================================
@@ -170,6 +184,8 @@
 
         let selectedStartSubjects = [];
         let selectedEndSubjects = [];
+        let selectedStrengths = [];
+        let selectedWeaknesses = [];
 
         // دیکشنری کامل دروس
         const subjectsDict = { 
@@ -252,20 +268,25 @@
                 endContainer.innerHTML += `<div class="chip ${isEnd}" onclick="toggleSubject(this, '${subj}', 'end')">${subj}</div>`;
 
                 let defaultScore = 3;
-                if (existingSettings && existingSettings.subject_skills) {
-                    let found = existingSettings.subject_skills.find(s => s.subject === subj);
-                    if (found) defaultScore = found.score;
-                }
+                // خواندن نقاط قوت و ضعف از دیتابیس قبلی
+            if (existingSettings && existingSettings.subject_skills) {
+                existingSettings.subject_skills.forEach(s => {
+                    if (s.score === 5) selectedStrengths.push(s.subject);
+                    if (s.score === 1) selectedWeaknesses.push(s.subject);
+                });
+            }
 
-                skillsContainer.innerHTML += `
-                <div class="slider-group">
-                    <div class="slider-header">
-                        <span class="slider-label">سطح شما در ${subj}</span>
-                        <span class="skill-slider-val" id="v_skill_${index}">امتیاز: ${defaultScore}</span>
-                    </div>
-                    <input type="range" class="skill-range" data-subj="${subj}" min="1" max="5" step="1" value="${defaultScore}" oninput="document.getElementById('v_skill_${index}').innerText = 'امتیاز: ' + this.value">
-                </div>
-                `;
+            let strContainer = document.getElementById('strengthsContainer');
+            let weakContainer = document.getElementById('weaknessesContainer');
+            
+            globalSubjects.forEach((subj) => {
+                // کپسول‌های نقاط قوت
+                let isStr = selectedStrengths.includes(subj) ? 'active' : '';
+                strContainer.innerHTML += `<div class="chip ${isStr}" onclick="toggleEvalSubject(this, '${subj}', 'strength')">${subj}</div>`;
+                
+                // کپسول‌های نقاط ضعف
+                let isWeak = selectedWeaknesses.includes(subj) ? 'active' : '';
+                weakContainer.innerHTML += `<div class="chip ${isWeak}" onclick="toggleEvalSubject(this, '${subj}', 'weakness')">${subj}</div>`;
             });
 
             if (existingSettings && existingSettings.class_schedule && existingSettings.class_schedule.length > 0) {
@@ -284,6 +305,27 @@
             } else {
                 if (targetArray.length >= 3) {
                     alert("⚠️ رفیق، می‌تونی حداکثر ۳ تا درس رو برای این بخش انتخاب کنی!");
+                    return;
+                }
+                targetArray.push(subj);
+                element.classList.add('active');
+            }
+        }
+
+        function toggleEvalSubject(element, subj, type) {
+            let targetArray = type === 'strength' ? selectedStrengths : selectedWeaknesses;
+            let oppositeArray = type === 'strength' ? selectedWeaknesses : selectedStrengths;
+            
+            if (targetArray.includes(subj)) {
+                targetArray.splice(targetArray.indexOf(subj), 1);
+                element.classList.remove('active');
+            } else {
+                if (targetArray.length >= 3) {
+                    alert("⚠️ رفیق، می‌تونی حداکثر ۳ تا درس رو برای این بخش انتخاب کنی!");
+                    return;
+                }
+                if (oppositeArray.includes(subj)) {
+                    alert("⚠️ این درس رو تو لیست مقابل انتخاب کردی! یه درس نمی‌تونه هم نقطه قوت باشه هم ضعف.");
                     return;
                 }
                 targetArray.push(subj);
@@ -376,8 +418,11 @@
             if(customEx !== "") selectedExams.push(customEx);
 
             let skills = [];
-            document.querySelectorAll('.skill-range').forEach(input => {
-                skills.push({ subject: input.dataset.subj, score: parseInt(input.value) });
+            globalSubjects.forEach(subj => {
+                let score = 3; 
+                if (selectedStrengths.includes(subj)) score = 5;
+                if (selectedWeaknesses.includes(subj)) score = 1;
+                skills.push({ subject: subj, score: score });
             });
 
             let classesData = [];
