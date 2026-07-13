@@ -106,6 +106,15 @@
 
     <script>
         // ==========================================
+        // 🔒 لایه‌های امنیتی (جلوگیری از کپی و Inspect)
+        // ==========================================
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false; 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
+        };
+        // ==========================================
         // 🔗 تنظیمات سوپابیس
         // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
@@ -140,7 +149,11 @@
                 renderHistoryCards(data);
 
             } catch (error) {
-                alert("⚠️ خطا در دریافت اطلاعات. اینترنت خود را چک کنید.");
+                // خطای واقعی در پس‌زمینه برای شما چاپ می‌شود
+                console.error("System Error (History):", error);
+                
+                // پیام محترمانه و ایمن برای کاربر
+                alert("⚠️ سیستم در حال دریافت گزارش‌ها است یا اینترنت شما نوسان دارد. لطفاً چند لحظه دیگر مجدداً تلاش کنید.");
                 document.getElementById('mainLoader').style.display = 'none';
             }
         }
