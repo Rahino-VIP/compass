@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>عملیات امروز | قطب‌نما</title>
+    <title>عملیات امروز</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -169,6 +169,16 @@
     </div>
 
     <script>
+        // ==========================================
+        // 🔒 لایه‌های امنیتی (جلوگیری از کپی و Inspect)
+        // ==========================================
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false; 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
+        };
+        
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
@@ -254,23 +264,51 @@
             await loadCurrentSchedule();
         };
         // ==========================================
-        // ☀️ سیستم بررسی و اجرای مینی‌گیم بیدارباش
+        // ☀️ سیستم بررسی و اجرای مینی‌گیم بیدارباش (محدودیت زمانی)
         // ==========================================
         async function checkMorningStatus() {
             try {
-                // چک کردن وضعیت امروز دانش‌آموز در سوپابیس
                 const { data } = await supabaseClient.from('students').select('wake_streak, last_wakeup_date').eq('national_id', String(userId)).single();
                 if(data) document.getElementById('streakCount').innerText = data.wake_streak || 0;
 
                 const todayStr = new Date().toISOString().split('T')[0];
+                const now = new Date();
+                const timeInMinutes = now.getHours() * 60 + now.getMinutes();
+                
+                // تعریف پنجره زمانی مجاز (۵:۰۰ تا ۷:۳۰ صبح)
+                const startWindow = 5 * 60;       // 300 minutes
+                const endWindow = 7 * 60 + 30;    // 450 minutes
 
-                // اگر امروز هنوز اعلام بیداری نکرده، مودال رو باز کن و بازی رو بیار
                 if (!data || data.last_wakeup_date !== todayStr) {
-                    document.getElementById('wakeupModal').style.display = 'flex';
-                    fetchMorningQuiz();
+                    
+                    if (timeInMinutes >= startWindow && timeInMinutes <= endWindow) {
+                        // 🟢 در بازه مجاز -> نمایش مودال بیدارباش
+                        document.getElementById('wakeupModal').style.display = 'flex';
+                        fetchMorningQuiz();
+                    } 
+                    else if (timeInMinutes > endWindow) {
+                        // 🔴 خواب مونده! -> بررسی اینکه آیا امروز جریمه براش ثبت شده یا نه
+                        const missedFlag = localStorage.getItem(`missed_wakeup_${todayStr}`);
+                        
+                        if (!missedFlag) {
+                            // ۱. ثبت پیام هشدار در صندوق پیام‌ها
+                            await supabaseClient.from('messages').insert({
+                                student_nid: String(userId),
+                                title: '⏰ خواب موندی رفیق!',
+                                body: 'امروز خواب موندی و چالش بیدارباش رو از دست دادی! حواست باشه فردا خواب نمونی قهرمان.'
+                            });
+                            
+                            // ۲. صفر کردن زنجیره بیداری به عنوان جریمه
+                            await supabaseClient.from('students').update({ wake_streak: 0 }).eq('national_id', String(userId));
+                            document.getElementById('streakCount').innerText = '0';
+                            
+                            // ۳. ثبت در حافظه محلی تا امروز دیگه پیام تکراری نده
+                            localStorage.setItem(`missed_wakeup_${todayStr}`, 'true');
+                        }
+                    }
                 }
             } catch (err) {
-                console.error("خطا در بررسی وضعیت بیداری:", err);
+                console.error("System Error (Wakeup Check):", err);
             }
         }
 
@@ -387,7 +425,8 @@
                 }, 1500);
 
             } catch(e) {
-                alert("❌ خطا در ثبت اطلاعات: " + e.message);
+                console.error("System Error (Win Game): ", e);
+                alert("⚠️ مشکلی در ارتباط با سرور پیش آمده است. لطفاً چند دقیقه دیگر مجدداً تلاش کنید.");
                 document.getElementById('wakeupModal').style.display = 'none';
             }
         }
@@ -568,10 +607,10 @@
             // ۱. اول فقط دیتابیس رو آپدیت می‌کنیم
             try {
                 await savePlanToDB(); 
+            // ... داخل بخش catch اول
             } catch (err) {
-                console.error(err);
-                alert("❌ مشکل در ذخیره‌سازی! لطفاً اینترنت را چک کنید.");
-                // اگر واقعا اینترنت قطع بود، تیک رو برگردون
+                console.error("System Error (Toggle Quest DB):", err);
+                alert("⚠️ مشکلی در ارتباط با سرور پیش آمده است. لطفاً چند دقیقه دیگر مجدداً تلاش کنید.");
                 block.status = block.status === 'completed' ? 'pending' : 'completed'; 
                 btn.style.pointerEvents = 'auto';
                 btn.innerText = '✅';
@@ -627,8 +666,10 @@
                 await savePlanToDB();
                 updateProgressBar();
                 renderTodayTab(); 
+            // ... انتهای تابع
             } catch(err) {
-                alert("❌ مشکل در انتقال! لطفاً اینترنت را چک کنید.");
+                console.error("System Error (Shift Quest):", err);
+                alert("⚠️ مشکلی در ارتباط با سرور پیش آمده است. لطفاً چند دقیقه دیگر مجدداً تلاش کنید.");
             }
         }
 
@@ -654,8 +695,12 @@
                     const celebModal = document.getElementById('celebrationModal');
                     if (celebModal) celebModal.style.display = 'flex'; 
                     
-                    // 🛡️ گارد محافظ برای ارور گرافیکی کاغذ رنگی
-                    try { triggerConfetti(); } catch(e) {} 
+                    // 🌟 دستور صحیح پخش کاغذ رنگی
+                    try { 
+                        confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 }, colors: ['#f59e0b', '#ef4444', '#10b981', '#3b82f6'] }); 
+                    } catch(e) {
+                        console.error("System Error (Confetti):", e);
+                    } 
                     
                     setTimeout(() => {
                         if (celebModal) celebModal.style.display = 'none';
