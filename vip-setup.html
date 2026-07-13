@@ -293,8 +293,8 @@
                 existingSettings.class_schedule.forEach(cls => addClassCard(cls));
             } else {
                 addClassCard(); 
-            }
-        })
+            })
+        }
 
         function toggleSubject(element, subj, type) {
             let targetArray = type === 'start' ? selectedStartSubjects : selectedEndSubjects;
