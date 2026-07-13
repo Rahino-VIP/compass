@@ -266,8 +266,7 @@
                 
                 let isEnd = selectedEndSubjects.includes(subj) ? 'active' : '';
                 endContainer.innerHTML += `<div class="chip ${isEnd}" onclick="toggleSubject(this, '${subj}', 'end')">${subj}</div>`;
-
-                let defaultScore = 3;
+            });
                 // خواندن نقاط قوت و ضعف از دیتابیس قبلی
             if (existingSettings && existingSettings.subject_skills) {
                 existingSettings.subject_skills.forEach(s => {
@@ -293,7 +292,7 @@
                 existingSettings.class_schedule.forEach(cls => addClassCard(cls));
             } else {
                 addClassCard(); 
-            })
+            }
         }
 
         function toggleSubject(element, subj, type) {
