@@ -42,7 +42,7 @@
         .btn-gold { background: linear-gradient(135deg, var(--gold), #d97706); color: #000; width: 100%; padding: 18px; border-radius: 16px; border: none; font-size: 16px; font-weight: 900; cursor: pointer; }
     </style>
 </head>
-<body>
+<body data-theme="dark">
 
     <div class="app-container">
         <div class="nav-header">
@@ -75,7 +75,7 @@
                 <div id="requestFormContent" style="display: none;">
                     <div id="dynamicSwitchesArea"></div>
                     <textarea class="modern-input" id="nextWeekNote" rows="3" placeholder="یادداشت برای مشاور (مثلاً: سه‌شنبه امتحان فارسی دارم یا جمعه مهمونی دعوتیم...)"></textarea>
-                    <button class="btn-gold" id="btnRequestPlan" onclick="requestNewSchedule()">تایید استراتژی و ساخت برنامه 🚀</button>
+                    <button class="btn-gold" id="btnRequestPlan" onclick="requestNewSchedule()">ارسال پرونده به اتاق مشاور 🚀</button>
                     <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: center;">
                         ⚠️ فقط یک‌بار فرصت ارسال دارید.
                     </div>
@@ -86,29 +86,42 @@
 
     <script>
         // ==========================================
+        // 🔒 لایه‌های امنیتی (جلوگیری از کپی و Inspect)
+        // ==========================================
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false; 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
+        };
+        // ==========================================
         // 🌓 سیستم تغییر تم (دارک و لایت مود)
         // ==========================================
-        function toggleTheme() {
-            const root = document.documentElement;
-            const currentTheme = root.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            root.setAttribute('data-theme', newTheme);
-            
-            // ذخیره تم تو مرورگر که با رفرش نپره
-            localStorage.setItem('app_theme', newTheme);
-        }
-
-        // بررسی تم ذخیره شده موقع لود صفحه
+        const themeBtn = document.getElementById('themeBtn');
+        const currentTheme = localStorage.getItem('theme') || 'dark'; // پیش‌فرض دارک
+        
         document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('app_theme');
-            if (savedTheme) {
-                document.documentElement.setAttribute('data-theme', savedTheme);
+            if (currentTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                if(themeBtn) themeBtn.innerText = '☀️';
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                if(themeBtn) themeBtn.innerText = '🌙';
             }
         });
 
-        // ==========================================
-        // 🚀 سیستم ارسال درخواست برنامه‌ریزی
-        // ==========================================
+        function toggleTheme() {
+            if (document.documentElement.getAttribute('data-theme') === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                if(themeBtn) themeBtn.innerText = '🌙';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                if(themeBtn) themeBtn.innerText = '☀️';
+            }
+        }
+
         // ==========================================
         // تنظیمات پایه و اتصال به سوپابیس
         // ==========================================
@@ -198,9 +211,6 @@
         // ==========================================
         // 🎛️ لود کردن و فیلتر کردن سوئیچ‌ها از دیتابیس
         // ==========================================
-        // ==========================================
-        // 🎛️ لود کردن و فیلتر کردن سوئیچ‌ها از دیتابیس
-        // ==========================================
         async function loadDynamicSwitches(studentGrade, studentExams) {
             const container = document.getElementById('dynamicSwitchesArea');
             container.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--text-muted);">در حال بررسی گزینه‌های اختصاصی شما... ⏳</div>';
@@ -261,7 +271,7 @@
 
             const btn = document.getElementById('btnRequestPlan');
             if(btn) {
-                btn.innerHTML = 'در حال محاسبه توان مطالعاتی و ارسال... ⏳'; 
+                btn.innerHTML = 'در حال ارسال پرونده به اتاق مشاور... ⏳'; 
                 btn.disabled = true;
             }
 
@@ -317,18 +327,21 @@
                 formContainer.innerHTML = `
                     <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px; text-align: center; margin-top: 20px; animation: fadeIn 0.5s;">
                         <div style="font-size: 40px; margin-bottom: 10px;">✅</div>
-                        <h3 style="color: var(--success); margin-bottom: 10px;">استراتژی با موفقیت پرتاب شد!</h3>
+                        <h3 style="color: var(--success); margin-bottom: 10px;">پرونده ارسال شد!</h3>
                         <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">
-                            اطلاعات شما به هسته مرکزی رسید. الگوریتم برنامه شما را چید و اکنون در انتظار تایید نهایی مشاور است. 
+                            اطلاعات شما روی میز مشاور قرار گرفت. مشاور شما پس از بررسی وضعیت این هفته، بهترین برنامه را برایتان تدوین خواهد کرد. 
                         </p>
                     </div>
                 `;
 
             } catch (error) {
-                console.error("Fetch Error:", error);
-                alert('❌ اینترنت شما ضعیف است یا ارتباط با سرور برقرار نشد.');
+                // خطای واقعی رو برای خودت تو پس‌زمینه نگه دار
+                console.error("System Error (Submit Request):", error);
+                
+                // پیام شیک و امن برای کاربر
+                alert('⚠️ در ارتباط با سرور مشکلی پیش آمده است. لطفاً چند لحظه دیگر مجدداً تلاش کنید.');
                 if(btn) {
-                    btn.innerHTML = 'ارسال اطلاعات به اتاق فکر 🚀'; 
+                    btn.innerHTML = 'ارسال پرونده به اتاق مشاور 🚀'; 
                     btn.disabled = false;
                 }
             }
