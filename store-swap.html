@@ -834,14 +834,6 @@
             invoiceText += `مبلغ نهایی پرداختی (مابه‌التفاوت): ${formatMoney(financeData.final)} تومان\n`;
             if(state.paymentMethod === 'installments' && financeData.installments.length > 0) invoiceText += `زمان‌بندی اقساط جدید:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
             
-            // بسته اطلاعاتی برای پنل ادمین
-            let tradeInData = {
-                pansion: { action: state.pansion === 'no_change' ? 'no_change' : (state.pansion === 'none' ? 'cancel' : 'change'), type: state.panType, dur: pDurVal },
-                consult: { action: state.consult === 'no_change' ? 'no_change' : (state.consult === 'none' ? 'cancel' : 'change'), type: state.conType, dur: cDurVal },
-                walletChange: financeData.walletNetChange
-            };
-            invoiceText += `\n[TRADE_IN_DATA: ${JSON.stringify(tradeInData)}]`;
-
             const payload = {
                 action: 'web_auth', sub_action: 'store_purchase', 
                 national_id: userId, receipt_base64: receiptBase64 || "", mime_type: receiptMimeType || "",
