@@ -258,26 +258,30 @@
         // ==========================================
         // 🚀 راه‌اندازی 
         // ==========================================
+        // ==========================================
+        // 🚀 راه‌اندازی و لود دیتا (باگ‌گیری شده)
+        // ==========================================
         window.onload = async function() {
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
                 const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
 
-                // (در تابع window.onload)
                 const [studentRes, servicesRes, promosRes, mySubsRes, sysRes, rulesRes, instRes] = await Promise.all([
                     fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/services?is_active=eq.true`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/promo_codes?is_active=eq.true`, { headers }),
-                    fetch(`${cleanUrl}/rest/v1/subscriptions?student_nid=eq.${userId}&status=eq.active`, { headers }), // 👈 بدون محدودیت ستون‌ها
+                    fetch(`${cleanUrl}/rest/v1/subscriptions?student_nid=eq.${userId}&status=eq.active`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/system_settings?select=konkur_date`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/terms_and_rules`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/installments?student_nid=eq.${userId}`, { headers }) 
                 ]);
 
-                // ... (کدهای قبلی) ...
+                // استخراج اطلاعات (فقط یک بار برای هرکدام)
+                dbData.services = await servicesRes.json() || [];
+                dbData.promos = await promosRes.json() || [];
+                dbData.userSubs = await mySubsRes.json() || [];
                 dbData.rules = await rulesRes.json() || [];
                 
-                // 🎯 فیلتر کردن فقط اقساطی که هنوز پرداخت نشدند
                 let allInst = await instRes.json() || [];
                 dbData.installments = allInst.filter(i => i.status === 'pending_upload' || i.status === 'pending_approval');
 
@@ -296,11 +300,6 @@
                     else if (g === 'دهم' || g.includes('دهم')) studentData.normGrade = 'دهم';
                     else studentData.normGrade = 'all';
                 } else { alert("حساب یافت نشد."); window.location.href='index.html'; return; }
-
-                dbData.services = await servicesRes.json() || [];
-                dbData.promos = await promosRes.json() || [];
-                dbData.userSubs = await mySubsRes.json() || [];
-                dbData.rules = await rulesRes.json() || [];
                 
                 let sysData = await sysRes.json();
                 if (sysData && sysData.length > 0 && sysData[0].konkur_date) {
@@ -311,7 +310,6 @@
 
                 document.getElementById('uiWalletBalance').innerText = formatMoney(studentData.wallet_balance || 0);
 
-                // اگر کاربر هیچ پلن فعالی نداره، اینجا جاش نیست!
                 if(dbData.userSubs.length === 0) {
                     alert("شما هیچ اشتراک فعالی برای تعویض ندارید! لطفا از بخش 'تمدید و فروشگاه' خرید جدید انجام دهید.");
                     window.location.href = 'store-renew.html';
@@ -323,9 +321,11 @@
                 document.getElementById('loaderOverlay').style.opacity = '0';
                 setTimeout(() => document.getElementById('loaderOverlay').style.display = 'none', 300);
 
-            } catch (err) { alert("خطا در دریافت اطلاعات سرور."); }
+            } catch (err) { 
+                console.error(err);
+                alert("خطا در دریافت اطلاعات سرور."); 
+            }
         };
-
         // ==========================================
         // 🃏 ساخت کارت‌های هوشمند (Trade-in)
         // ==========================================
@@ -453,6 +453,9 @@
         // 🧮 موتور عظیم معاوضه و حسابداری (Trade-in Engine)
         // آپدیت شده: استفاده از ارزش‌های قطعی و دقیق (بدون هیچ تخمینی)
         // ==========================================
+        // ==========================================
+        // 🧮 موتور عظیم معاوضه و حسابداری (Trade-in Engine)
+        // ==========================================
         function calculateInvoice() {
             let pDurVal = document.getElementById('newPanDuration').value;
             let cDurVal = document.getElementById('newConDuration').value;
@@ -474,17 +477,15 @@
             let oldPan = dbData.userSubs.find(s => s.service_category === 'pansion');
             let oldCon = dbData.userSubs.find(s => s.service_category === 'consult');
 
-            // 🔄 1. محاسبه بازخرید پانسیون (کاملا دقیق بر اساس دیتابیس)
+            // 🔄 1. محاسبه بازخرید پانسیون
             if (state.pansion !== 'no_change' && oldPan) {
                 let consumedDays = Math.max(0, Math.ceil((new Date() - new Date(oldPan.start_date)) / (1000 * 3600 * 24)));
                 let totalDays = Math.max(1, Math.ceil((new Date(oldPan.end_date) - new Date(oldPan.start_date)) / (1000 * 3600 * 24)));
                 let totalMonths = Math.round(totalDays / 30) || 1; 
                 
-                // خواندن مقادیر دقیق از دیتابیس (اگر دیتا قدیمی بود و خالی بود، صفر در نظر میگیره)
                 let actualPaid = parseInt(oldPan.actual_paid_value) || 0;
                 let baseValue = parseInt(oldPan.base_total_value) || 0;
                 
-                // ارزش روزانه (برای ارتقا) و ارزش پایه ماهانه (برای لغو و تنزیل)
                 let dailyActualValue = actualPaid / totalDays;
                 let dailyBaseValue = baseValue / totalDays;
                 let monthlyBaseValue = baseValue / totalMonths;
@@ -498,17 +499,14 @@
                 let logicLabel = "";
 
                 if (state.pansion === 'none') {
-                    // ❌ لغو: تبدیل روزها به ماهِ کامل روبه‌بالا * ضربدر قیمت پایه ماهانه (لغو کامل تخفیف)
                     let consumedMonths = Math.ceil(consumedDays / 30);
                     valueConsumed = consumedMonths * monthlyBaseValue;
                     logicLabel = `قانون لغو (مصرف گرد شد به ${consumedMonths} ماه کامل، بدون تخفیف)`;
                     if(consumedMonths >= totalMonths) valueConsumed = actualPaid; 
                 } else if (new_base_price < old_base_price) {
-                    // 🔻 تنزیل: روزشمار دقیق * قیمت پایه روزانه (لغو تخفیف بلندمدت)
                     valueConsumed = consumedDays * dailyBaseValue;
                     logicLabel = `قانون تنزیل (روزشمار دقیق، اما محاسبه با قیمت آزاد)`;
                 } else {
-                    // 🚀 ارتقا: پاداش! روزشمار دقیق * ارزش واقعی پرداختی (حفظ تمام تخفیف‌ها)
                     valueConsumed = consumedDays * dailyActualValue;
                     logicLabel = `پاداش ارتقا (روزشمار دقیق با حفظ تمام تخفیف‌ها)`;
                 }
@@ -526,17 +524,14 @@
                     </div>`;
             }
 
-            // 🔄 2. محاسبه بازخرید مشاوره (کاملا دقیق بر اساس دیتابیس)
+            // 🔄 2. محاسبه بازخرید مشاوره
             if (state.consult !== 'no_change' && oldCon) {
                 let consumedDays = Math.max(0, Math.ceil((new Date() - new Date(oldCon.start_date)) / (1000 * 3600 * 24)));
                 let totalDays = Math.max(1, Math.ceil((new Date(oldCon.end_date) - new Date(oldCon.start_date)) / (1000 * 3600 * 24)));
                 let totalMonths = Math.round(totalDays / 30) || 1; 
                 
-                // اینجا اگر هم‌زمان پانسیون داشته، طرح الماس خودش رو تو actualPaid و baseValue نشون میده!
                 let actualPaid = parseInt(oldCon.actual_paid_value) || 0;
                 let baseValue = parseInt(oldCon.base_total_value) || 0;
-                
-                // در مشاوره، چون الماس از اول روی Base اعمال میشه (تخفیف ۶۰ درصدی)، Base رو تعدیل می‌کنیم
                 let effectiveBaseValue = oldPan ? (baseValue * 0.4) : baseValue;
 
                 let dailyActualValue = actualPaid / totalDays;
@@ -578,9 +573,8 @@
             }
             
             refundAmount = Math.floor(refundAmount / 10000) * 10000;
-            // ==========================================
-            // 🚨 موتور تسویه اقساط معوقه (تسویه حساب قطعی)
-            // ==========================================
+
+            // 🚨 موتور تسویه اقساط معوقه
             let activeInvoicesBeingModified = new Set();
             if (state.pansion !== 'no_change' && oldPan && oldPan.invoice_id) activeInvoicesBeingModified.add(oldPan.invoice_id);
             if (state.consult !== 'no_change' && oldCon && oldCon.invoice_id) activeInvoicesBeingModified.add(oldCon.invoice_id);
@@ -588,7 +582,6 @@
             let unpaidInstallmentsSum = 0;
             let unpaidHtml = '';
             
-            // جمع زدن تمام اقساط پاس نشده مربوط به فاکتورهای درگیر در این معاوضه
             activeInvoicesBeingModified.forEach(invId => {
                 let insts = dbData.installments.filter(i => String(i.invoice_id) === String(invId));
                 insts.forEach(inst => {
@@ -598,11 +591,11 @@
             });
 
             let netRefund = refundAmount - unpaidInstallmentsSum;
-            let debtFromOldPlan = 0; // پولی که دانش‌آموز بعد از ابطال چک‌ها هنوز بدهکار می‌شود
+            let debtFromOldPlan = 0; 
 
             if (netRefund < 0) {
                 debtFromOldPlan = Math.abs(netRefund);
-                netRefund = 0; // استرداد صفر می‌شود چون بدهکارتر است
+                netRefund = 0; 
             }
 
             if (unpaidInstallmentsSum > 0) {
@@ -614,7 +607,6 @@
                     </div>`;
             }
 
-            // جایگزین کردن مبلغ استرداد با مبلغ خالص (پس از کسر بدهی)
             refundAmount = netRefund;
 
             // 🛒 3. محاسبه هزینه‌های خرید جدید
@@ -630,7 +622,7 @@
             let subTotal = newPanCharge + newConCharge + debtFromOldPlan;
             let msgEl = document.getElementById('promoMsg');
             
-            // 💎 4. محاسبه الماس روی خرید جدید
+            // 💎 4. محاسبه الماس
             let comboDisc = 0;
             let panMonthsActive = 0;
             if (state.pansion !== 'no_change' && state.pansion !== 'none') panMonthsActive = panDur; 
@@ -678,8 +670,12 @@
             let panTimeRate = pDurVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (pDurVal === 'konkur' ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
             let conTimeRate = cDurVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (cDurVal === 'konkur' ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
             
+            // 🧩 تفکیک تخفیف زمانی برای ارسال دقیق به دیتابیس
+            let pan_time_disc = newPanCharge * panTimeRate;
             let conNetForTimeDisc = newConCharge - comboDisc - promoDisc;
-            let timeDisc = (newPanCharge * panTimeRate) + (Math.max(0, conNetForTimeDisc) * conTimeRate); 
+            let con_time_disc = Math.max(0, conNetForTimeDisc) * conTimeRate;
+
+            let timeDisc = pan_time_disc + con_time_disc; 
             subTotal -= timeDisc;
 
             // 🔄 7. تهاتر و کیف پول
@@ -696,6 +692,12 @@
                 subTotal -= walletUsed;
                 financeData.newWalletBalance -= walletUsed;
             }
+
+            // 💡 استخراج ارزش واقعی و پایه برای طرح‌های جدید
+            financeData.pan_base_value = newPanCharge;
+            financeData.pan_actual_value = newPanCharge - pan_time_disc;
+            financeData.con_base_value = newConCharge;
+            financeData.con_actual_value = newConCharge - comboDisc - promoDisc - con_time_disc;
 
             financeData.tradeInValue = refundAmount; financeData.newCharge = newPanCharge + newConCharge;
             financeData.discount = comboDisc + promoDisc + timeDisc; financeData.walletUsed = walletUsed;
@@ -778,7 +780,6 @@
                 }
             }
         }
-
         // ==========================================
         // 📤 ارسال نهایی به ادمین
         // ==========================================
@@ -805,11 +806,7 @@
             let cDurStr = cDurVal === 'konkur' ? 'تا کنکور' : cDurVal + ' ماهه';
 
             let invoiceText = `⚠️ عملیات تعویض (Trade-in): اقساط قبلی به قوت خود باقیست. قراردادهای لغوشده به صورت خودکار ابطال می‌شوند.\n\n`;
-
-            // (در تابع submitFinalStep)
-            // ... (ساخت invoiceText) ...
             
-            // 🎯 پیدا کردن فاکتورهایی که اقساطشان باید باطل شود
             let activeInvoicesBeingModified = new Set();
             let oldPan = dbData.userSubs.find(s => s.service_category === 'pansion');
             let oldCon = dbData.userSubs.find(s => s.service_category === 'consult');
@@ -820,7 +817,7 @@
                 pansion: { action: state.pansion === 'no_change' ? 'no_change' : (state.pansion === 'none' ? 'cancel' : 'change'), type: state.panType, dur: document.getElementById('newPanDuration').value },
                 consult: { action: state.consult === 'no_change' ? 'no_change' : (state.consult === 'none' ? 'cancel' : 'change'), type: state.conType, dur: document.getElementById('newConDuration').value },
                 walletChange: financeData.walletNetChange,
-                void_invoice_ids: Array.from(activeInvoicesBeingModified) // 👈 این آرایه جدید اضافه شد
+                void_invoice_ids: Array.from(activeInvoicesBeingModified) 
             };
             invoiceText += `\n[TRADE_IN_DATA: ${JSON.stringify(tradeInData)}]`;
             
@@ -844,21 +841,26 @@
                 fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
 
-                // 💡 رفع ارور دیتابیس: اضافه کردن total_amount, discount_amount و payment_method
                 let invPayload = {
                     student_nid: userId, 
                     invoice_type: 'تعویض و ارتقا',
-                    total_amount: financeData.newCharge || 0,      // 👈 مشکل اصلی این بود که Null می‌رفت
+                    total_amount: financeData.newCharge || 0,     
                     discount_amount: financeData.discount || 0,
                     final_amount: financeData.final || 0,
-                    payment_method: state.paymentMethod || 'cash', // 👈 اضافه شد
+                    payment_method: state.paymentMethod || 'cash', 
                     paid_upfront: financeData.upfront || 0,
                     status: 'pending', 
                     invoice_details: invoiceText,
                     pansion_tier: state.pansion === 'no_change' ? 'none' : state.panType,
                     pan_duration: parseInt(pDurVal) || 0,
                     consult_tier: state.consult === 'no_change' ? 'none' : state.conType,
-                    con_duration: parseInt(cDurVal) || 0
+                    con_duration: parseInt(cDurVal) || 0,
+                    
+                    // 🎯 ارسال ارزش‌های مالی برای ثبت در فاکتور و سپس انتقال به اشتراک‌ها
+                    pan_base_value: financeData.pan_base_value || 0,
+                    pan_actual_value: financeData.pan_actual_value || 0,
+                    con_base_value: financeData.con_base_value || 0,
+                    con_actual_value: financeData.con_actual_value || 0
                 };
 
                 if (receiptBase64) { 
@@ -871,7 +873,6 @@
                     body: JSON.stringify(invPayload)
                 });
                 
-                // سیستم گزارش ارور دقیق
                 if (!invRes.ok) {
                     let err = await invRes.text();
                     alert("❌ خطای دیتابیس (Invoices):\n" + err);
