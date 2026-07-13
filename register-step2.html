@@ -422,7 +422,6 @@
         }
 
         function calculateInvoice() {
-            // 👈 تبدیل هوشمند گزینه konkur به تعداد ماه‌های محاسبه شده
             let pVal = document.getElementById('panDuration').value;
             let cVal = document.getElementById('conDuration').value;
             
@@ -435,7 +434,7 @@
             }
             
             document.getElementById('invoiceArea').style.display = 'block'; document.getElementById('checkoutBox').style.display = 'block';
-            updateRules(); // 👈 آپدیت لحظه‌ای قوانین
+            updateRules();
 
             let basePanMonthly = state.pansion !== 'none' ? getPrice('pansion', state.pansion) : 0;
             let baseConMonthly = state.consult !== 'none' ? getPrice('consult', state.consult) : 0;
@@ -458,7 +457,6 @@
                 if(document.getElementById('promoMsg').innerText.includes('الماس')) document.getElementById('promoMsg').innerText = '';
             }
 
-            // 👈 تخفیف کُد فقط روی ماه‌هایی ضرب میشه که با پانسیون تداخل ندارن!
             if (state.promoRate > 0 && remainingConMonths > 0) promoDisc = (baseConMonthly * remainingConMonths) * state.promoRate; 
             
             let subTotal = totalBase - comboDisc - promoDisc;
@@ -471,17 +469,41 @@
             let panTimeRate = pVal === 'konkur' ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : (state.panDuration === 3 ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
             let conTimeRate = cVal === 'konkur' ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : (state.conDuration === 3 ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
             
-            let timeDisc = (totalPan * panTimeRate) + ((totalCon - comboDisc - promoDisc) * conTimeRate); 
+            // 🧩 تفکیک تخفیف‌های زمانی برای ثبت دقیق در دیتابیس
+            let pan_time_disc = totalPan * panTimeRate;
+            let conNetForTimeDisc = totalCon - comboDisc - promoDisc;
+            let con_time_disc = Math.max(0, conNetForTimeDisc) * conTimeRate;
+
+            let timeDisc = pan_time_disc + con_time_disc; 
             let finalTotal = subTotal - timeDisc;
 
             let refDiscount = 0;
             if (state.hasReferral) { refDiscount = 100000; finalTotal = Math.max(0, finalTotal - refDiscount); }
 
+            // ==========================================
+            // 💡 استخراج ارزش واقعی و پایه برای هر سرویس 
+            // ==========================================
+            let pan_actual = totalPan - pan_time_disc;
+            let con_actual = totalCon - comboDisc - promoDisc - con_time_disc;
+            
+            // کسر کردن هدیه معرف از ارزش واقعی (تا جمع پرداختی‌ها با مبلغ فاکتور مو نزند)
+            if (refDiscount > 0) {
+                if (con_actual >= refDiscount) con_actual -= refDiscount;
+                else if (pan_actual >= refDiscount) pan_actual -= refDiscount;
+            }
+
             financeData.total = totalBase;
             financeData.discount = comboDisc + promoDisc + timeDisc + refDiscount;
             financeData.final = finalTotal;
+
+            // ذخیره مقادیر تفکیک‌شده برای ارسال به بک‌اند
+            financeData.pan_base_value = totalPan;
+            financeData.pan_actual_value = pan_actual;
+            financeData.con_base_value = totalCon;
+            financeData.con_actual_value = con_actual;
             financeData.installments = [];
 
+            // نمایش اطلاعات در فاکتور (کدهای نمایشی بدون تغییر ماندند)
             document.getElementById('row_pan_base').style.display = totalPan > 0 ? 'flex' : 'none'; document.getElementById('inv_pan_base').innerText = formatMoney(totalPan) + ' تومان';
             document.getElementById('row_con_base').style.display = totalCon > 0 ? 'flex' : 'none'; document.getElementById('inv_con_base').innerText = formatMoney(totalCon) + ' تومان';
             document.getElementById('row_combo_disc').style.display = comboDisc > 0 ? 'flex' : 'none'; document.getElementById('inv_combo_disc').innerText = '- ' + formatMoney(comboDisc) + ' تومان';
@@ -498,32 +520,28 @@
                 const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
                 let today = new Date();
 
-                if (maxDur <= 1) { // 👈 تغییر برای ۱ ماهه
+                if (maxDur <= 1) { 
                     let upfrontRounded = roundDown100k(finalTotal * 0.50);
                     let remaining = finalTotal - upfrontRounded;
                     financeData.upfront = upfrontRounded;
-                    
                     let d1 = new Date(); d1.setDate(today.getDate() + 10); 
                     financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
                     instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (آپلود فیش):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b> (۱۰ روز دیگر)</li>`;
                 } 
-                else if (maxDur <= 3) { // 👈 تغییر برای تا ۳ ماه
+                else if (maxDur <= 3) { 
                     let upfrontRounded = roundDown100k(finalTotal * 0.50);
                     let remaining = finalTotal - upfrontRounded;
                     financeData.upfront = upfrontRounded;
-
                     let d1 = new Date(); d1.setDate(today.getDate() + 45); 
                     financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
                     instBox.innerHTML = `<li><strong style="color:var(--danger)">نقد (آپلود فیش):</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
                 } 
-                else { // 👈 تغییر: هر قراردادی که بیشتر از ۳ ماه باشه (مثل کنکور) میاد تو این بخش ۳ قسطی
+                else { 
                     let upfrontRounded = roundDown100k(Math.min(finalTotal * 0.40, 15000000));
                     let remaining = finalTotal - upfrontRounded;
                     financeData.upfront = upfrontRounded;
-
                     let checkAmt = roundDown100k(remaining / 3);
                     let lastCheckAmt = remaining - (checkAmt * 2);
-                    
                     let d1 = new Date(); d1.setMonth(today.getMonth() + 2);
                     let d2 = new Date(); d2.setMonth(today.getMonth() + 4);
                     let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
@@ -566,7 +584,6 @@
             let cDurStr = cVal === 'konkur' ? `تا کنکور (${konkurDurationMonths} ماهه)` : `${state.conDuration} ماهه`;
 
             let invoiceText = `طرح انتخابی: ${state.pansion !== 'none' ? 'پانسیون '+state.pansion+' ('+pDurStr+')' : ''} ${state.consult !== 'none' ? 'مشاوره '+state.consult+' ('+cDurStr+')' : ''}\n`;
-            // ... (بقیه تابع بدون تغییر است) ...
             invoiceText += `مبلغ نهایی فاکتور: ${document.getElementById('inv_total').innerText}\nروش پرداخت: ${state.paymentMethod === 'cash' ? 'نقدی' : 'اقساط'}\n`;
             if(state.paymentMethod === 'installments') invoiceText += `زمان‌بندی اقساط:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
             if(state.hasReferral) invoiceText += `(کسر ۱۰۰ هزار تومان هدیه معرفی در فاکتور لحاظ شد)\n`;
@@ -582,11 +599,15 @@
                     final_amount: financeData.final,
                     payment_method: state.paymentMethod,
                     paid_upfront: financeData.upfront,
-                    // ارسال جزئیات برای فاکتور
+                    // 🎯 ارسال اطلاعات تفکیک‌شده به بک‌اند (برای ثبت در جدول اشتراک‌ها)
                     pansion_tier: state.pansion,       
-                    pan_duration: state.panDuration,   
+                    pan_duration: state.panDuration,
+                    pan_base_value: financeData.pan_base_value,     
+                    pan_actual_value: financeData.pan_actual_value, 
                     consult_tier: state.consult,       
-                    con_duration: state.conDuration    
+                    con_duration: state.conDuration,
+                    con_base_value: financeData.con_base_value,     
+                    con_actual_value: financeData.con_actual_value  
                 },
                 installments: financeData.installments
             };
