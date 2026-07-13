@@ -477,6 +477,7 @@
                 }, 500);
 
             } catch (error) {
+                console.error("VIP Setup Error: ", error);
                 alert("⚠️ اتصال به سرور برقرار نشد.");
                 btn.innerText = "ذخیره و ورود به داشبورد برنامه 🚀"; btn.disabled = false;
             }
