@@ -169,6 +169,16 @@
     </div>
 
     <script>
+        // ==========================================
+        // 🔒 لایه‌های امنیتی (جلوگیری از کپی و Inspect)
+        // ==========================================
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false; 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
+        };
+        
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
 
@@ -249,8 +259,11 @@
                 document.getElementById('appContent').style.display = 'block';
                 
             } catch (error) {
-                console.error("متن دقیق ارور:", error);
-                alert("⚠️ خطا در پردازش اطلاعات داشبورد.");
+                // خطای واقعی در پس‌زمینه برای شما چاپ می‌شود
+                console.error("System Error (Dashboard):", error);
+                
+                // پیام محترمانه و ایمن برای کاربر
+                alert("⚠️ در ارتباط با سرور و پردازش اطلاعات مشکلی پیش آمده است. لطفاً صفحه را رفرش کنید.");
                 document.getElementById('mainLoader').style.display = 'none';
             }
         }
