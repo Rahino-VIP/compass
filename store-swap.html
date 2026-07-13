@@ -721,15 +721,18 @@
                 financeData.newWalletBalance -= walletUsed;
             }
 
-            // 💡 استخراج ارزش واقعی و پایه برای طرح‌های جدید
-            financeData.pan_base_value = newPanCharge;
-            financeData.pan_actual_value = newPanCharge - pan_time_disc;
-            financeData.con_base_value = newConCharge;
-            financeData.con_actual_value = newConCharge - comboDisc - promoDisc - con_time_disc;
+            // 💡 استخراج ارزش واقعی و پایه برای طرح‌های جدید (رُند شده برای دیتابیس)
+            financeData.pan_base_value = Math.round(newPanCharge);
+            financeData.pan_actual_value = Math.round(newPanCharge - pan_time_disc);
+            financeData.con_base_value = Math.round(newConCharge);
+            financeData.con_actual_value = Math.round(newConCharge - comboDisc - promoDisc - con_time_disc);
 
-            financeData.tradeInValue = refundAmount; financeData.newCharge = newPanCharge + newConCharge;
-            financeData.discount = comboDisc + promoDisc + timeDisc; financeData.walletUsed = walletUsed;
-            financeData.final = subTotal; financeData.walletNetChange = transferredToWallet - walletUsed;
+            financeData.tradeInValue = Math.round(refundAmount); 
+            financeData.newCharge = Math.round(newPanCharge + newConCharge);
+            financeData.discount = Math.round(comboDisc + promoDisc + timeDisc); 
+            financeData.walletUsed = Math.round(walletUsed);
+            financeData.final = Math.round(subTotal); 
+            financeData.walletNetChange = Math.round(transferredToWallet - walletUsed);
             financeData.installments = [];
 
             // 📊 نمایش نتایج در رابط کاربری
