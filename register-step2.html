@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تکمیل ثبت‌نام و فاکتور | قطب‌نمای راهینو</title>
+    <title>تکمیل ثبت‌نام و فاکتور</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
@@ -202,9 +202,16 @@
                 <div id="lblPayNow" style="font-size: 28px; font-weight: 900; color: #10b981; margin-bottom: 20px;">۰ تومان</div>
                 
                 <div style="background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); padding: 15px; border-radius: 12px;">
-                    <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px;">لطفاً مبلغ فوق را به شماره کارت زیر واریز نمایید:</div>
+                    <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px;">لطفاً مبلغ فوق را به حساب زیر واریز نمایید:</div>
                     <div style="font-size: 20px; font-weight: 900; letter-spacing: 3px; direction: ltr; margin-bottom: 5px;">6219 8618 1038 0484</div>
-                    <div style="font-size: 12px; color: #f59e0b; font-weight: bold;">به نام: ارشاد شفیعی فرد - بانک سامان</div>
+                    
+                    <!-- 🏦 بخش شبا (فقط برای مبالغ بالا نمایش داده می‌شود) -->
+                    <div id="adminShabaBox" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <div style="font-size: 11px; color: #f87171; margin-bottom: 5px;">⚠️ به دلیل سقف انتقال، برای مبالغ بالای ۱۵ میلیون از شماره شبا (پایا/ساتنا) استفاده کنید:</div>
+                        <div style="font-size: 16px; font-weight: 900; letter-spacing: 1px; direction: ltr; color: #fcd34d;">IR 2005 6061 1828 0061 0861 8001</div>
+                    </div>
+
+                    <div style="font-size: 12px; color: #f59e0b; font-weight: bold; margin-top: 10px;">به نام: ارشاد شفیعی فرد - بانک سامان</div>
                 </div>
             </div>
 
@@ -306,7 +313,8 @@
                         let diffDays = Math.ceil((kDate - new Date()) / (1000 * 3600 * 24));
                         
                         if (diffDays > 0) {
-                            konkurDurationMonths = Math.max(1, Math.round(diffDays / 30));
+                            // 🎯 تغییر جادویی: محاسبه دقیق ماه‌ها با یک رقم اعشار (بدون گرد کردن اضافی)
+                            konkurDurationMonths = Math.max(1, Math.round((diffDays / 30) * 10) / 10);
                             
                             // تبدیل به تاریخ شمسی خوانا (مثلاً ۱۵ تیر ۱۴۰۶)
                             let shamsiKDate = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' }).format(kDate);
@@ -317,7 +325,7 @@
                             else if (konkurDurationMonths >= 6 && konkurDurationMonths < 8) discountText = "۱۰٪ تخفیف";
                             else if (konkurDurationMonths < 3) discountText = "بدون تخفیف زمانی";
 
-                            let optText = `تا روز کنکور (${shamsiKDate}) - حدود ${konkurDurationMonths} ماهه (${discountText})`;
+                            let optText = `تا روز کنکور (${shamsiKDate}) - دقیقاً ${konkurDurationMonths} ماه (${discountText})`;
                             
                             document.querySelector('#panDuration option[value="konkur"]').innerText = optText;
                             document.querySelector('#conDuration option[value="konkur"]').innerText = optText;
@@ -596,6 +604,13 @@
             }
             // آپدیت مبلغ نهایی روی باکس پرداخت وجه
             document.getElementById('lblPayNow').innerText = formatMoney(financeData.upfront) + ' تومان';
+            
+            // نمایش هوشمند شماره شبا برای مبالغ بالای 15 میلیون
+            if (financeData.upfront > 15000000) {
+                document.getElementById('adminShabaBox').style.display = 'block';
+            } else {
+                document.getElementById('adminShabaBox').style.display = 'none';
+            }
         }
 
         // ==========================================
