@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>داشبورد | قطب‌نمای راهینو</title>
+    <title>داشبورد</title>
     <!-- اتصال به فایل مانیفست برای تبدیل شدن به اپلیکیشن -->
     <link rel="manifest" href="manifest.json">
     
@@ -232,12 +232,12 @@
             </a>
         </div>
 
-        <!-- بخش 3: آزمایشگاه هوش مصنوعی -->
-        <div class="section-title">آزمایشگاه هوش مصنوعی راهینو</div>
+        <!-- بخش 3: اتاق تحلیل و ارزیابی -->
+        <div class="section-title">آزمایشگاه و اتاق تحلیل راهینو</div>
         <div class="menu-grid">
             <a href="#" class="card" onclick="navigate('ai-standard')">
                 <span class="card-icon">🧠</span>
-                <span class="card-title">تحلیل هوشمند (هفتگی)</span>
+                <span class="card-title">ارزیابی و تحلیل (هفتگی)</span>
             </a>
             <a href="#" class="card" id="btn-ai-promax" onclick="handleProtectedNavigation('ai-promax')">
                 <span class="card-icon">👑</span>
@@ -273,6 +273,15 @@
     </div>
 
     <script>
+        // ==========================================
+        // 🔒 لایه‌های امنیتی (جلوگیری از کپی و Inspect)
+        // ==========================================
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false; 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
+        };
        // ==========================================
         // 🛡️ نگهبان امنیتی (Security Check)
         // ==========================================
@@ -349,7 +358,8 @@
                     });
                 }
             } catch (err) {
-                console.log("خطا در دریافت اشتراک‌ها:", err);
+                // خطای واقعی برای دیباگ خودت
+                console.error("System Error (Fetch Subs):", err);
             }
         }
 
@@ -379,7 +389,8 @@
                     }
                 }
             } catch (err) {
-                console.log("خطا در دریافت نوتیفیکیشن پیام‌ها:", err);
+                // خطای واقعی برای دیباگ خودت
+                console.error("System Error (Unread Msgs):", err);
             }
         }
 
