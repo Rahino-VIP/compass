@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ثبت‌نام (مرحله ۱) | قطب‌نمای راهینو</title>
+    <title>ثبت‌نام (مرحله ۱)</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     
     <style>
@@ -161,7 +161,6 @@
                     <option value="" disabled selected>انتخاب کنید...</option>
                     <option value="دهم">دهم</option><option value="یازدهم">یازدهم</option>
                     <option value="دوازدهم">دوازدهم</option><option value="پشت کنکوری">فارغ التحصیل (پشت کنکوری)</option>
-                    <option value="متوسطه اول">متوسطه اول</option>
                 </select>
             </div>
             <div class="input-group">
@@ -169,7 +168,7 @@
                 <select id="regMajor">
                     <option value="" disabled selected>انتخاب کنید...</option>
                     <option value="تجربی">علوم تجربی</option><option value="ریاضی">ریاضی فیزیک</option>
-                    <option value="انسانی">علوم انسانی</option><option value="سایر">سایر رشته‌ها (هنر، زبان و...)</option>
+                    <option value="انسانی">علوم انسانی</option>
                 </select>
             </div>
             
@@ -222,6 +221,15 @@
     </div>
 
     <script>
+        // ==========================================
+        // 🔒 لایه‌های امنیتی (جلوگیری از کپی و Inspect)
+        // ==========================================
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false; 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
+        };
         // ==========================================
         // 🔗 تنظیمات اتصال
         // ==========================================
