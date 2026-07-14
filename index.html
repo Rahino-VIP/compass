@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ورود | قطب‌نمای راهینو</title>
+    <title>ورود</title>
     <!-- اتصال به فایل مانیفست برای تبدیل شدن به اپلیکیشن -->
     <link rel="manifest" href="manifest.json">
     
@@ -96,7 +96,7 @@
         </div>
         
         <h1>قطب‌نمای راهینو</h1>
-        <p class="subtitle">سیستم مدیریت و برنامه‌ریزی هوشمند</p>
+        <p class="subtitle">سیستم هوشمند مدیریت، مشاوره و برنامه‌ریزی</p>
 
         <div id="mainAlert" class="alert-box"></div>
 
@@ -150,6 +150,15 @@
     </div>
 
     <script>
+        // ==========================================
+        // 🔒 لایه‌های امنیتی (جلوگیری از کپی و Inspect)
+        // ==========================================
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false; 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
+        };
         // ==========================================
         // 🔗 تنظیمات اتصال
         // ==========================================
