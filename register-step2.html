@@ -633,10 +633,16 @@
             
             const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = "در حال صدور فاکتور... ⏳";
 
+            // 🎯 استخراج دقیق مقادیر، تبدیل "تا کنکور" به عدد واقعی ماه
             let pVal = document.getElementById('panDuration').value;
             let cVal = document.getElementById('conDuration').value;
-            let pDurStr = pVal === 'konkur' ? `تا کنکور (${konkurDurationMonths} ماهه)` : `${state.panDuration} ماهه`;
-            let cDurStr = cVal === 'konkur' ? `تا کنکور (${konkurDurationMonths} ماهه)` : `${state.conDuration} ماهه`;
+            
+            // اگر "konkur" بود از متغیر هوشمند استفاده کن، وگرنه عدد صحیح بگیر
+            let finalPanDuration = pVal === 'konkur' ? konkurDurationMonths : parseInt(pVal);
+            let finalConDuration = cVal === 'konkur' ? konkurDurationMonths : parseInt(cVal);
+
+            let pDurStr = pVal === 'konkur' ? `تا کنکور (${finalPanDuration} ماهه)` : `${finalPanDuration} ماهه`;
+            let cDurStr = cVal === 'konkur' ? `تا کنکور (${finalConDuration} ماهه)` : `${finalConDuration} ماهه`;
 
             let invoiceText = `طرح انتخابی: ${state.pansion !== 'none' ? 'پانسیون '+state.pansion+' ('+pDurStr+')' : ''} ${state.consult !== 'none' ? 'مشاوره '+state.consult+' ('+cDurStr+')' : ''}\n`;
             invoiceText += `مبلغ نهایی فاکتور: ${document.getElementById('inv_total').innerText}\nروش پرداخت: ${state.paymentMethod === 'cash' ? 'نقدی' : 'اقساط'}\n`;
@@ -654,15 +660,15 @@
                     final_amount: financeData.final,
                     payment_method: state.paymentMethod,
                     paid_upfront: financeData.upfront,
-                    // 🎯 ارسال اطلاعات تفکیک‌شده به بک‌اند (برای ثبت در جدول اشتراک‌ها)
+                    // 🎯 ارسال اطلاعات تفکیک‌شده (همه مقادیر عددی باید تضمین شده باشند)
                     pansion_tier: state.pansion,       
-                    pan_duration: state.panDuration,
-                    pan_base_value: financeData.pan_base_value,     
-                    pan_actual_value: financeData.pan_actual_value, 
+                    pan_duration: finalPanDuration || 0, // فقط عدد می‌رود
+                    pan_base_value: financeData.pan_base_value || 0,     
+                    pan_actual_value: financeData.pan_actual_value || 0, 
                     consult_tier: state.consult,       
-                    con_duration: state.conDuration,
-                    con_base_value: financeData.con_base_value,     
-                    con_actual_value: financeData.con_actual_value  
+                    con_duration: finalConDuration || 0, // فقط عدد می‌رود
+                    con_base_value: financeData.con_base_value || 0,     
+                    con_actual_value: financeData.con_actual_value || 0  
                 },
                 installments: financeData.installments
             };
@@ -675,7 +681,11 @@
                 alert("🎉 فاکتور شما با موفقیت ثبت شد و در انتظار تایید مدیریت است.");
                 localStorage.removeItem('temp_reg_nid'); localStorage.removeItem('temp_referral_code');
                 window.location.href = 'index.html';
-            } catch(err) { alert("خطا: " + err.message); btn.disabled = false; btn.innerText = "تلاش مجدد"; }
+            } catch(err) { 
+                console.error("System Error (Submit):", err);
+                alert("⚠️ مشکلی در ارتباط با سیستم مالی پیش آمد. لطفاً چند لحظه دیگر دوباره تلاش کنید."); 
+                btn.disabled = false; btn.innerText = "تلاش مجدد"; 
+            }
         }
     </script>
 </body>
