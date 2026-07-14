@@ -189,17 +189,28 @@
             
             <div class="rules-box">
                 <div style="font-size: 13px; font-weight: bold; color: var(--accent); margin-bottom: 10px;">📜 قوانین و مقررات:</div>
-                <ul id="dynamicRules" style="font-size: 11px; color: var(--text-main); line-height: 1.8; margin-right: 15px; margin-bottom: 15px;">
-                    </ul>
+                <ul id="dynamicRules" style="font-size: 11px; color: var(--text-main); line-height: 1.8; margin-right: 15px; margin-bottom: 15px;"></ul>
                 <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                     <input type="checkbox" id="regRules" style="width: 18px; height: 18px;">
                     <span style="font-size: 12px; font-weight: bold; color: var(--primary);">تمامی قوانین فوق را خواندم و می‌پذیرم.</span>
                 </label>
             </div>
 
+            <!-- 💳 باکس جدید پرداخت وجه -->
+            <div style="background: linear-gradient(135deg, #1e3a8a, #0f172a); padding: 25px 20px; border-radius: 16px; margin-bottom: 20px; color: white; text-align: center; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(30, 58, 138, 0.2);">
+                <div style="font-size: 13px; color: #94a3b8; margin-bottom: 10px;">مبلغ قابل پرداخت در این لحظه (جهت فعال‌سازی پرونده):</div>
+                <div id="lblPayNow" style="font-size: 28px; font-weight: 900; color: #10b981; margin-bottom: 20px;">۰ تومان</div>
+                
+                <div style="background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); padding: 15px; border-radius: 12px;">
+                    <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px;">لطفاً مبلغ فوق را به شماره کارت زیر واریز نمایید:</div>
+                    <div style="font-size: 20px; font-weight: 900; letter-spacing: 3px; direction: ltr; margin-bottom: 5px;">6219 8618 1038 0484</div>
+                    <div style="font-size: 12px; color: #f59e0b; font-weight: bold;">به نام: ارشاد شفیعی فرد - بانک سامان</div>
+                </div>
+            </div>
+
             <div class="file-upload" id="boxFile" onclick="document.getElementById('regReceipt').click()">
                 <div style="font-size: 30px; margin-bottom: 5px;">📥</div>
-                <div id="lblFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی پیش‌پرداخت (الزامی)</div>
+                <div id="lblFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی (الزامی)</div>
                 <input type="file" id="regReceipt" accept="image/*" onchange="handleReceiptSelect(this)" onclick="event.stopPropagation()" style="display: none;">
             </div>
 
@@ -208,10 +219,18 @@
                 <button class="btn btn-outline" onclick="window.location.href='index.html'">انصراف</button>
             </div>
         </div>
-
     </div>
 
     <script>
+        // ==========================================
+        // 🔒 لایه‌های امنیتی (جلوگیری از کپی و Inspect)
+        // ==========================================
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false; 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
+        };
         // ==========================================
         // 🌓 مدیریت تم
         // ==========================================
@@ -285,14 +304,26 @@
                     if (sysData && sysData.length > 0 && sysData[0].konkur_date) {
                         let kDate = new Date(sysData[0].konkur_date);
                         let diffDays = Math.ceil((kDate - new Date()) / (1000 * 3600 * 24));
+                        
                         if (diffDays > 0) {
                             konkurDurationMonths = Math.max(1, Math.round(diffDays / 30));
-                            // آپدیت متن گزینه‌ها در لیست کشویی با تعداد ماه محاسبه شده
-                            document.querySelector('#panDuration option[value="konkur"]').innerText = `تا روز کنکور - حدود ${konkurDurationMonths} ماهه (۱۵٪ تخفیف پانسیون)`;
-                            document.querySelector('#conDuration option[value="konkur"]').innerText = `تا روز کنکور - حدود ${konkurDurationMonths} ماهه (۱۵٪ تخفیف مشاوره)`;
+                            
+                            // تبدیل به تاریخ شمسی خوانا (مثلاً ۱۵ تیر ۱۴۰۶)
+                            let shamsiKDate = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' }).format(kDate);
+                            
+                            // فرمول هوشمند درصدها بر اساس زمان باقی‌مانده
+                            let discountText = "۱۵٪ تخفیف";
+                            if (konkurDurationMonths < 6 && konkurDurationMonths >= 3) discountText = "۵٪ تخفیف";
+                            else if (konkurDurationMonths >= 6 && konkurDurationMonths < 8) discountText = "۱۰٪ تخفیف";
+                            else if (konkurDurationMonths < 3) discountText = "بدون تخفیف زمانی";
+
+                            let optText = `تا روز کنکور (${shamsiKDate}) - حدود ${konkurDurationMonths} ماهه (${discountText})`;
+                            
+                            document.querySelector('#panDuration option[value="konkur"]').innerText = optText;
+                            document.querySelector('#conDuration option[value="konkur"]').innerText = optText;
                         }
                     }
-                } catch(e) {}
+                } catch(e) { console.error("System Error (Konkur Date):", e); }
 
                 let refCode = localStorage.getItem('temp_referral_code');
                 if (refCode && refCode.length > 5) {
@@ -466,9 +497,16 @@
             if (subTotal <= 0) { switchCont.style.display = 'none'; state.paymentMethod = 'cash'; } 
             else { switchCont.style.display = 'flex'; } 
 
-            let panTimeRate = pVal === 'konkur' ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : (state.panDuration === 3 ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
-            let conTimeRate = cVal === 'konkur' ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : (state.conDuration === 3 ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
-            
+            // 🧠 موتور هوشمند تخفیف زمانی بر اساس ماه‌های باقیمانده تا کنکور
+            let getKonkurRate = (months, method) => {
+                if (months >= 8) return method === 'cash' ? 0.15 : 0.08;
+                if (months >= 6) return method === 'cash' ? 0.10 : 0.05;
+                if (months >= 3) return method === 'cash' ? 0.05 : 0.02;
+                return 0; // کمتر از ۳ ماه تخفیف زمانی ندارد
+            };
+
+            let panTimeRate = pVal === 'konkur' ? getKonkurRate(konkurDurationMonths, state.paymentMethod) : (state.panDuration === 3 ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
+            let conTimeRate = cVal === 'konkur' ? getKonkurRate(konkurDurationMonths, state.paymentMethod) : (state.conDuration === 3 ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
             // 🧩 تفکیک تخفیف‌های زمانی برای ثبت دقیق در دیتابیس
             let pan_time_disc = totalPan * panTimeRate;
             let conNetForTimeDisc = totalCon - comboDisc - promoDisc;
@@ -556,6 +594,8 @@
                 instBox.style.display = 'none'; 
                 financeData.upfront = finalTotal; 
             }
+            // آپدیت مبلغ نهایی روی باکس پرداخت وجه
+            document.getElementById('lblPayNow').innerText = formatMoney(financeData.upfront) + ' تومان';
         }
 
         // ==========================================
