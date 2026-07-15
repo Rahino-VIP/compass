@@ -323,14 +323,15 @@
                 const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
 
                 // اینجا rulesRes به متغیرها اضافه شد 👇
-                const [studentRes, servicesRes, promosRes, mySubsRes, allSubsRes, sysRes, rulesRes] = await Promise.all([
+                const [studentRes, servicesRes, promosRes, mySubsRes, allSubsRes, sysRes, rulesRes, instRes] = await Promise.all([
                     fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/services?is_active=eq.true`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/promo_codes?is_active=eq.true`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/subscriptions?student_nid=eq.${userId}&status=eq.active`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/subscriptions?status=eq.active&select=service_category,service_type,end_date,will_not_renew`, { headers }),
                     fetch(`${cleanUrl}/rest/v1/system_settings?select=konkur_date`, { headers }),
-                    fetch(`${cleanUrl}/rest/v1/terms_and_rules`, { headers }) // 👈 این خط رو هم اضافه کن
+                    fetch(`${cleanUrl}/rest/v1/terms_and_rules`, { headers }), // 👈 این خط رو هم اضافه کن
+                    fetch(`${cleanUrl}/rest/v1/installments?student_nid=eq.${userId}&select=installment_number`, { headers })
                 ]);
                 let sData = await studentRes.json();
                 if (sData && sData.length > 0) {
@@ -356,6 +357,10 @@
                 dbData.userSubs = await mySubsRes.json() || [];
                 dbData.allActiveSubs = await allSubsRes.json() || [];
                 dbData.rules = await rulesRes.json() || [];
+                
+                // 🎯 استخراج آخرین شماره قسط ثبت شده برای کاربر
+                let allInst = await instRes.json() || [];
+                state.lastInstNum = Math.max(...allInst.map(i => parseInt(i.installment_number) || 0), 0);
                 
                 // 💡 جادوی محاسبه دقیق ماه‌های باقیمانده تا کنکور
                 try {
@@ -751,22 +756,24 @@
             if (state.paymentMethod === 'installments' && financeData.final > 0) {
                 instBox.style.display = 'block';
                 const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
-                
-                // ⏱️ اصلاح: اقساط همیشه بر مبنای "امروز" (زمان خرید) محاسبه می‌شوند
                 let baseInstDate = new Date(); 
                 let today = new Date();
 
+                // 🎯 تولید شماره اقساط به صورت سریالی
+                let n1 = state.lastInstNum + 1;
+                let n2 = state.lastInstNum + 2;
+                let n3 = state.lastInstNum + 3;
+
                 let maxDur = Math.max(state.pansion !== 'none' ? state.panDuration : 0, state.consult !== 'none' ? state.conDuration : 0);
                 
-                // ... ادامه کدهای قبلی اقساط (if maxDur <= 1 ...) بدون تغییر باقی بمونه
                 if (maxDur <= 1) { 
                     let upfrontRounded = roundDown100k(financeData.final * 0.50);
                     let remaining = financeData.final - upfrontRounded;
                     financeData.upfront = upfrontRounded;
                     
                     let d1 = new Date(baseInstDate); d1.setDate(baseInstDate.getDate() + 10); 
-                    financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
-                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
+                    financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: n1 });
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط #${n1} (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
                 } 
                 else if (maxDur <= 3) {
                     let upfrontRounded = roundDown100k(financeData.final * 0.50);
@@ -774,8 +781,8 @@
                     financeData.upfront = upfrontRounded;
 
                     let d1 = new Date(baseInstDate); d1.setDate(baseInstDate.getDate() + 45); 
-                    financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
-                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
+                    financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: n1 });
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط #${n1} (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
                 } 
                 else { 
                     let upfrontRounded = roundDown100k(Math.min(financeData.final * 0.40, 15000000));
@@ -789,11 +796,11 @@
                     let d2 = new Date(baseInstDate); d2.setMonth(baseInstDate.getMonth() + 4);
                     let d3 = new Date(baseInstDate); d3.setMonth(baseInstDate.getMonth() + 6);
                     
-                    financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: checkAmt, installment_number: 1 });
-                    financeData.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: 2 });
-                    financeData.installments.push({ due_date: d3.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: 3 });
+                    financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: checkAmt, installment_number: n1 });
+                    financeData.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: n2 });
+                    financeData.installments.push({ due_date: d3.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: n3 });
                     
-                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>قسط اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>قسط دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>قسط سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
+                    instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>قسط #${n1} (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>قسط #${n2} (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>قسط #${n3} (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
                 }
             } else { 
                 instBox.style.display = 'none'; 
