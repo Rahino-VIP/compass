@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تعویض و ارتقای طرح | قطب‌نمای راهینو</title>
+    <title>تعویض و ارتقای طرح</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
@@ -36,8 +36,27 @@
 
         .header-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px dashed var(--border); padding-bottom: 15px; }
         .header-title h1 { font-size: 20px; font-weight: 900; color: var(--primary); }
-        .back-btn { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); padding: 8px 15px; border-radius: 12px; text-decoration: none; font-size: 13px; font-weight: bold; transition: 0.2s; }
-        .back-btn:hover { border-color: var(--primary); }
+        .back-toggle { position: absolute; top: 20px; right: 20px; background: var(--surface); border: 2px solid var(--border); color: var(--text-main); width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); z-index: 100; transition: 0.3s; text-decoration: none; }
+        .back-toggle:hover { transform: scale(1.1); border-color: var(--primary); }
+
+        /* ========================================== */
+        /* 📱 چکشِ ریسپانسیو (ضدگلوله برای موبایل) */
+        /* ========================================== */
+        @media (max-width: 768px) {
+            body { padding: 10px 5px !important; }
+            .theme-toggle { top: 10px !important; left: 10px !important; width: 38px !important; height: 38px !important; font-size: 18px !important; }
+            .back-toggle { top: 10px !important; right: 10px !important; width: 38px !important; height: 38px !important; font-size: 18px !important; }
+            .auth-box { padding: 20px 15px !important; border-radius: 20px !important; margin-top: 45px !important; }
+            
+            .header-title { flex-direction: column; gap: 15px; text-align: center; }
+            .header-title h1 { font-size: 18px !important; margin-top: 5px !important; }
+            
+            .selection-grid { grid-template-columns: 1fr !important; }
+            .invoice-row { flex-direction: column !important; align-items: flex-start !important; gap: 5px !important; padding: 10px 0 !important; border-bottom: 1px dashed var(--border); }
+            .invoice-total { flex-direction: column !important; align-items: center !important; text-align: center !important; }
+            .pay-method-switch { flex-direction: column !important; }
+            .btn-submit { padding: 14px !important; font-size: 14px !important; }
+        }
 
         /* 💳 کارت بانکی */
         .payment-card { background: linear-gradient(135deg, #0f172a, #1e3a8a); border-radius: 20px; padding: 25px; color: white; position: relative; overflow: hidden; box-shadow: 0 15px 30px rgba(30, 58, 138, 0.3); margin-bottom: 20px; }
@@ -94,7 +113,7 @@
     </style>
 </head>
 <body data-theme="dark">
-
+    <a href="profile.html" class="back-toggle" title="بازگشت">🔙</a>
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️</button>
 
     <div class="auth-box">
@@ -104,21 +123,8 @@
             <h3 style="color: var(--primary); font-size: 14px;">در حال پردازش سوابق مالی...</h3>
         </div>
 
-        <div class="header-title">
+       <div class="header-title" style="justify-content: center;">
             <h1>تعویض و ارتقای طرح</h1>
-            <a href="profile.html" class="back-btn">🔙 بازگشت</a>
-        </div>
-
-        <div class="payment-card">
-            <div class="pc-header"><div>صاحب حساب: <b>ارشاد شفیعی فرد</b></div><div>بانک سامان</div></div>
-            <div class="pc-row">
-                <div><span class="pc-label">شماره کارت:</span><div class="pc-value" id="txtCard">6219861810380484</div></div>
-                <button class="btn-copy-mini" onclick="copyText('txtCard')">کپی</button>
-            </div>
-            <div class="pc-row" style="margin-bottom: 0;">
-                <div><span class="pc-label">شماره شبا:</span><div class="pc-value shaba" id="txtSheba">IR200560611828006108618001</div></div>
-                <button class="btn-copy-mini" onclick="copyText('txtSheba')">کپی</button>
-            </div>
         </div>
 
         <div class="wallet-banner">
@@ -209,6 +215,25 @@
             </label>
         </div>
 
+        <!-- 💳 باکس جدید پرداخت وجه -->
+        <div id="paymentBoxBottom" style="background: linear-gradient(135deg, #1e3a8a, #0f172a); padding: 25px 20px; border-radius: 16px; margin-bottom: 20px; color: white; text-align: center; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(30, 58, 138, 0.2); display: none;">
+            <div style="font-size: 13px; color: #94a3b8; margin-bottom: 10px;">مبلغ مابه‌التفاوت جهت واریز:</div>
+            <div id="lblPayNow" style="font-size: 28px; font-weight: 900; color: #10b981; margin-bottom: 20px;">۰ تومان</div>
+            
+            <div style="background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); padding: 15px; border-radius: 12px;">
+                <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px;">لطفاً مبلغ فوق را به حساب زیر واریز نمایید:</div>
+                <div style="font-size: 20px; font-weight: 900; letter-spacing: 3px; direction: ltr; margin-bottom: 5px;">6219 8618 1038 0484</div>
+                
+                <!-- 🏦 بخش شبا -->
+                <div id="adminShabaBox" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size: 11px; color: #f87171; margin-bottom: 5px;">⚠️ به دلیل سقف انتقال، لطفاً از شماره شبا استفاده کنید:</div>
+                    <div style="font-size: 16px; font-weight: 900; letter-spacing: 1px; direction: ltr; color: #fcd34d;">IR 2005 6061 1828 0061 0861 8001</div>
+                </div>
+
+                <div style="font-size: 12px; color: #f59e0b; font-weight: bold; margin-top: 10px;">به نام: ارشاد شفیعی فرد - بانک سامان</div>
+            </div>
+        </div>
+
         <div class="file-upload" id="boxFile" onclick="document.getElementById('receipt').click()">
             <div style="font-size: 30px; margin-bottom: 5px;">📥</div>
             <div id="lblFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی مابه‌التفاوت</div>
@@ -294,18 +319,34 @@
                     else if (m.includes('انسانی')) studentData.normMajor = 'انسانی';
                     else studentData.normMajor = 'all';
 
+                    // 💡 فیلتر ضدباگ برای دوازدهم، پشت‌کنکوری و فارغ‌التحصیل
                     let g = studentData.grade || '';
-                    if (g === 'دوازدهم' || g.includes('دوازدهم')) studentData.normGrade = 'دوازدهم';
-                    else if (g === 'یازدهم' || g.includes('یازدهم')) studentData.normGrade = 'یازدهم';
-                    else if (g === 'دهم' || g.includes('دهم')) studentData.normGrade = 'دهم';
+                    if (g.includes('دوازدهم') || g.includes('پشت') || g.includes('فارغ')) studentData.normGrade = 'دوازدهم';
+                    else if (g.includes('یازدهم')) studentData.normGrade = 'یازدهم';
+                    else if (g.includes('دهم')) studentData.normGrade = 'دهم';
                     else studentData.normGrade = 'all';
                 } else { alert("حساب یافت نشد."); window.location.href='index.html'; return; }
                 
+                // 💡 ایجاد متغیر سراسری و محاسبه داینامیک لیست‌ها برای خرید جدید
+                window.konkurDateObj = null;
+                window.konkurMaxMonths = 10;
                 let sysData = await sysRes.json();
                 if (sysData && sysData.length > 0 && sysData[0].konkur_date) {
-                    let kDate = new Date(sysData[0].konkur_date);
-                    daysToKonkur = Math.ceil((kDate - new Date()) / (1000 * 3600 * 24));
-                    if (daysToKonkur <= 0) daysToKonkur = 1;
+                    window.konkurDateObj = new Date(sysData[0].konkur_date);
+                    let diffDays = Math.ceil((window.konkurDateObj - new Date()) / (1000 * 3600 * 24));
+                    if (diffDays > 0) {
+                        window.konkurMaxMonths = Math.max(1, Math.round((diffDays / 30.41) * 10) / 10);
+                        let shamsiKDate = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' }).format(window.konkurDateObj);
+                        let discountText = window.konkurMaxMonths >= 6 ? "تا ۱۵٪ تخفیف" : (window.konkurMaxMonths >= 3 ? "تا ۱۰٪ تخفیف" : "بدون تخفیف");
+                        
+                        let optHTML = `
+                            <option value="1">۱ ماهه</option>
+                            ${window.konkurMaxMonths >= 3 ? '<option value="3">۳ ماهه</option>' : ''}
+                            <option value="konkur" selected>تا روز کنکور (${shamsiKDate}) - حدود ${window.konkurMaxMonths} ماه (${discountText})</option>
+                        `;
+                        document.getElementById('newPanDuration').innerHTML = optHTML;
+                        document.getElementById('newConDuration').innerHTML = optHTML;
+                    }
                 }
 
                 document.getElementById('uiWalletBalance').innerText = formatMoney(studentData.wallet_balance || 0);
@@ -451,17 +492,13 @@
 
         // ==========================================
         // 🧮 موتور عظیم معاوضه و حسابداری (Trade-in Engine)
-        // آپدیت شده: استفاده از ارزش‌های قطعی و دقیق (بدون هیچ تخمینی)
-        // ==========================================
-        // ==========================================
-        // 🧮 موتور عظیم معاوضه و حسابداری (Trade-in Engine)
         // ==========================================
         function calculateInvoice() {
             let pDurVal = document.getElementById('newPanDuration').value;
             let cDurVal = document.getElementById('newConDuration').value;
-            let panDur = pDurVal === 'konkur' ? (daysToKonkur / 30) : parseInt(pDurVal);
-            let conDur = cDurVal === 'konkur' ? (daysToKonkur / 30) : parseInt(cDurVal);
-
+            let panDur = pDurVal === 'konkur' ? window.konkurMaxMonths : parseFloat(pDurVal || 0);
+            let conDur = cDurVal === 'konkur' ? window.konkurMaxMonths : parseFloat(cDurVal || 0);
+            
             if (state.pansion === 'no_change' && state.consult === 'no_change') {
                 document.getElementById('invoiceArea').style.display = 'none'; document.getElementById('rulesBox').style.display = 'none'; document.getElementById('boxFile').style.display = 'none'; document.getElementById('btnSubmit').style.display = 'none'; return;
             }
@@ -695,9 +732,19 @@
                 document.getElementById('btnPayCash').classList.add('active'); document.getElementById('btnPayInst').classList.remove('active');
             } else { switchCont.style.display = 'flex'; } 
 
-            let panTimeRate = pDurVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (pDurVal === 'konkur' ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
-            let conTimeRate = cDurVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (cDurVal === 'konkur' ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
-            
+            // 🧠 موتور هوشمند تخفیف زمانی (قطع کامل تخفیف برای زیر ۳ ماه)
+            let getKonkurRate = (months, method) => {
+                if (months < 3) return 0; // 🛑 زیر 3 ماه تخفیفی اعمال نمی‌شود
+                if (method !== 'cash') {
+                    if (months >= 6) return 0.08;
+                    return 0.05;
+                }
+                if (months >= 6) return 0.15; 
+                return 0.10;                  
+            };
+
+            let panTimeRate = pDurVal === 'konkur' ? getKonkurRate(window.konkurMaxMonths, state.paymentMethod) : (pDurVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
+            let conTimeRate = cDurVal === 'konkur' ? getKonkurRate(window.konkurMaxMonths, state.paymentMethod) : (cDurVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
             // 🧩 تفکیک تخفیف زمانی برای ارسال دقیق به دیتابیس
             let pan_time_disc = newPanCharge * panTimeRate;
             let conNetForTimeDisc = newConCharge - comboDisc - promoDisc;
@@ -754,6 +801,15 @@
             
             const instBox = document.getElementById('installmentDetails');
             const fileBox = document.getElementById('boxFile');
+
+            // مدیریت نمایش کادر پرداخت و شماره شبا
+            if (financeData.final > 0) {
+                document.getElementById('paymentBoxBottom').style.display = 'block';
+                document.getElementById('lblPayNow').innerText = formatMoney(financeData.upfront) + ' تومان';
+                document.getElementById('adminShabaBox').style.display = financeData.upfront > 15000000 ? 'block' : 'none';
+            } else {
+                document.getElementById('paymentBoxBottom').style.display = 'none';
+            }
             
             if (financeData.final === 0) {
                 document.getElementById('inv_total').innerText = "0 تومان";
@@ -844,6 +900,9 @@
             if (state.pansion !== 'no_change' && oldPan && oldPan.invoice_id) activeInvoicesBeingModified.add(oldPan.invoice_id);
             if (state.consult !== 'no_change' && oldCon && oldCon.invoice_id) activeInvoicesBeingModified.add(oldCon.invoice_id);
 
+            let finalPanDuration = pDurVal === 'konkur' ? window.konkurMaxMonths : parseFloat(pDurVal || 0);
+            let finalConDuration = cDurVal === 'konkur' ? window.konkurMaxMonths : parseFloat(cDurVal || 0);
+
             let tradeInData = {
                 pansion: { action: state.pansion === 'no_change' ? 'no_change' : (state.pansion === 'none' ? 'cancel' : 'change'), type: state.panType, dur: document.getElementById('newPanDuration').value },
                 consult: { action: state.consult === 'no_change' ? 'no_change' : (state.consult === 'none' ? 'cancel' : 'change'), type: state.conType, dur: document.getElementById('newConDuration').value },
@@ -875,25 +934,23 @@
                 let invPayload = {
                     student_nid: userId, 
                     invoice_type: 'تعویض و ارتقا',
-                    total_amount: financeData.newCharge || 0,     
-                    discount_amount: financeData.discount || 0,
-                    final_amount: financeData.final || 0,
+                    total_amount: Math.round(financeData.newCharge) || 0,     
+                    discount_amount: Math.round(financeData.discount) || 0,
+                    final_amount: Math.round(financeData.final) || 0,
                     payment_method: state.paymentMethod || 'cash', 
-                    paid_upfront: financeData.upfront || 0,
+                    paid_upfront: Math.round(financeData.upfront) || 0,
                     status: 'pending', 
                     invoice_details: invoiceText,
                     pansion_tier: state.pansion === 'no_change' ? 'none' : state.panType,
-                    pan_duration: parseInt(pDurVal) || 0,
+                    pan_duration: Number(finalPanDuration),
                     consult_tier: state.consult === 'no_change' ? 'none' : state.conType,
-                    con_duration: parseInt(cDurVal) || 0,
-                    
-                    // 🎯 ارسال ارزش‌های مالی برای ثبت در فاکتور و سپس انتقال به اشتراک‌ها
-                    pan_base_value: financeData.pan_base_value || 0,
-                    pan_actual_value: financeData.pan_actual_value || 0,
-                    con_base_value: financeData.con_base_value || 0,
-                    con_actual_value: financeData.con_actual_value || 0
+                    con_duration: Number(finalConDuration),
+                    pan_base_value: Math.round(financeData.pan_base_value) || 0,
+                    pan_actual_value: Math.round(financeData.pan_actual_value) || 0,
+                    con_base_value: Math.round(financeData.con_base_value) || 0,
+                    con_actual_value: Math.round(financeData.con_actual_value) || 0
                 };
-
+                
                 if (receiptBase64) { 
                     invPayload.receipt_base64 = receiptBase64; 
                     invPayload.mime_type = receiptMimeType; 
