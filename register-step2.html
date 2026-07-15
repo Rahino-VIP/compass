@@ -649,7 +649,9 @@
             let pDurStr = pVal === 'konkur' ? `تا کنکور (${finalPanDuration} ماهه)` : `${finalPanDuration} ماهه`;
             let cDurStr = cVal === 'konkur' ? `تا کنکور (${finalConDuration} ماهه)` : `${finalConDuration} ماهه`;
 
-            let invoiceText = `طرح انتخابی: ${state.pansion !== 'none' ? 'پانسیون '+state.pansion+' ('+pDurStr+')' : ''} ${state.consult !== 'none' ? 'مشاوره '+state.consult+' ('+cDurStr+')' : ''}\n`;
+            let invoiceText = `طرح‌های انتخابی:\n`;
+            if (state.pansion !== 'none') invoiceText += `- پانسیون ${state.pansion} (${pDurStr})\n`;
+            if (state.consult !== 'none') invoiceText += `- مشاوره ${state.consult} (${cDurStr})\n`;
             invoiceText += `مبلغ نهایی فاکتور: ${document.getElementById('inv_total').innerText}\nروش پرداخت: ${state.paymentMethod === 'cash' ? 'نقدی' : 'اقساط'}\n`;
             if(state.paymentMethod === 'installments') invoiceText += `زمان‌بندی اقساط:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
             if(state.hasReferral) invoiceText += `(کسر ۱۰۰ هزار تومان هدیه معرفی در فاکتور لحاظ شد)\n`;
