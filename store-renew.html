@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تمدید و فروشگاه | قطب‌نمای راهینو</title>
+    <title>تمدید و فروشگاه</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
@@ -154,22 +154,6 @@
             <a href="profile.html" class="back-btn">🔙 بازگشت به پروفایل</a>
         </div>
 
-        <!-- کارت بانکی مدیریت -->
-        <div class="payment-card">
-            <div class="pc-header">
-                <div>صاحب حساب: <b>ارشاد شفیعی فرد</b></div>
-                <div>بانک سامان</div>
-            </div>
-            <div class="pc-row">
-                <div><span class="pc-label">شماره کارت:</span><div class="pc-value" id="txtCard">6219861810380484</div></div>
-                <button class="btn-copy-mini" onclick="copyText('txtCard')">کپی</button>
-            </div>
-            <div class="pc-row" style="margin-bottom: 0;">
-                <div><span class="pc-label">شماره شبا:</span><div class="pc-value shaba" id="txtSheba">IR200560611828006108618001</div></div>
-                <button class="btn-copy-mini" onclick="copyText('txtSheba')">کپی</button>
-            </div>
-        </div>
-
         <div class="wallet-banner">
             <span style="font-size: 12px; color: var(--text-muted); font-weight: bold;">موجودی قابل استفاده کیف پول:</span>
             <span id="uiWalletBalance" style="font-size: 16px; font-weight: 900; color: var(--accent); margin-right: 5px;">0</span>
@@ -240,15 +224,32 @@
             <div class="rules-box" style="background: rgba(0,0,0,0.03); border-radius: 12px; border: 1px solid var(--border); padding: 15px; margin-bottom: 25px;">
                 <div style="font-size: 13px; font-weight: bold; color: var(--accent); margin-bottom: 10px;">📜 قوانین و مقررات تمدید/خرید:</div>
                 <ul id="dynamicRules" style="font-size: 11px; color: var(--text-main); line-height: 1.8; margin-right: 15px; margin-bottom: 15px;">
-                    <!-- با جاوااسکریپت پر میشه، یا یه متن ثابت بذار -->
-                    <li>من کلیه قوانین انضباطی و مالی آموزشگاه را می‌پذیرم.</li>
-                    <li>در صورت انصراف، هزینه طبق تعرفه آزاد کسر خواهد شد.</li>
                 </ul>
                 <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                     <input type="checkbox" id="regRules" style="width: 18px; height: 18px;">
                     <span style="font-size: 12px; font-weight: bold; color: var(--primary);">تمامی قوانین فوق را خواندم و می‌پذیرم.</span>
                 </label>
             </div>
+
+            <!-- 💳 باکس جدید پرداخت وجه -->
+            <div style="background: linear-gradient(135deg, #1e3a8a, #0f172a); padding: 25px 20px; border-radius: 16px; margin-bottom: 20px; color: white; text-align: center; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(30, 58, 138, 0.2);">
+                <div style="font-size: 13px; color: #94a3b8; margin-bottom: 10px;">مبلغ قابل پرداخت در این لحظه (جهت فعال‌سازی پرونده):</div>
+                <div id="lblPayNow" style="font-size: 28px; font-weight: 900; color: #10b981; margin-bottom: 20px;">۰ تومان</div>
+                
+                <div style="background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); padding: 15px; border-radius: 12px;">
+                    <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px;">لطفاً مبلغ فوق را به حساب زیر واریز نمایید:</div>
+                    <div style="font-size: 20px; font-weight: 900; letter-spacing: 3px; direction: ltr; margin-bottom: 5px;">6219 8618 1038 0484</div>
+                    
+                    <!-- 🏦 بخش شبا -->
+                    <div id="adminShabaBox" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <div style="font-size: 11px; color: #f87171; margin-bottom: 5px;">⚠️ به دلیل سقف انتقال کارت‌به‌کارت، لطفاً از شماره شبا (پایا/ساتنا) استفاده کنید:</div>
+                        <div style="font-size: 16px; font-weight: 900; letter-spacing: 1px; direction: ltr; color: #fcd34d;">IR 2005 6061 1828 0061 0861 8001</div>
+                    </div>
+
+                    <div style="font-size: 12px; color: #f59e0b; font-weight: bold; margin-top: 10px;">به نام: ارشاد شفیعی فرد - بانک سامان</div>
+                </div>
+            </div>
+
             <div class="file-upload" id="boxFile" onclick="document.getElementById('regReceipt').click()">
                 <div style="font-size: 30px; margin-bottom: 5px;">📥</div>
                 <div id="lblFileName" style="font-size: 13px; font-weight: bold; color: var(--primary);">آپلود تصویر فیش واریزی (الزامی)</div>
@@ -261,6 +262,20 @@
     </div>
 
     <script>
+        // ==========================================
+        // 🔒 لایه‌های امنیتی و تبدیل اعداد
+        // ==========================================
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false; 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
+        };
+        
+        function toEngDigits(str) { return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)) : ''; }
+
+        // متغیر گلوبال برای ماه‌های کنکور
+        let konkurDurationMonths = 10;
         // ==========================================
         // 🌓 مدیریت تم
         // ==========================================
@@ -328,11 +343,11 @@
                     else if (m.includes('انسانی')) studentData.normMajor = 'انسانی';
                     else studentData.normMajor = 'all'; // اگر رشته نداشت، همه رو نشون بده
 
-                   // 💡 فیلتر هوشمند پایه (رفع باگ کلمات مشابه)
+                   // 💡 فیلتر هوشمند پایه (رفع باگ پشت کنکوری و فارغ‌التحصیل)
                     let g = studentData.grade || '';
-                    if (g === 'دوازدهم' || g.includes('دوازدهم')) studentData.normGrade = 'دوازدهم';
-                    else if (g === 'یازدهم' || g.includes('یازدهم')) studentData.normGrade = 'یازدهم';
-                    else if (g === 'دهم' || g === 'دهم') studentData.normGrade = 'دهم';
+                    if (g.includes('دوازدهم') || g.includes('پشت') || g.includes('فارغ')) studentData.normGrade = 'دوازدهم';
+                    else if (g.includes('یازدهم')) studentData.normGrade = 'یازدهم';
+                    else if (g.includes('دهم')) studentData.normGrade = 'دهم';
                     else studentData.normGrade = 'all';
                 }
                 else { alert("حساب یافت نشد."); window.location.href='index.html'; return; }
@@ -343,12 +358,27 @@
                 dbData.allActiveSubs = await allSubsRes.json() || [];
                 dbData.rules = await rulesRes.json() || [];
                 
-                let sysData = await sysRes.json();
-                if (sysData && sysData.length > 0 && sysData[0].konkur_date) {
-                    let kDate = new Date(sysData[0].konkur_date);
-                    daysToKonkur = Math.ceil((kDate - new Date()) / (1000 * 3600 * 24));
-                    if (daysToKonkur <= 0) daysToKonkur = 1;
-                }
+                // 💡 جادوی محاسبه دقیق ماه‌های باقیمانده تا کنکور
+                try {
+                    let sysData = await sysRes.json();
+                    if (sysData && sysData.length > 0 && sysData[0].konkur_date) {
+                        let kDate = new Date(sysData[0].konkur_date);
+                        let diffDays = Math.ceil((kDate - new Date()) / (1000 * 3600 * 24));
+                        if (diffDays > 0) {
+                            konkurDurationMonths = Math.max(1, Math.round((diffDays / 30.41) * 10) / 10);
+                            
+                            let shamsiKDate = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' }).format(kDate);
+                            
+                            let discountText = "۱۵٪ تخفیف";
+                            if (konkurDurationMonths < 6 && konkurDurationMonths >= 3) discountText = "۱۰٪ تخفیف";
+
+                            let optText = `تا روز کنکور (${shamsiKDate}) - دقیقاً ${konkurDurationMonths} ماه (${discountText})`;
+                            
+                            document.querySelector('#panDuration option[value="konkur"]').innerText = optText;
+                            document.querySelector('#conDuration option[value="konkur"]').innerText = optText;
+                        }
+                    }
+                } catch(e) { console.error("System Error (Konkur Date):", e); }
 
                 document.getElementById('uiWalletBalance').innerText = formatMoney(studentData.wallet_balance || 0);
 
@@ -639,9 +669,20 @@
                 document.getElementById('btnPayInst').classList.remove('active');
             } else { switchCont.style.display = 'flex'; } 
 
-            let panTimeRate = pVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (pVal === 'konkur' ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
-            let conTimeRate = cVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : (cVal === 'konkur' ? (state.paymentMethod === 'cash' ? 0.15 : 0.08) : 0);
-            
+            // 🧠 فرمول هوشمند تخفیف زمانی
+            let getKonkurRate = (months, method) => {
+                if (method !== 'cash') {
+                    if (months >= 6) return 0.08;
+                    if (months >= 3) return 0.05;
+                    return 0.02;
+                }
+                if (months >= 6) return 0.15; 
+                if (months >= 3) return 0.10; 
+                return 0.05;                  
+            };
+
+            let panTimeRate = pVal === 'konkur' ? getKonkurRate(konkurDurationMonths, state.paymentMethod) : (pVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
+            let conTimeRate = cVal === 'konkur' ? getKonkurRate(konkurDurationMonths, state.paymentMethod) : (cVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
             let timeDisc = (totalPan * panTimeRate) + ((totalCon - comboDisc - promoDisc) * conTimeRate); 
             subTotal -= timeDisc;
 
@@ -719,6 +760,14 @@
                 instBox.style.display = 'none'; 
                 financeData.upfront = financeData.final; 
             }
+            // آپدیت مبلغ نهایی روی باکس پرداخت وجه
+            document.getElementById('lblPayNow').innerText = formatMoney(financeData.upfront) + ' تومان';
+            
+            if (financeData.upfront > 15000000) {
+                document.getElementById('adminShabaBox').style.display = 'block';
+            } else {
+                document.getElementById('adminShabaBox').style.display = 'none';
+            }
         }
         // ==========================================
         // 📤 آپلود فیش و ارسال به بک‌اند (حل مشکل ادمین و بله)
@@ -755,6 +804,10 @@
             invoiceText += `مبلغ نهایی فاکتور: ${document.getElementById('inv_total').innerText}\nروش پرداخت: ${state.paymentMethod === 'cash' ? 'نقدی' : 'اقساط'}\n`;
             if(state.paymentMethod === 'installments') invoiceText += `زمان‌بندی اقساط:\n` + document.getElementById('installmentDetails').innerText.replace(/\n/g, ' | ') + '\n';
 
+            // قبل از تعریف payload:
+            let finalPanDuration = pVal === 'konkur' ? konkurDurationMonths : parseFloat(pVal || 0);
+            let finalConDuration = cVal === 'konkur' ? konkurDurationMonths : parseFloat(cVal || 0);
+
             const payload = {
                 action: 'web_auth', sub_action: 'register_step2', 
                 national_id: userId,
@@ -762,16 +815,17 @@
                 invoice_data: {
                     plan_summary: `خرید از فروشگاه داخلی`,
                     invoice_text: invoiceText,
-                    total_amount: financeData.total,
-                    discount_amount: financeData.discount,
-                    final_amount: financeData.final,
+                    // 🛡️ استفاده از Math.round و Number
+                    total_amount: Math.round(financeData.total) || 0,
+                    discount_amount: Math.round(financeData.discount) || 0,
+                    final_amount: Math.round(financeData.final) || 0,
                     payment_method: state.paymentMethod,
-                    paid_upfront: financeData.upfront,
+                    paid_upfront: Math.round(financeData.upfront) || 0,
                     pansion_tier: state.panType,       
-                    pan_duration: state.panDuration,
+                    pan_duration: Number(finalPanDuration),
                     pan_start: state.panStartDate, 
                     consult_tier: state.conType,       
-                    con_duration: state.conDuration,
+                    con_duration: Number(finalConDuration),
                     con_start: state.conStartDate 
                 },
                 installments: financeData.installments
@@ -797,7 +851,8 @@
                 window.location.href = 'profile.html';
 
             } catch(err) { 
-                alert("خطا در ثبت اطلاعات در دیتابیس."); 
+                console.error("System Error (Submit):", err);
+                alert("⚠️ مشکلی در ارتباط با سیستم مالی پیش آمد. لطفاً مجدداً تلاش کنید."); 
                 btn.disabled = false; btn.innerText = "تلاش مجدد"; 
             }
         }
