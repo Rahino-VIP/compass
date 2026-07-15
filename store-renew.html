@@ -697,9 +697,9 @@
                 document.getElementById('btnPayInst').classList.remove('active');
             } else { switchCont.style.display = 'flex'; } 
 
-            // 🧠 فرمول هوشمند تخفیف زمانی
+           // 🧠 موتور هوشمند تخفیف زمانی (قطع کامل تخفیف برای زیر ۳ ماه)
             let getKonkurRate = (months, method) => {
-                if (months < 3) return 0; // 🛑 بدون تخفیف
+                if (months < 3) return 0; // 🛑 زیر 3 ماه تخفیفی اعمال نمی‌شود
                 if (method !== 'cash') {
                     if (months >= 6) return 0.08;
                     return 0.05;
@@ -708,9 +708,15 @@
                 return 0.10;                  
             };
 
-            let panTimeRate = pVal === 'konkur' ? getKonkurRate(state.panMaxMonths, state.paymentMethod) : (pVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
-            let conTimeRate = cVal === 'konkur' ? getKonkurRate(state.conMaxMonths, state.paymentMethod) : (cVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
-            let timeDisc = (totalPan * panTimeRate) + ((totalCon - comboDisc - promoDisc) * conTimeRate); 
+            let panTimeRate = pVal === 'konkur' ? getKonkurRate(window.konkurMaxMonths, state.paymentMethod) : (pVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
+            let conTimeRate = cVal === 'konkur' ? getKonkurRate(window.konkurMaxMonths, state.paymentMethod) : (cVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
+            
+            // 🧩 تفکیک دقیق تخفیف‌های زمانی برای ارسال به دیتابیس
+            let pan_time_disc = totalPan * panTimeRate;
+            let conNetForTimeDisc = totalCon - comboDisc - promoDisc;
+            let con_time_disc = Math.max(0, conNetForTimeDisc) * conTimeRate;
+
+            let timeDisc = pan_time_disc + con_time_disc; 
             subTotal -= timeDisc;
 
             let curWallet = studentData.wallet_balance || 0;
@@ -724,6 +730,12 @@
             financeData.final = subTotal;
             financeData.installments = [];
 
+            // 💡 ذخیره مقادیر پایه و واقعی برای دیتابیس (حل مشکل صفر شدن ارزش در بخش ارتقا)
+            financeData.pan_base_value = totalPan;
+            financeData.pan_actual_value = Math.max(0, totalPan - pan_time_disc);
+            financeData.con_base_value = totalCon;
+            financeData.con_actual_value = Math.max(0, conNetForTimeDisc - con_time_disc);
+            
             document.getElementById('row_pan_base').style.display = totalPan > 0 ? 'flex' : 'none'; document.getElementById('inv_pan_base').innerText = formatMoney(totalPan) + ' تومان';
             document.getElementById('row_con_base').style.display = totalCon > 0 ? 'flex' : 'none'; document.getElementById('inv_con_base').innerText = formatMoney(totalCon) + ' تومان';
             document.getElementById('row_combo_disc').style.display = comboDisc > 0 ? 'flex' : 'none'; document.getElementById('inv_combo_disc').innerText = '- ' + formatMoney(comboDisc) + ' تومان';
@@ -842,7 +854,6 @@
                 invoice_data: {
                     plan_summary: `خرید از فروشگاه داخلی`,
                     invoice_text: invoiceText,
-                    // 🛡️ استفاده از Math.round و Number
                     total_amount: Math.round(financeData.total) || 0,
                     discount_amount: Math.round(financeData.discount) || 0,
                     final_amount: Math.round(financeData.final) || 0,
@@ -853,11 +864,16 @@
                     pan_start: state.panStartDate, 
                     consult_tier: state.conType,       
                     con_duration: Number(finalConDuration),
-                    con_start: state.conStartDate 
+                    con_start: state.conStartDate,
+                    
+                    // 🎯 ارسال ارزش‌های مالی به دیتابیس برای استفاده در سیستم ارتقا
+                    pan_base_value: Math.round(financeData.pan_base_value) || 0,
+                    pan_actual_value: Math.round(financeData.pan_actual_value) || 0,
+                    con_base_value: Math.round(financeData.con_base_value) || 0,
+                    con_actual_value: Math.round(financeData.con_actual_value) || 0 
                 },
                 installments: financeData.installments
             };
-
             try {
                 fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
 
