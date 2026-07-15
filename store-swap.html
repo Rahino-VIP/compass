@@ -307,9 +307,13 @@
                 dbData.userSubs = await mySubsRes.json() || [];
                 dbData.rules = await rulesRes.json() || [];
                 
+                // استخراج اطلاعات
                 let allInst = await instRes.json() || [];
                 dbData.installments = allInst.filter(i => i.status === 'pending_upload' || i.status === 'pending_approval');
-
+                
+                // 🎯 پیدا کردن بزرگترین شماره قسط کاربر تا این لحظه
+                state.lastInstNum = Math.max(...allInst.map(i => parseInt(i.installment_number) || 0), 0);
+                
                 let sData = await studentRes.json();
                 if (sData && sData.length > 0) {
                     studentData = sData[0];
@@ -611,7 +615,7 @@
             
             refundAmount = Math.floor(refundAmount / 10000) * 10000;
 
-            // 🚨 موتور تسویه اقساط معوقه
+            // 🚨 موتور یکپارچه تسویه اقساط معوقه
             let activeInvoicesBeingModified = new Set();
             if (state.pansion !== 'no_change' && oldPan && oldPan.invoice_id) activeInvoicesBeingModified.add(oldPan.invoice_id);
             if (state.consult !== 'no_change' && oldCon && oldCon.invoice_id) activeInvoicesBeingModified.add(oldCon.invoice_id);
@@ -619,14 +623,13 @@
             let unpaidInstallmentsSum = 0;
             let unpaidHtml = '';
             
-            activeInvoicesBeingModified.forEach(invId => {
-                let insts = dbData.installments.filter(i => String(i.invoice_id) === String(invId));
-                insts.forEach(inst => {
-                    unpaidInstallmentsSum += parseInt(inst.amount);
-                    unpaidHtml += `<div style="display:flex; justify-content:space-between; color:var(--danger); font-size:11px; margin-bottom:4px;"><span>قسط پاس‌نشده #${inst.installment_number}:</span><span>- ${formatMoney(inst.amount)} تومان</span></div>`;
-                });
+            // 🎯 تجمیع کل بدهی‌ها: تمام اقساط معلق کاربر فراخوانی و فاکتورشان ابطال می‌شود
+            dbData.installments.forEach(inst => {
+                unpaidInstallmentsSum += parseInt(inst.amount);
+                unpaidHtml += `<div style="display:flex; justify-content:space-between; color:var(--danger); font-size:11px; margin-bottom:4px;"><span>قسط پاس‌نشده #${inst.installment_number}:</span><span>- ${formatMoney(inst.amount)} تومان</span></div>`;
+                activeInvoicesBeingModified.add(inst.invoice_id); // اضافه کردن فاکتورِ این قسط به لیست ابطالی‌ها
             });
-
+            
             let netRefund = refundAmount - unpaidInstallmentsSum;
             let debtFromOldPlan = 0; 
 
@@ -829,21 +832,26 @@
                     const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
                     let today = new Date();
 
+                    // 🎯 تولید شماره اقساط به صورت سریالی (در ادامه اقساط قبلی)
+                    let n1 = state.lastInstNum + 1;
+                    let n2 = state.lastInstNum + 2;
+                    let n3 = state.lastInstNum + 3;
+
                     if (maxDur <= 1) { 
                         let upfrontRounded = roundDown100k(financeData.final * 0.50);
                         let remaining = financeData.final - upfrontRounded;
                         financeData.upfront = upfrontRounded;
                         let d1 = new Date(); d1.setDate(today.getDate() + 10); 
-                        financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
-                        instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
+                        financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: n1 });
+                        instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط #${n1} (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
                     } 
                     else if (maxDur <= 3) {
                         let upfrontRounded = roundDown100k(financeData.final * 0.50);
                         let remaining = financeData.final - upfrontRounded;
                         financeData.upfront = upfrontRounded;
                         let d1 = new Date(); d1.setDate(today.getDate() + 45); 
-                        financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
-                        instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط دوم (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
+                        financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: n1 });
+                        instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط #${n1} (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
                     } 
                     else { 
                         let upfrontRounded = roundDown100k(Math.min(financeData.final * 0.40, 15000000));
@@ -855,11 +863,11 @@
                         let d2 = new Date(); d2.setMonth(today.getMonth() + 4);
                         let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
                         
-                        financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: checkAmt, installment_number: 1 });
-                        financeData.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: 2 });
-                        financeData.installments.push({ due_date: d3.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: 3 });
+                        financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: checkAmt, installment_number: n1 });
+                        financeData.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: n2 });
+                        financeData.installments.push({ due_date: d3.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: n3 });
                         
-                        instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>قسط اول (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>قسط دوم (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>قسط سوم (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
+                        instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>قسط #${n1} (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>قسط #${n2} (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>قسط #${n3} (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
                     }
                 } else { 
                     instBox.style.display = 'none'; 
