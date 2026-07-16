@@ -30,19 +30,37 @@
     
     <style>
         /* 🎨 پالت رنگی حرفه‌ای (دارک و لایت) */
+        /* 🎨 پالت رنگی اختصاصی راهینو (الهام گرفته از لوگو) */
         :root { 
-            --primary: #1e3a8a; --primary-hover: #1e40af; --accent: #d97706;  
-            --bg-color: #f1f5f9; --surface: #ffffff; --text-main: #1e293b; 
-            --text-muted: #64748b; --border: #e2e8f0; --shadow: 0 20px 40px rgba(30, 58, 138, 0.15);
-            --danger: #ef4444; --success: #10b981;
+            /* تم روشن (Light Mode) */
+            --primary: #639889;       /* سبز سدری ملایم (دکمه‌های اصلی) */
+            --primary-hover: #4d7a6e; /* سبز تیره‌تر برای هاور */
+            --accent: #d9858a;        /* صورتی رزگلد (لینک‌ها و مکمل) */
+            
+            --bg-color: #f7f9f8;      /* پس‌زمینه بسیار روشن با هاله سبز/خاکستری */
+            --surface: #ffffff;       /* رنگ باکس‌ها */
+            --text-main: #2d3748;     /* متن اصلی */
+            --text-muted: #718096;    /* متن کمرنگ */
+            --border: #e2e8f0;        
+            --shadow: 0 20px 40px rgba(99, 152, 137, 0.15); /* سایه همرنگ با برند */
+            
+            --danger: #ef4444; 
+            --success: #10b981;
         }
 
         [data-theme="dark"] {
-            --primary: #3b82f6; --primary-hover: #60a5fa; --accent: #f59e0b;
-            --bg-color: #0f172a; --surface: #1e293b; --text-main: #f8fafc;
-            --text-muted: #94a3b8; --border: #334155; --shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            /* تم تاریک (Dark Mode) */
+            --primary: #77bba9;       /* سبز روشن‌تر برای دید بهتر در تاریکی */
+            --primary-hover: #8fd0bf; 
+            --accent: #e59ea3;        /* صورتی روشن‌تر */
+            
+            --bg-color: #121918;      /* سبز-خاکستری بسیار تیره (لوکس) */
+            --surface: #1b2624;       /* باکس‌های تیره */
+            --text-main: #f1f5f9;     
+            --text-muted: #94a3b8;    
+            --border: #2d3d3a;        
+            --shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         }
-
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
         
         body { background: var(--bg-color); color: var(--text-main); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; position: relative; }
