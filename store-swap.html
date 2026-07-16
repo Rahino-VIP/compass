@@ -497,21 +497,26 @@
         // ==========================================
         // 🧮 موتور عظیم معاوضه و حسابداری (Trade-in Engine)
         // ==========================================
+        // ==========================================
+        // 🧮 موتور عظیم معاوضه و حسابداری (نسخه نهایی و ضدباگ)
+        // ==========================================
         function calculateInvoice() {
-            let pDurVal = document.getElementById('newPanDuration').value;
-            let cDurVal = document.getElementById('newConDuration').value;
-            let panDur = pDurVal === 'konkur' ? window.konkurMaxMonths : parseFloat(pDurVal || 0);
-            let conDur = cDurVal === 'konkur' ? window.konkurMaxMonths : parseFloat(cDurVal || 0);
+            let pDurVal = document.getElementById('newPanDuration') ? document.getElementById('newPanDuration').value : '1';
+            let cDurVal = document.getElementById('newConDuration') ? document.getElementById('newConDuration').value : '1';
             
+            // 🎯 استفاده از maxMonths داینامیک یا پیش‌فرض
+            let kMax = window.konkurMaxMonths || (daysToKonkur / 30.41);
+            let panDur = pDurVal === 'konkur' ? kMax : parseFloat(pDurVal || 0);
+            let conDur = cDurVal === 'konkur' ? kMax : parseFloat(cDurVal || 0);
+
             if (state.pansion === 'no_change' && state.consult === 'no_change') {
-                document.getElementById('invoiceArea').style.display = 'none'; document.getElementById('rulesBox').style.display = 'none'; document.getElementById('boxFile').style.display = 'none'; document.getElementById('btnSubmit').style.display = 'none'; return;
+                document.getElementById('invoiceArea').style.display = 'none'; document.getElementById('rulesBox').style.display = 'none'; document.getElementById('boxFile').style.display = 'none'; document.getElementById('btnSubmit').style.display = 'none'; document.getElementById('paymentBoxBottom').style.display = 'none'; return;
             }
             
             document.getElementById('invoiceArea').style.display = 'block'; document.getElementById('rulesBox').style.display = 'block'; document.getElementById('btnSubmit').style.display = 'block';
             updateRules();
 
-            let refundAmount = 0;
-            let tradeinBreakdownHtml = ''; 
+            let refundAmount = 0; let tradeinBreakdownHtml = ''; 
             let newPanCharge = 0; let newConCharge = 0;
             let basePanPrice = 0; let baseConPrice = 0;
             
@@ -536,8 +541,7 @@
                 let oldSrv = dbData.services.find(s => s.category === 'pansion' && s.type === oldPan.service_type);
                 let old_base_price = oldSrv ? parseInt(oldSrv.base_price) : 0;
                 
-                let valueConsumed = 0;
-                let logicLabel = "";
+                let valueConsumed = 0; let logicLabel = "";
 
                 if (state.pansion === 'none') {
                     let consumedMonths = Math.ceil(consumedDays / 30);
@@ -546,7 +550,7 @@
                     if(consumedMonths >= totalMonths) valueConsumed = actualPaid; 
                 } else if (new_base_price < old_base_price) {
                     valueConsumed = consumedDays * dailyBaseValue;
-                    logicLabel = `قانون تنزیل (روزشمار دقیق، اما محاسبه با قیمت آزاد)`;
+                    logicLabel = `قانون تنزیل (روزشمار دقیق، محاسبه با قیمت آزاد)`;
                 } else {
                     valueConsumed = consumedDays * dailyActualValue;
                     logicLabel = `پاداش ارتقا (روزشمار دقیق با حفظ تمام تخفیف‌ها)`;
@@ -584,8 +588,7 @@
                 let oldSrv = dbData.services.find(s => s.category === 'consult' && s.type === oldCon.service_type);
                 let old_base_price = oldSrv ? parseInt(oldSrv.base_price) : 0;
                 
-                let valueConsumed = 0;
-                let logicLabel = "";
+                let valueConsumed = 0; let logicLabel = "";
 
                 if (state.consult === 'none') {
                     let consumedMonths = Math.ceil(consumedDays / 30);
@@ -594,7 +597,7 @@
                     if(consumedMonths >= totalMonths) valueConsumed = actualPaid;
                 } else if (new_base_price < old_base_price) {
                     valueConsumed = consumedDays * dailyBaseValue;
-                    logicLabel = `قانون تنزیل (روزشمار دقیق، اما محاسبه با قیمت آزاد)`;
+                    logicLabel = `قانون تنزیل (روزشمار دقیق، محاسبه با قیمت آزاد)`;
                 } else {
                     valueConsumed = consumedDays * dailyActualValue;
                     logicLabel = `پاداش ارتقا (روزشمار دقیق با حفظ تمام تخفیف‌ها)`;
@@ -615,28 +618,23 @@
             
             refundAmount = Math.floor(refundAmount / 10000) * 10000;
 
-            // 🚨 موتور یکپارچه تسویه اقساط معوقه
+            // 🚨 3. تسویه اقساط معوقه و تجمیع بدهی
             let activeInvoicesBeingModified = new Set();
             if (state.pansion !== 'no_change' && oldPan && oldPan.invoice_id) activeInvoicesBeingModified.add(oldPan.invoice_id);
             if (state.consult !== 'no_change' && oldCon && oldCon.invoice_id) activeInvoicesBeingModified.add(oldCon.invoice_id);
 
-            let unpaidInstallmentsSum = 0;
-            let unpaidHtml = '';
+            let unpaidInstallmentsSum = 0; let unpaidHtml = '';
             
-            // 🎯 تجمیع کل بدهی‌ها: تمام اقساط معلق کاربر فراخوانی و فاکتورشان ابطال می‌شود
-            dbData.installments.forEach(inst => {
+            // تسویه یکپارچه تمام اقساط
+            (dbData.installments || []).forEach(inst => {
                 unpaidInstallmentsSum += parseInt(inst.amount);
                 unpaidHtml += `<div style="display:flex; justify-content:space-between; color:var(--danger); font-size:11px; margin-bottom:4px;"><span>قسط پاس‌نشده #${inst.installment_number}:</span><span>- ${formatMoney(inst.amount)} تومان</span></div>`;
-                activeInvoicesBeingModified.add(inst.invoice_id); // اضافه کردن فاکتورِ این قسط به لیست ابطالی‌ها
+                activeInvoicesBeingModified.add(inst.invoice_id); 
             });
-            
+
             let netRefund = refundAmount - unpaidInstallmentsSum;
             let debtFromOldPlan = 0; 
-
-            if (netRefund < 0) {
-                debtFromOldPlan = Math.abs(netRefund);
-                netRefund = 0; 
-            }
+            if (netRefund < 0) { debtFromOldPlan = Math.abs(netRefund); netRefund = 0; }
 
             if (unpaidInstallmentsSum > 0) {
                 tradeinBreakdownHtml += `
@@ -646,10 +644,9 @@
                         <div style="margin-top:6px; font-weight:bold; color:var(--danger); border-top:1px dashed rgba(239, 68, 68, 0.3); padding-top:4px;">مجموع بدهی کسر شده از استرداد: ${formatMoney(unpaidInstallmentsSum)} تومان</div>
                     </div>`;
             }
-
             refundAmount = netRefund;
 
-            // 🛒 3. محاسبه هزینه‌های خرید جدید
+            // 🛒 4. محاسبه هزینه‌های خرید جدید
             if (state.pansion !== 'no_change' && state.pansion !== 'none') {
                 let newPanSrv = dbData.services.find(s => s.id === state.pansion);
                 if (newPanSrv) { basePanPrice = parseInt(newPanSrv.base_price); newPanCharge = basePanPrice * panDur; }
@@ -662,19 +659,12 @@
             let subTotal = newPanCharge + newConCharge + debtFromOldPlan;
             let msgEl = document.getElementById('promoMsg');
             
-            // 💎 4. محاسبه الماس روی خرید جدید (یا پاداش ارتقا)
+            // 💎 5. طرح الماس
             let comboDisc = 0;
-            
-            let panMonthsActive = 0;
-            if (state.pansion !== 'no_change' && state.pansion !== 'none') panMonthsActive = panDur; 
-            else if (state.pansion === 'no_change' && oldPan) panMonthsActive = Math.max(0, (new Date(oldPan.end_date) - new Date()) / (1000 * 3600 * 24 * 30));
-
-            let conMonthsActive = 0;
-            if (state.consult !== 'no_change' && state.consult !== 'none') conMonthsActive = conDur;
-            else if (state.consult === 'no_change' && oldCon) conMonthsActive = Math.max(0, (new Date(oldCon.end_date) - new Date()) / (1000 * 3600 * 24 * 30));
+            let panMonthsActive = (state.pansion !== 'no_change' && state.pansion !== 'none') ? panDur : ((state.pansion === 'no_change' && oldPan) ? Math.max(0, (new Date(oldPan.end_date) - new Date()) / (1000 * 3600 * 24 * 30)) : 0);
+            let conMonthsActive = (state.consult !== 'no_change' && state.consult !== 'none') ? conDur : ((state.consult === 'no_change' && oldCon) ? Math.max(0, (new Date(oldCon.end_date) - new Date()) / (1000 * 3600 * 24 * 30)) : 0);
 
             if (state.consult !== 'no_change' && state.consult !== 'none') {
-                // حالت اول: دانش‌آموز در حال خرید مشاوره جدید است
                 if (panMonthsActive > 0 && newConCharge > 0) {
                     let overlapMonths = Math.min(panMonthsActive, conDur);
                     let nonOverlapMonths = Math.max(0, conDur - overlapMonths);
@@ -689,74 +679,61 @@
                     if (msgEl.innerText.includes('الماس')) msgEl.innerText = '';
                 }
             } else if (state.pansion !== 'no_change' && state.pansion !== 'none' && state.consult === 'no_change' && oldCon) {
-                // 🎯 حالت دوم (پاداش ارتقا): ارتقای پانسیون در حالی که مشاوره از قبل وجود دارد
                 let oldPanRemainMonths = oldPan ? Math.max(0, (new Date(oldPan.end_date) - new Date()) / (1000 * 3600 * 24 * 30)) : 0;
                 let oldOverlap = Math.min(oldPanRemainMonths, conMonthsActive);
                 let newOverlap = Math.min(panDur, conMonthsActive);
                 let additionalOverlap = Math.max(0, newOverlap - oldOverlap);
-
                 if (additionalOverlap > 0) {
                     let oldSrv = dbData.services.find(s => s.category === 'consult' && s.type === oldCon.service_type);
-                    let oldConBasePrice = oldSrv ? parseInt(oldSrv.base_price) : 0;
-                    
-                    comboDisc = (oldConBasePrice * additionalOverlap) * 0.60;
-                    subTotal -= comboDisc; // کسر مستقیم از فاکتور پانسیون
-                    msgEl.innerHTML = `💎 پاداش الماس: با ارتقای پانسیون، ${additionalOverlap.toFixed(1)} ماه از مشاوره فعلی شما نیز شامل ۶۰٪ تخفیف شد!`;
+                    comboDisc = ((oldSrv ? parseInt(oldSrv.base_price) : 0) * additionalOverlap) * 0.60;
+                    subTotal -= comboDisc; 
+                    msgEl.innerHTML = `💎 پاداش الماس: ${additionalOverlap.toFixed(1)} ماه از مشاوره فعلی شما شامل تخفیف شد!`;
                     msgEl.style.color = "var(--success)";
                 }
-                document.getElementById('promoCode').disabled = true; // روی مشاوره قبلی نمی‌توان کد وارد کرد
+                document.getElementById('promoCode').disabled = true;
             } else {
                  document.getElementById('promoCode').disabled = false;
                  if (msgEl.innerText.includes('الماس')) msgEl.innerText = '';
             }
 
-            // 🎟️ 5. کد تخفیف
+            // 🎟️ 6. کد تخفیف
             let promoDisc = 0;
             if (state.promoRate > 0 && newConCharge > 0) {
-                let panMonthsAct = (state.pansion !== 'no_change' && state.pansion !== 'none') ? panDur : ((state.pansion === 'no_change' && oldPan) ? Math.max(0, (new Date(oldPan.end_date) - new Date()) / (1000 * 3600 * 24 * 30)) : 0);
-                let overlapM = Math.min(panMonthsAct, conDur);
+                let overlapM = Math.min(panMonthsActive, conDur);
                 let nonOverlapM = Math.max(0, conDur - overlapM);
                 if (nonOverlapM > 0) {
                     promoDisc = (baseConPrice * nonOverlapM) * state.promoRate;
                     subTotal -= promoDisc;
-                    msgEl.innerHTML += `<br>✅ کد تخفیف با موفقیت روی ماه‌های آزاد اعمال شد.`;
+                    msgEl.innerHTML += `<br>✅ کد تخفیف با موفقیت اعمال شد.`;
                 }
             }
 
-            // 💳 6. تخفیف زمانی و اقساط
+            // 💳 7. بررسی هوشمند اجازه اقساط (بر اساس پرداختیِ خالص)
+            let maxDur = Math.max((state.pansion !== 'no_change' && state.pansion !== 'none') ? panDur : 0, (state.consult !== 'no_change' && state.consult !== 'none') ? conDur : 0);
+            let estimatedNetPayable = subTotal - refundAmount; // مابه‌التفاوت خالص
+            
             const switchCont = document.getElementById('paySwitchContainer');
-            let maxDur = Math.max(
-                (state.pansion !== 'no_change' && state.pansion !== 'none') ? panDur : 0, 
-                (state.consult !== 'no_change' && state.consult !== 'none') ? conDur : 0
-            );
-
-            if (maxDur <= 1 || subTotal < 3000000) { 
+            if (maxDur <= 1 || estimatedNetPayable < 3000000) { 
                 switchCont.style.display = 'none'; state.paymentMethod = 'cash'; 
                 document.getElementById('btnPayCash').classList.add('active'); document.getElementById('btnPayInst').classList.remove('active');
             } else { switchCont.style.display = 'flex'; } 
 
-            // 🧠 موتور هوشمند تخفیف زمانی (قطع کامل تخفیف برای زیر ۳ ماه)
+            // 🧠 8. فرمول قطعی تخفیف زمانی
             let getKonkurRate = (months, method) => {
-                if (months < 3) return 0; // 🛑 زیر 3 ماه تخفیفی اعمال نمی‌شود
-                if (method !== 'cash') {
-                    if (months >= 6) return 0.08;
-                    return 0.05;
-                }
-                if (months >= 6) return 0.15; 
-                return 0.10;                  
+                if (months < 3) return 0; 
+                if (method !== 'cash') return months >= 6 ? 0.08 : 0.05;
+                return months >= 6 ? 0.15 : 0.10;                  
             };
 
-            let panTimeRate = pDurVal === 'konkur' ? getKonkurRate(window.konkurMaxMonths, state.paymentMethod) : (pDurVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
-            let conTimeRate = cDurVal === 'konkur' ? getKonkurRate(window.konkurMaxMonths, state.paymentMethod) : (cDurVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
-            // 🧩 تفکیک تخفیف زمانی برای ارسال دقیق به دیتابیس
+            let panTimeRate = pDurVal === 'konkur' ? getKonkurRate(kMax, state.paymentMethod) : (pDurVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
+            let conTimeRate = cDurVal === 'konkur' ? getKonkurRate(kMax, state.paymentMethod) : (cDurVal === '3' ? (state.paymentMethod === 'cash' ? 0.05 : 0.02) : 0);
+            
             let pan_time_disc = newPanCharge * panTimeRate;
-            let conNetForTimeDisc = newConCharge - comboDisc - promoDisc;
-            let con_time_disc = Math.max(0, conNetForTimeDisc) * conTimeRate;
-
+            let con_time_disc = Math.max(0, newConCharge - comboDisc - promoDisc) * conTimeRate;
             let timeDisc = pan_time_disc + con_time_disc; 
             subTotal -= timeDisc;
 
-            // 🔄 7. تهاتر و کیف پول
+            // 🔄 9. تهاتر نهایی و کیف پول
             let transferredToWallet = 0;
             if (refundAmount > 0) {
                 if (refundAmount > subTotal) { transferredToWallet = refundAmount - subTotal; subTotal = 0; } 
@@ -771,7 +748,7 @@
                 financeData.newWalletBalance -= walletUsed;
             }
 
-            // 💡 استخراج ارزش واقعی و پایه برای طرح‌های جدید (رُند شده برای دیتابیس)
+            // ذخیره مقادیر پایه
             financeData.pan_base_value = Math.round(newPanCharge);
             financeData.pan_actual_value = Math.round(newPanCharge - pan_time_disc);
             financeData.con_base_value = Math.round(newConCharge);
@@ -785,42 +762,25 @@
             financeData.walletNetChange = Math.round(transferredToWallet - walletUsed);
             financeData.installments = [];
 
-            // 📊 نمایش نتایج در رابط کاربری
-            document.getElementById('row_tradein').style.display = refundAmount > 0 ? 'flex' : 'none'; 
-            document.getElementById('inv_tradein').innerText = '+ ' + formatMoney(refundAmount) + ' تومان';
-            
-            let breakdownDiv = document.getElementById('tradeinBreakdown');
-            breakdownDiv.innerHTML = tradeinBreakdownHtml;
-            breakdownDiv.style.display = tradeinBreakdownHtml ? 'block' : 'none';
-
+            // 📊 10. نمایش نتایج در رابط کاربری
+            document.getElementById('row_tradein').style.display = refundAmount > 0 ? 'flex' : 'none'; document.getElementById('inv_tradein').innerText = '+ ' + formatMoney(refundAmount) + ' تومان';
+            let breakdownDiv = document.getElementById('tradeinBreakdown'); breakdownDiv.innerHTML = tradeinBreakdownHtml; breakdownDiv.style.display = tradeinBreakdownHtml ? 'block' : 'none';
             document.getElementById('row_pan_new').style.display = newPanCharge > 0 ? 'flex' : 'none'; document.getElementById('inv_pan_new').innerText = formatMoney(newPanCharge) + ' تومان';
             document.getElementById('row_con_new').style.display = newConCharge > 0 ? 'flex' : 'none'; document.getElementById('inv_con_new').innerText = formatMoney(newConCharge) + ' تومان';
             document.getElementById('row_combo_disc').style.display = comboDisc > 0 ? 'flex' : 'none'; document.getElementById('inv_combo_disc').innerText = '- ' + formatMoney(comboDisc) + ' تومان';
             document.getElementById('row_promo_disc').style.display = promoDisc > 0 ? 'flex' : 'none'; document.getElementById('inv_promo_disc').innerText = '- ' + formatMoney(promoDisc) + ' تومان';
             document.getElementById('row_time_disc').style.display = timeDisc > 0 ? 'flex' : 'none'; document.getElementById('inv_time_disc').innerText = '- ' + formatMoney(timeDisc) + ' تومان';
             document.getElementById('row_wallet_used').style.display = walletUsed > 0 ? 'flex' : 'none'; document.getElementById('inv_wallet_used').innerText = '- ' + formatMoney(walletUsed) + ' تومان';
-            document.getElementById('row_debt_old').style.display = debtFromOldPlan > 0 ? 'flex' : 'none';
-            document.getElementById('inv_debt_old').innerText = '+ ' + formatMoney(debtFromOldPlan) + ' تومان';
+            document.getElementById('row_debt_old').style.display = debtFromOldPlan > 0 ? 'flex' : 'none'; document.getElementById('inv_debt_old').innerText = '+ ' + formatMoney(debtFromOldPlan) + ' تومان';
             
             const instBox = document.getElementById('installmentDetails');
             const fileBox = document.getElementById('boxFile');
-
-            // مدیریت نمایش کادر پرداخت و شماره شبا
-            if (financeData.final > 0) {
-                document.getElementById('paymentBoxBottom').style.display = 'block';
-                document.getElementById('lblPayNow').innerText = formatMoney(financeData.upfront) + ' تومان';
-                document.getElementById('adminShabaBox').style.display = financeData.upfront > 15000000 ? 'block' : 'none';
-            } else {
-                document.getElementById('paymentBoxBottom').style.display = 'none';
-            }
             
             if (financeData.final === 0) {
                 document.getElementById('inv_total').innerText = "0 تومان";
                 document.getElementById('creditAlert').style.display = 'block';
-                if(transferredToWallet > 0) document.getElementById('creditAlert').innerText = `* شما بستانکار شدید! مبلغ ${formatMoney(transferredToWallet)} تومان به کیف پول شما واریز شد.`;
-                else document.getElementById('creditAlert').innerText = `* مبلغ قابل پرداخت ۰ تومان است.`;
-                
-                fileBox.style.display = 'none'; instBox.style.display = 'none'; switchCont.style.display = 'none';
+                document.getElementById('creditAlert').innerText = transferredToWallet > 0 ? `* شما بستانکار شدید! مبلغ ${formatMoney(transferredToWallet)} تومان به کیف پول شما واریز شد.` : `* مبلغ قابل پرداخت ۰ تومان است.`;
+                fileBox.style.display = 'none'; instBox.style.display = 'none'; switchCont.style.display = 'none'; document.getElementById('paymentBoxBottom').style.display = 'none';
                 financeData.upfront = 0;
             } else {
                 document.getElementById('inv_total').innerText = formatMoney(financeData.final) + ' تومان';
@@ -831,48 +791,43 @@
                     instBox.style.display = 'block';
                     const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
                     let today = new Date();
-
-                    // 🎯 تولید شماره اقساط به صورت سریالی (در ادامه اقساط قبلی)
-                    let n1 = state.lastInstNum + 1;
-                    let n2 = state.lastInstNum + 2;
-                    let n3 = state.lastInstNum + 3;
+                    
+                    // 🎯 تولید شماره اقساط به صورت سریالی (تجمیع شده)
+                    let baseN = (state.lastInstNum || 0);
+                    let n1 = baseN + 1; let n2 = baseN + 2; let n3 = baseN + 3;
 
                     if (maxDur <= 1) { 
                         let upfrontRounded = roundDown100k(financeData.final * 0.50);
-                        let remaining = financeData.final - upfrontRounded;
                         financeData.upfront = upfrontRounded;
                         let d1 = new Date(); d1.setDate(today.getDate() + 10); 
-                        financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: n1 });
-                        instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط #${n1} (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
-                    } 
-                    else if (maxDur <= 3) {
+                        financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: financeData.final - upfrontRounded, installment_number: n1 });
+                        instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط #${n1} (${formatMoney(financeData.final - upfrontRounded)} تومان): <b>${formatter.format(d1)}</b></li>`;
+                    } else if (maxDur <= 3) {
                         let upfrontRounded = roundDown100k(financeData.final * 0.50);
-                        let remaining = financeData.final - upfrontRounded;
                         financeData.upfront = upfrontRounded;
                         let d1 = new Date(); d1.setDate(today.getDate() + 45); 
-                        financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: n1 });
-                        instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط #${n1} (${formatMoney(remaining)} تومان): <b>${formatter.format(d1)}</b></li>`;
-                    } 
-                    else { 
+                        financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: financeData.final - upfrontRounded, installment_number: n1 });
+                        instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>موعد قسط #${n1} (${formatMoney(financeData.final - upfrontRounded)} تومان): <b>${formatter.format(d1)}</b></li>`;
+                    } else { 
                         let upfrontRounded = roundDown100k(Math.min(financeData.final * 0.40, 15000000));
-                        let remaining = financeData.final - upfrontRounded;
                         financeData.upfront = upfrontRounded;
-                        let checkAmt = roundDown100k(remaining / 3);
-                        let lastCheckAmt = remaining - (checkAmt * 2);
-                        let d1 = new Date(); d1.setMonth(today.getMonth() + 2);
-                        let d2 = new Date(); d2.setMonth(today.getMonth() + 4);
-                        let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
-                        
+                        let checkAmt = roundDown100k((financeData.final - upfrontRounded) / 3);
+                        let lastCheckAmt = (financeData.final - upfrontRounded) - (checkAmt * 2);
+                        let d1 = new Date(); d1.setMonth(today.getMonth() + 2); let d2 = new Date(); d2.setMonth(today.getMonth() + 4); let d3 = new Date(); d3.setMonth(today.getMonth() + 6);
                         financeData.installments.push({ due_date: d1.toISOString().split('T')[0], amount: checkAmt, installment_number: n1 });
                         financeData.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: n2 });
                         financeData.installments.push({ due_date: d3.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: n3 });
-                        
                         instBox.innerHTML = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${formatMoney(upfrontRounded)} تومان</li><li>قسط #${n1} (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d1)}</b></li><li>قسط #${n2} (${formatMoney(checkAmt)} تومان): <b>${formatter.format(d2)}</b></li><li>قسط #${n3} (${formatMoney(lastCheckAmt)} تومان): <b>${formatter.format(d3)}</b></li>`;
                     }
                 } else { 
                     instBox.style.display = 'none'; 
                     financeData.upfront = financeData.final; 
                 }
+
+                // 💳 نمایش باکس پرداخت مابه‌التفاوت
+                document.getElementById('paymentBoxBottom').style.display = 'block';
+                document.getElementById('lblPayNow').innerText = formatMoney(financeData.upfront) + ' تومان';
+                document.getElementById('adminShabaBox').style.display = financeData.upfront > 15000000 ? 'block' : 'none';
             }
         }
         // ==========================================
