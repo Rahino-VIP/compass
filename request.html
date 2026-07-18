@@ -220,11 +220,20 @@
                 container.innerHTML = ''; 
                 
                 if (data && data.length > 0) {
-                    let validSwitches = data.filter(sw => {
-                        let gradeMatch = (sw.target_grade === 'all' || studentGrade.includes(sw.target_grade));
-                        let examMatch = (sw.target_exam === 'all' || studentExams.some(ex => ex.includes(sw.target_exam)));
-                        return gradeMatch && examMatch;
-                    });
+                    // جایگزین این بخش در تابع loadDynamicSwitches
+let validSwitches = data.filter(sw => {
+    // از آنجا که هدف‌ها حالا آرایه هستند، باید از includes استفاده کنیم
+    let gradeTargets = sw.target_grade || [];
+    let examTargets = sw.target_exam || [];
+
+    let gradeMatch = gradeTargets.includes('all') || gradeTargets.includes(studentGrade);
+    
+    let examMatch = examTargets.includes('all') || 
+                    examTargets.includes('بدون آزمون') || 
+                    studentExams.some(ex => examTargets.includes(ex));
+                    
+    return gradeMatch && examMatch;
+});
 
                     if (validSwitches.length > 0) {
                         validSwitches.forEach(sw => {
