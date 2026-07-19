@@ -150,7 +150,7 @@
             const hour = now.getHours();
 
             // شرط باز بودن: یا (پنجشنبه است و ساعت >= 22) یا (جمعه است و ساعت < 20)
-            const isWindowOpen = (dayOfWeek === 4 && hour >= 22) || (dayOfWeek === 6 && hour < 20);
+            const isWindowOpen = (dayOfWeek === 4 && hour >= 22) || (dayOfWeek === 7 && hour < 20);
 
             if (!isWindowOpen) {
                 // اگر تو زمان مجاز نیستیم، فرم رو قفل کن و پیام نشون بده
