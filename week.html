@@ -8,8 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        :root { --vip-bg: #f8fafc; --vip-surface: #ffffff; --vip-border: #e2e8f0; --gold: #d97706; --success: #10b981; --danger: #ef4444; --text-main: #0f172a; --text-muted: #64748b; }
-        [data-theme="dark"] { --vip-bg: #0f172a; --vip-surface: #1e293b; --vip-border: #334155; --gold: #f59e0b; --success: #10b981; --danger: #ef4444; --text-main: #f8fafc; --text-muted: #94a3b8; }
+        :root { --vip-bg: #f8fafc; --vip-surface: #ffffff; --vip-border: #e2e8f0; --gold: #d97706; --success: #10b981; --danger: #ef4444; --pending: #475569; --text-main: #0f172a; --text-muted: #64748b; }
+        [data-theme="dark"] { --vip-bg: #0f172a; --vip-surface: #1e293b; --vip-border: #334155; --gold: #f59e0b; --success: #10b981; --danger: #ef4444; --pending: #475569; --text-main: #f8fafc; --text-muted: #94a3b8; }
         
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
         body { background: var(--vip-bg); color: var(--text-main); line-height: 1.6; padding-bottom: 90px; }
@@ -20,12 +20,22 @@
 
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .action-btn { background: var(--vip-surface); border: 1px solid var(--vip-border); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; }
-        .page-title { font-size: 16px; font-weight: 900; color: var(--gold); text-align: center; }
-        select.week-selector { background: var(--vip-surface); border: 1px solid var(--vip-border); color: var(--text-muted); padding: 5px; border-radius: 8px; outline: none; font-size: 11px; margin-top: 5px; cursor: pointer; }
+        
+        /* 🌟 استایل‌های جدید منوی کشویی هفته */
+        .page-title { display: flex; flex-direction: column; align-items: center; }
+        .page-title-text { font-size: 16px; font-weight: 900; color: var(--gold); }
+        select.week-selector { background: var(--vip-surface); border: 1px solid var(--vip-border); color: var(--text-main); padding: 5px 10px; border-radius: 8px; outline: none; font-size: 11px; margin-top: 5px; cursor: pointer; font-family: inherit; font-weight: bold;}
 
         .tabs-container { display: flex; background: var(--vip-surface); border-radius: 16px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--vip-border); }
         .tab-btn { flex: 1; text-align: center; padding: 12px 2px; font-size: 13px; font-weight: bold; color: var(--text-muted); text-decoration: none; border-radius: 12px; transition: 0.3s; }
         .tab-btn.active { background: var(--gold); color: #000; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); }
+
+        /* 🌟 استایل نوار پیشرفت هفتگی */
+        .progress-box { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 16px; padding: 15px; margin-bottom: 20px; display: none; }
+        .progress-header { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
+        .progress-bar-bg { width: 100%; height: 8px; background: var(--vip-bg); border-radius: 10px; overflow: hidden; display: flex; }
+        .progress-bar-fill-success { height: 100%; background: var(--success); transition: width 1s ease; }
+        .progress-bar-fill-danger { height: 100%; background: var(--danger); transition: width 1s ease; }
 
         /* تقویم گرافیکی Flex */
         .gcal-wrapper { overflow-x: auto; background: var(--vip-surface); border-radius: 16px; border: 1px solid var(--vip-border); direction: rtl; }
@@ -35,11 +45,12 @@
         .gcal-time-slot { height: 60px; border-bottom: 1px dashed var(--vip-border); font-size: 10px; color: var(--text-muted); text-align: center; padding-top: 5px; font-family: monospace; }
         .gcal-day-col { flex: 1; border-left: 1px solid var(--vip-border); position: relative; min-width: 110px; }
         .gcal-day-header { height: 45px; border-bottom: 1px solid var(--vip-border); display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; background: var(--vip-surface); position: sticky; top: 0; z-index: 9; }
-        .gcal-day-date { font-size: 9px; color: var(--text-muted); font-weight: normal; }
         .gcal-day-grid { position: relative; height: 1080px; background-image: linear-gradient(to bottom, transparent 59px, var(--vip-border) 60px); background-size: 100% 60px; }
-        .gcal-event { position: absolute; left: 4px; right: 4px; border-radius: 6px; padding: 6px; font-size: 10px; color: white; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border-right: 3px solid rgba(255,255,255,0.4); z-index: 5; }
-        .gcal-event.completed { opacity: 0.5; background: var(--success) !important; border-right-color: rgba(255,255,255,0.2); }
-        .gcal-event.shifted { opacity: 0.4; background: var(--danger) !important; text-decoration: line-through; }
+        
+        .gcal-event { position: absolute; left: 4px; right: 4px; border-radius: 6px; padding: 4px 6px; font-size: 10px; color: white; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border-right: 3px solid rgba(255,255,255,0.4); z-index: 5; display: flex; flex-direction: column; }
+        .gcal-event.completed { border-right-color: rgba(255,255,255,0.5); }
+        .gcal-event.shifted { opacity: 0.85; text-decoration: line-through; }
+        .event-topic { font-size: 8px; color: rgba(255,255,255,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
     </style>
 </head>
 <body>
@@ -48,7 +59,9 @@
         <div class="nav-header">
             <a href="menu.html" class="action-btn">🔙</a>
             <div class="page-title" id="mainPageTitle">
-                قطب‌نمای راهینو
+                <div class="page-title-text">قطب‌نمای راهینو</div>
+                <!-- 🌟 منوی آرشیو هفته‌ها -->
+                <select id="weekSelector" class="week-selector" onchange="changeWeek()" style="display: none;"></select>
             </div>
             <div style="display: flex; gap: 10px;">
                 <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
@@ -62,9 +75,23 @@
             <a href="request.html" class="tab-btn">🎁 اتاق فکر</a>
         </div>
 
+        <!-- 🌟 باکس پیشرفت هفتگی -->
+        <div class="progress-box" id="weeklyProgressBox">
+            <div class="progress-header">
+                <span>پیشرفت این هفته</span>
+                <div style="display:flex; gap:10px;">
+                    <span id="successPercentText" style="color:var(--success);">0% انجام شده</span>
+                    <span id="dangerPercentText" style="color:var(--danger);">0% عقب‌افتاده</span>
+                </div>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill-success" id="successBar" style="width: 0%;"></div>
+                <div class="progress-bar-fill-danger" id="dangerBar" style="width: 0%;"></div>
+            </div>
+        </div>
+
         <div id="aiWeeklyMotivationBox" style="display: none; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1)); border: 1px solid var(--success); border-radius: 16px; padding: 15px; margin-bottom: 20px; position: relative; animation: fadeIn 0.5s;">
             <button onclick="dismissWeeklyMotivation()" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.05); border: none; width: 24px; height: 24px; border-radius: 50%; font-size: 10px; color: var(--text-muted); cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s;">❌</button>
-            
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                 <span style="font-size: 20px;">🎯</span>
                 <span style="font-size: 13px; font-weight: 900; color: var(--success);">استراتژیِ این هفته:</span>
@@ -79,7 +106,7 @@
 
     <script>
         // ==========================================
-        // 🔒 لایه‌های امنیتی (جلوگیری از کپی و Inspect)
+        // 🔒 لایه‌های امنیتی
         // ==========================================
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
@@ -91,23 +118,16 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); 
         
-        // 🌟 سیستم هوشمند استخراج آیدی
-        const userId = localStorage.getItem('national_id') || 
-                       localStorage.getItem('qotbnama_user_id') || 
-                       localStorage.getItem('student_id') || 
-                       localStorage.getItem('chat_id');
+        const userId = localStorage.getItem('national_id') || localStorage.getItem('qotbnama_user_id') || localStorage.getItem('student_id') || localStorage.getItem('chat_id');
 
-        // 🛡️ بررسی هویت
         if (!userId || userId === 'null' || userId === 'undefined') {
             alert("❌ سیستم نمی‌تواند هویت شما را تشخیص دهد. لطفاً مجدداً وارد شوید.");
             window.location.href = 'index.html';
         }
         
+        let allSchedules = [];
         let currentScheduleObj = null;
 
-        // ==========================================
-        // 🌓 سیستم تم (Dark/Light)
-        // ==========================================
         const themeBtn = document.getElementById('themeBtn');
         const currentTheme = localStorage.getItem('theme') || 'dark'; 
         if (currentTheme === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); themeBtn.innerText = '☀️'; } else { themeBtn.innerText = '🌙'; }
@@ -118,12 +138,8 @@
             else { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); themeBtn.innerText = '☀️'; }
         }
 
-        // ==========================================
-        // 🚀 لود اولیه
-        // ==========================================
         window.onload = async function() { await fetchAndRender(); };
 
-        // 📭 نمایش وضعیت خالی یا ارور
         function showEmptyState(msg) {
             const container = document.getElementById('gcalGrid');
             if (container) {
@@ -133,32 +149,55 @@
                         <h3 style="color: var(--text-muted); font-size: 14px;">${msg}</h3>
                     </div>`;
             }
+            document.getElementById('weeklyProgressBox').style.display = 'none';
         }
 
+        // ==========================================
+        // 🚀 دریافت دیتای تمام هفته‌ها از سرور
+        // ==========================================
         async function fetchAndRender() {
             try {
-                const nowIso = new Date().toISOString();
-
-                // دریافت برنامه این هفته
+                // 🌟 گرفتن تمام برنامه‌ها (حذف limit 1 و lte)
                 const { data: schData, error: schErr } = await supabaseClient
                     .from('ai_schedules')
                     .select('*')
                     .eq('national_id', String(userId))
                     .eq('status', 'approved')
-                    .lte('target_start_date', nowIso) 
-                    .order('target_start_date', { ascending: false }) 
-                    .limit(1)
-                    .single();
+                    .order('target_start_date', { ascending: false });
 
-                if (schErr || !schData) {
-                    showEmptyState("هنوز برنامه‌ی فعالی برای این هفته آغاز نشده است.");
+                if (schErr || !schData || schData.length === 0) {
+                    showEmptyState("هنوز هیچ برنامه‌ای برای شما ثبت نشده است.");
                     return;
                 }
 
-                currentScheduleObj = schData;
+                allSchedules = schData;
                 
-                document.getElementById('mainPageTitle').innerHTML = `قطب‌نمای راهینو<br><span style="font-size:11px; color:var(--text-muted);">${schData.week_label || 'برنامه جاری'}</span>`;
+                // 🌟 پر کردن منوی کشویی آرشیو
+                const selector = document.getElementById('weekSelector');
+                selector.innerHTML = '';
+                allSchedules.forEach(sch => {
+                    let opt = document.createElement('option');
+                    opt.value = sch.id;
+                    opt.innerText = sch.week_label || 'برنامه ناشناس';
+                    selector.appendChild(opt);
+                });
+                selector.style.display = 'block';
 
+                // 🌟 منطق دقیق ۱۲ شب (تعیین هفته جاری)
+                let now = new Date();
+                currentScheduleObj = allSchedules.find(s => {
+                    let stDate = new Date(s.target_start_date);
+                    // ریست کردن ساعت دیتابیس به 00:00 به وقت ایران/محلی
+                    stDate.setHours(0, 0, 0, 0); 
+                    return stDate <= now;
+                });
+                
+                // اگر برنامه‌ای نرسیده بود (مثلا کاربر جلوتر از زمانه)، همون آخرین برنامه رو نشون بده
+                if(!currentScheduleObj) currentScheduleObj = allSchedules[0]; 
+
+                selector.value = currentScheduleObj.id;
+                
+                updateWeeklyProgress();
                 renderGCal();
 
             } catch (err) {
@@ -167,18 +206,54 @@
             }
         }
 
+        // 🌟 تغییر هفته از منوی آرشیو
+        function changeWeek() {
+            const selectedId = document.getElementById('weekSelector').value;
+            currentScheduleObj = allSchedules.find(s => s.id === selectedId);
+            updateWeeklyProgress();
+            renderGCal();
+        }
+
+        // 🌟 محاسبه و نمایش نوار پیشرفت هفته
+        function updateWeeklyProgress() {
+            const progressBox = document.getElementById('weeklyProgressBox');
+            if(!currentScheduleObj || !currentScheduleObj.raw_plan) {
+                progressBox.style.display = 'none';
+                return;
+            }
+
+            let planArr = typeof currentScheduleObj.raw_plan === 'string' ? JSON.parse(currentScheduleObj.raw_plan) : currentScheduleObj.raw_plan;
+            
+            // فقط تسک‌های درسی (حذف استراحت‌ها و کلاس‌ها)
+            let taskBlocks = planArr.filter(p => p.type !== 'break' && !p.subject.includes('ناهار') && !p.subject.includes('شام') && p.type !== 'class');
+            
+            let total = taskBlocks.length;
+            let completed = taskBlocks.filter(p => p.status === 'completed').length;
+            let shifted = taskBlocks.filter(p => p.status === 'shifted' || p.day === 'bench').length;
+            
+            let compPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
+            let shiftPercent = total > 0 ? Math.round((shifted / total) * 100) : 0;
+
+            document.getElementById('successPercentText').innerText = `${compPercent}% انجام شده`;
+            document.getElementById('dangerPercentText').innerText = `${shiftPercent}% عقب‌افتاده`;
+            
+            document.getElementById('successBar').style.width = `${compPercent}%`;
+            document.getElementById('dangerBar').style.width = `${shiftPercent}%`;
+
+            progressBox.style.display = 'block';
+        }
+
         // ==========================================
-        // 📅 موتور رندر تقویم (حالت مینیمال بدون تاریخ)
+        // 📅 موتور رندر تقویم (نمایش مبحث و رنگ‌بندی جدید)
         // ==========================================
         function renderGCal() {
-            // بخش پیام انگیزشی
             const weeklyMotivationBox = document.getElementById('aiWeeklyMotivationBox');
             const weeklyMotivationText = document.getElementById('aiWeeklyMotivationText');
             if (currentScheduleObj && currentScheduleObj.ai_motivations) {
                 let aiMotivations = typeof currentScheduleObj.ai_motivations === 'string' ? JSON.parse(currentScheduleObj.ai_motivations) : currentScheduleObj.ai_motivations;
                 let weeklyMessage = aiMotivations.weekly_motivation;
                 if (weeklyMessage) {
-                    let dismissedMsg = localStorage.getItem(`dismissed_weekly_${userId}`);
+                    let dismissedMsg = localStorage.getItem(`dismissed_weekly_${userId}_${currentScheduleObj.id}`);
                     if (dismissedMsg === weeklyMessage) { weeklyMotivationBox.style.display = 'none'; } 
                     else { weeklyMotivationText.innerText = weeklyMessage; weeklyMotivationBox.style.display = 'block'; }
                 } else { weeklyMotivationBox.style.display = 'none'; }
@@ -188,14 +263,12 @@
             container.innerHTML = '';
             const daysArr = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
             
-            // ساخت ستون ساعت‌ها
             let timeColHtml = `<div class="gcal-time-col"><div class="gcal-time-header">ساعت</div>`;
             for(let i=6; i<=23; i++) { timeColHtml += `<div class="gcal-time-slot">${i.toString().padStart(2,'0')}:00</div>`; }
             container.innerHTML += timeColHtml + `</div>`;
 
-            const planArr = currentScheduleObj.raw_plan || [];
+            const planArr = typeof currentScheduleObj.raw_plan === 'string' ? JSON.parse(currentScheduleObj.raw_plan) : currentScheduleObj.raw_plan;
 
-            // ساخت ستون روزها
             daysArr.forEach((day) => {
                 let dayBlocks = planArr.filter(p => p.day === day);
                 
@@ -204,35 +277,39 @@
                                 <div class="gcal-day-grid">`;
                 
                 dayBlocks.forEach(part => {
+                    if(!part.start_time || !part.end_time) return;
+
                     let startMins = (parseInt(part.start_time.split(':')[0])*60) + parseInt(part.start_time.split(':')[1]);
                     let endMins = (parseInt(part.end_time.split(':')[0])*60) + parseInt(part.end_time.split(':')[1]);
-                    let topPx = Math.max(0, startMins - 360); let heightPx = endMins - startMins;
+                    let topPx = Math.max(0, startMins - 360); 
+                    let heightPx = endMins - startMins;
 
-                    let bgColor = "#64748b"; 
-                    if(part.type === 'class') bgColor = "#334155"; 
-                    else if(part.type === 'online_debt') bgColor = "#ef4444";
-                    else if(part.subject.includes("زیست")) bgColor = "#10b981"; 
-                    else if(part.subject.includes("ریاضی") || part.subject.includes("فیزیک")) bgColor = "#f59e0b";
-                    else if(part.subject.includes("شیمی")) bgColor = "#3b82f6"; 
-                    else if(part.type === 'general') bgColor = "#8b5cf6";
-                    else if(part.subject.includes("جبرانی")) bgColor = "#475569";
-
+                    // 🌟 رنگ‌بندی منحصراً بر اساس وضعیت و نوع باکس
+                    let bgColor = "var(--pending)"; // خاکستری به عنوان پایه
+                    if (part.type === 'class') bgColor = "#334155"; // کلاس‌ها تیره
+                    else if (part.subject.includes("ناهار") || part.subject.includes("شام")) bgColor = "#475569";
+                    
+                    if (part.status === 'completed') bgColor = "var(--success)"; // سبز
+                    else if (part.status === 'shifted') bgColor = "var(--danger)"; // قرمز
+                    
                     let statusClass = part.status === 'completed' ? 'completed' : (part.status === 'shifted' ? 'shifted' : '');
-                    let textDecoration = part.status === 'shifted' ? 'text-decoration: line-through;' : '';
 
-                    dayHtml += `<div class="gcal-event ${statusClass}" style="top: ${topPx}px; height: ${heightPx}px; background: ${bgColor};" title="${part.subject}">
-                                    <div style="font-weight:900;font-size:11px; ${textDecoration}">${part.subject}</div>
-                                    <div style="font-size:9px;font-family:monospace;">${part.start_time}-${part.end_time}</div>
+                    // 🌟 نمایش موضوع (Topic) به صورت ریز در باکس
+                    let topicHtml = part.topic ? `<div class="event-topic">${part.topic}</div>` : '';
+
+                    dayHtml += `<div class="gcal-event ${statusClass}" style="top: ${topPx}px; height: ${heightPx}px; background: ${bgColor};" title="${part.subject}\n${part.topic || ''}">
+                                    <div style="font-weight:900;font-size:11px;">${part.subject}</div>
+                                    ${topicHtml}
+                                    <div style="font-size:9px;font-family:monospace; margin-top:auto;">${part.start_time}-${part.end_time}</div>
                                 </div>`;
                 });
                 container.innerHTML += dayHtml + `</div></div>`;
             });
         }
 
-        // 🔒 مخفی کردن پیام انگیزشی
         function dismissWeeklyMotivation() {
             const msgText = document.getElementById('aiWeeklyMotivationText').innerText;
-            localStorage.setItem(`dismissed_weekly_${userId}`, msgText);
+            localStorage.setItem(`dismissed_weekly_${userId}_${currentScheduleObj.id}`, msgText);
             document.getElementById('aiWeeklyMotivationBox').style.display = 'none';
         }
     </script>
