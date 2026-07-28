@@ -144,21 +144,20 @@
                 alert("❌ خطای احراز هویت!"); return;
             }
 
-            // 🌟 ۱. بررسی قفل زمانی (Time Lock)
-            const now = new Date();
-            const dayOfWeek = now.getDay(); // 0 = یکشنبه, ... , 4 = پنجشنبه, 5 = جمعه, 6 = شنبه
-            const hour = now.getHours();
+            // 🌟 ۱. بررسی قفل زمانی (Time Lock) - غیرفعال شده برای تست
+            // const now = new Date();
+            // const dayOfWeek = now.getDay(); 
+            // const hour = now.getHours();
+            // const isWindowOpen = (dayOfWeek === 1 && hour >= 22) || (dayOfWeek === 7 && hour < 20);
 
-            // شرط باز بودن: یا (پنجشنبه است و ساعت >= 22) یا (جمعه است و ساعت < 20)
-            const isWindowOpen = (dayOfWeek === 1 && hour >= 22) || (dayOfWeek === 7 && hour < 20);
+            // همیشه True است تا فرم باز بماند
+            const isWindowOpen = true; 
 
             if (!isWindowOpen) {
-                // اگر تو زمان مجاز نیستیم، فرم رو قفل کن و پیام نشون بده
                 document.getElementById('timeLockMessage').style.display = 'block';
                 document.getElementById('requestFormContent').style.display = 'none';
-                return; // عملیات همینجا متوقف میشه
+                return; 
             } else {
-                // پنجره بازه!
                 document.getElementById('timeLockMessage').style.display = 'none';
                 document.getElementById('requestFormContent').style.display = 'block';
             }
