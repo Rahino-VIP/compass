@@ -203,18 +203,30 @@
                 let shamsiStart = new Intl.DateTimeFormat('fa-IR', faOpt).format(sDate);
                 let shamsiEnd = new Intl.DateTimeFormat('fa-IR', faOpt).format(eDate);
 
-                // 🧠 تشخیص هوشمند فاز از روی تقویم مرجع (با قابلیت جستجوی درونی)
+               // 🧠 تشخیص هوشمند فاز از روی تقویم مرجع (کاملاً ضدگلوله)
                 let isExamWeek = false;
                 if (calendarData && calendarData.length > 0 && sch.week_label) {
-                    // سیستم می‌گردد ببیند آیا عبارت داخل تقویم مرجع (مثلاً "10 تا 16 مرداد") 
-                    // در دلِ لیبلِ برنامه دانش‌آموز وجود دارد یا خیر.
-                    let currentWeekCal = calendarData.find(c => 
-                        c.week_label && sch.week_label.includes(c.week_label)
-                    );
                     
-                    // اگر هفته پیدا شد و وضعیتش آزمون بود
-                    if (currentWeekCal && (currentWeekCal.status === 'exam' || currentWeekCal.status === 'آزمون')) {
-                        isExamWeek = true;
+                    // ۱. یکدست‌سازی متن برنامه دانش‌آموز (تبدیل اعداد فارسی به انگلیسی و حذف فاصله‌های اضافی)
+                    let safeSchLabel = sch.week_label.replace(/[۰-۹]/g, c => '۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).trim();
+                    
+                    let currentWeekCal = calendarData.find(c => {
+                        if (!c.week_label) return false;
+                        
+                        // ۲. یکدست‌سازی متن تقویم مرجع
+                        let safeCalLabel = c.week_label.replace(/[۰-۹]/g, c => '۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).trim();
+                        
+                        // حالا با خیال راحت جستجو می‌کنیم
+                        return safeSchLabel.includes(safeCalLabel);
+                    });
+                    
+                    if (currentWeekCal) {
+                        // ۳. یکدست‌سازی کلمه وضعیت (حذف فاصله‌های خالی و تبدیل حروف به کوچک)
+                        let status = (currentWeekCal.status || "").trim().toLowerCase();
+                        
+                        if (status === 'exam' || status === 'آزمون') {
+                            isExamWeek = true;
+                        }
                     }
                 }
 
