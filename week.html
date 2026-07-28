@@ -215,6 +215,7 @@
         }
 
         // 🌟 محاسبه و نمایش نوار پیشرفت هفته
+        // 🌟 محاسبه و نمایش نوار پیشرفت هفته (اصلاح شده و دقیق)
         function updateWeeklyProgress() {
             const progressBox = document.getElementById('weeklyProgressBox');
             if(!currentScheduleObj || !currentScheduleObj.raw_plan) {
@@ -224,12 +225,19 @@
 
             let planArr = typeof currentScheduleObj.raw_plan === 'string' ? JSON.parse(currentScheduleObj.raw_plan) : currentScheduleObj.raw_plan;
             
-            // فقط تسک‌های درسی (حذف استراحت‌ها و کلاس‌ها)
-            let taskBlocks = planArr.filter(p => p.type !== 'break' && !p.subject.includes('ناهار') && !p.subject.includes('شام') && p.type !== 'class');
+            // 🎯 فیلترهای دقیق: حذف ناهار، شام، جبرانیِ استفاده‌نشده، کلاس‌های حضوری و کپی‌های نیمکت
+            let taskBlocks = planArr.filter(p => 
+                p.type !== 'break' && 
+                p.subject !== 'بانک جبرانی' && 
+                !p.subject.includes('ناهار') && 
+                !p.subject.includes('شام') && 
+                (p.type !== 'class' || p.topic === 'کلاس آنلاین') && // کلاس آنلاین حساب میشه، حضوری نه
+                p.day !== 'bench' // کپی‌های نیمکت نباید دوبار حساب بشن
+            );
             
             let total = taskBlocks.length;
             let completed = taskBlocks.filter(p => p.status === 'completed').length;
-            let shifted = taskBlocks.filter(p => p.status === 'shifted' || p.day === 'bench').length;
+            let shifted = taskBlocks.filter(p => p.status === 'shifted').length;
             
             let compPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
             let shiftPercent = total > 0 ? Math.round((shifted / total) * 100) : 0;
@@ -242,7 +250,6 @@
 
             progressBox.style.display = 'block';
         }
-
         // ==========================================
         // 📅 موتور رندر تقویم (نمایش مبحث و رنگ‌بندی جدید)
         // ==========================================
