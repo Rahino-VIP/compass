@@ -164,23 +164,30 @@
         };
 
         // 🌟 خواندن برنامه‌ها (پرونده‌ها) از جدول واقعی ai_schedules
+        // 🌟 خواندن برنامه‌ها و تطبیق با تقویم مرجع
         async function loadDossiers() {
             const container = document.getElementById('dossiersContainer');
             const nowIso = new Date().toISOString();
             
-            const { data: schedules, error } = await supabaseClient
+            // ۱. دریافت برنامه‌های دانش‌آموز
+            const { data: schedules, error: schError } = await supabaseClient
                 .from('ai_schedules')
                 .select('id, week_label, target_start_date, created_at')
                 .eq('national_id', String(userId))
                 .eq('status', 'approved')
-                .lte('target_start_date', nowIso) // فقط برنامه‌هایی که شروع شدن
+                .lte('target_start_date', nowIso) 
                 .order('target_start_date', { ascending: false })
                 .limit(5);
 
-            if (error || !schedules || schedules.length === 0) {
+            if (schError || !schedules || schedules.length === 0) {
                 container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);">هنوز پرونده آموزشی فعالی برای شما ثبت نشده است.</div>';
                 return;
             }
+
+            // ۲. دریافت تقویم مرجع برای تشخیص فاز هفته
+            const { data: calendarData, error: calError } = await supabaseClient
+                .from('week_status_calendar')
+                .select('*');
 
             container.innerHTML = ''; 
 
@@ -196,11 +203,16 @@
                 let shamsiStart = new Intl.DateTimeFormat('fa-IR', faOpt).format(sDate);
                 let shamsiEnd = new Intl.DateTimeFormat('fa-IR', faOpt).format(eDate);
 
-                // 🧠 تشخیص اتوماتیک هوش مصنوعی: آیا این فازِ منتهی به آزمونه؟
-                let aiMots = typeof sch.ai_motivations === 'string' ? JSON.parse(sch.ai_motivations) : (sch.ai_motivations || {});
-                let weeklyMsg = aiMots.weekly_motivation || "";
-                // اگر تو پیام انگیزشی کلمه "هفته دوم" یا "آزمون" بود، یعنی باید کارنامه بده
-                let isExamWeek = weeklyMsg.includes("هفته دوم") || weeklyMsg.includes("آزمون");
+                // 🧠 تشخیص هوشمند فاز از روی تقویم مرجع
+                let isExamWeek = false;
+                if (calendarData && calendarData.length > 0) {
+                    // تطبیق بر اساس لیبل هفته یا تاریخ (فرض میکنیم لیبل هفته مچ میشه)
+                    let currentWeekCal = calendarData.find(c => c.week_label === sch.week_label);
+                    // اگر وضعیت هفته توی دیتابیس exam یا آزمون بود
+                    if (currentWeekCal && (currentWeekCal.status === 'exam' || currentWeekCal.status === 'آزمون')) {
+                        isExamWeek = true;
+                    }
+                }
 
                 let badge = isExamWeek 
                     ? `<span class="dossier-badge badge-exam">🎯 هدف: کالبدشکافی آزمون</span>` 
@@ -247,6 +259,7 @@
                                 `}
                                 
                                 <textarea class="modern-input" id="reflection_${sch.id}" rows="3" placeholder="اعترافات: در این فاز چه حسی داشتی؟ نقطه قوت و ضعفت چی بود؟"></textarea>
+                                <!-- ارسال مستقیم isExamWeek به تابع سابمیت -->
                                 <button class="btn-submit" id="btn_${sch.id}" onclick="submitAnalysis('${sch.id}', '${startStr}', '${endStr}', ${isExamWeek})">🚀 ارسال به آزمایشگاه</button>
                             </div>
                             
@@ -277,6 +290,7 @@
                 `;
             });
         }
+        
         function toggleExamUpload(id) {
             const isChecked = document.getElementById(`hasExam_${id}`).checked;
             document.getElementById(`uploadBox_${id}`).style.display = isChecked ? 'flex' : 'none';
@@ -486,7 +500,8 @@
         }
 
         async function submitAnalysis(id, startDate, endDate, isExamWeek) {
-            const hasExam = document.getElementById(`hasExam_${id}`).checked;
+            // استفاده مستقیم از دیتای سرور به جای جستجوی المان ناموجود در HTML
+            const hasExam = isExamWeek; 
             const reflection = document.getElementById(`reflection_${id}`).value.trim();
             
             if (hasExam && !selectedFileBase64[id]) { alert("لطفاً کارنامه (عکس یا PDF) خود را آپلود کنید!"); return; }
@@ -502,7 +517,7 @@
                     mode: 'no-cors',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ 
-                        action: 'analyze_period', // نام اکشن رو آپدیت کردیم
+                        action: 'analyze_period', 
                         student_id: userId, 
                         start_date: startDate, 
                         end_date: endDate, 
