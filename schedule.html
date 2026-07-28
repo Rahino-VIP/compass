@@ -461,6 +461,7 @@
         }
 
         // 🌟 سیستم تشخیص روزهای عقب‌افتاده + اطلاعیه
+        // 🌟 سیستم تشخیص روزهای عقب‌افتاده + اطلاعیه (اصلاح شده برای حفظ تاریخ کامل)
         function determineRenderDay() {
             let todayIdx = daysArr.indexOf(todayNameFa);
             if(todayIdx === -1) todayIdx = 6; 
@@ -492,11 +493,12 @@
                 document.getElementById('todayDateLabel').innerText = `⚠️ در حال پاکسازی عقب‌افتادگی‌های ${renderDayFa}`;
                 document.getElementById('todayDateLabel').style.color = 'var(--danger)';
             } else if (renderDayFa === todayNameFa) {
-                document.getElementById('todayDateLabel').innerText = todayNameFa;
+                // 🎯 اصلاح اصلی: بازسازی تاریخ کامل به جای اسمِ خالیِ روز
+                const todayShamsiFull = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
+                document.getElementById('todayDateLabel').innerText = todayShamsiFull;
                 document.getElementById('todayDateLabel').style.color = 'var(--text-muted)';
             }
         }
-
         function renderTodayTab() {
             const planArr = currentScheduleObj.raw_plan || [];
             const container = document.getElementById('questsContainer'); 
@@ -646,12 +648,21 @@
                 }
             }
 
-            // 🌟 منطق هوشمند جبرانی و نیمکت
+            // 🌟 منطق هوشمند جبرانی و نیمکت (اصلاح شده)
             if(availableMakeups.length < neededMakeups) { 
                 alert(`متاسفانه جبرانی خالی نمونده! این درس به عنوان بدهی رفت رو «نیمکت» برای هفته‌ی بعد.`); 
-                origBlock.status = 'pending'; // باید پندینگ بمونه تا هفته بعد دیده بشه
-                origBlock.day = 'bench';      // کلمه کلیدی برای ربات برنامه‌ریز
-                origBlock.is_benched = true; 
+                
+                // ۱. ایجاد یک کپیِ دقیق از این باکس برای نیمکت
+                let benchClone = JSON.parse(JSON.stringify(origBlock));
+                benchClone.block_id = 'blk_bnch_' + Math.random().toString(36).substr(2, 6);
+                benchClone.day = 'bench';
+                benchClone.status = 'pending';
+                benchClone.is_benched = true;
+                planArr.push(benchClone);
+
+                // ۲. قرمز کردن (Shift) باکس اصلی تا تقویم سوراخ و زشت نشود
+                origBlock.status = 'shifted'; 
+                
             } else {
                 origBlock.status = 'shifted'; 
                 for(let i=0; i<neededMakeups; i++) {
@@ -666,36 +677,38 @@
                 await savePlanToDB();
                 updateProgressBar();
                 renderTodayTab(); 
-            // ... انتهای تابع
             } catch(err) {
                 console.error("System Error (Shift Quest):", err);
                 alert("⚠️ مشکلی در ارتباط با سرور پیش آمده است. لطفاً چند دقیقه دیگر مجدداً تلاش کنید.");
             }
         }
-
+        
+        // 🌟 آپدیت نوار پیشرفت عملیات امروز (با فیلترهای دقیق)
         function updateProgressBar() {
+            // 🎯 فقط تسک‌های واقعیِ امروز رو می‌شماریم
             const activeToday = currentScheduleObj.raw_plan.filter(p => 
                 p.day === renderDayFa && 
                 p.subject !== 'بانک جبرانی' && 
                 !p.subject.includes('ناهار') && 
                 !p.subject.includes('شام') && 
                 (p.type !== 'class' || p.topic === 'کلاس آنلاین') && 
-                p.status !== 'shifted' &&
-                p.day !== 'bench' // روی نیمکتی‌ها تو درصد امروز حساب نمیشن
+                p.status !== 'shifted' && // منتقل‌شده‌ها از بار کاری امروز کم میشن
+                p.day !== 'bench' 
             );
+            
             const completedToday = activeToday.filter(p => p.status === 'completed');
             let percent = activeToday.length > 0 ? Math.round((completedToday.length / activeToday.length) * 100) : 0;
             
             document.getElementById('progressText').innerText = percent + '%';
             document.getElementById('progressBar').style.width = percent + '%';
             
+            // 🏆 پخش انیمیشن فقط در صورت رسیدن به ۱۰۰٪ کارهای واقعی
             if(percent === 100 && activeToday.length > 0) { 
                 if (!isInitialLoad && !hasCelebratedToday) {
                     hasCelebratedToday = true;
                     const celebModal = document.getElementById('celebrationModal');
                     if (celebModal) celebModal.style.display = 'flex'; 
                     
-                    // 🌟 دستور صحیح پخش کاغذ رنگی
                     try { 
                         confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 }, colors: ['#f59e0b', '#ef4444', '#10b981', '#3b82f6'] }); 
                     } catch(e) {
@@ -708,7 +721,9 @@
                         renderTodayTab(); 
                     }, 3500);
                 }
-            } else { hasCelebratedToday = false; }
+            } else { 
+                hasCelebratedToday = false; 
+            }
         }
         // ==========================================
         // 🎵 سیستم تایمر، تنفس بادکنکی و موسیقی (نسخه پایدار و نهایی)
