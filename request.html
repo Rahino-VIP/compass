@@ -8,56 +8,76 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        :root { --vip-bg: #f8fafc; --vip-surface: #ffffff; --vip-border: #e2e8f0; --gold: #d97706; --success: #10b981; --text-main: #0f172a; --text-muted: #64748b; }
-        [data-theme="dark"] { --vip-bg: #0f172a; --vip-surface: #1e293b; --vip-border: #334155; --gold: #f59e0b; --success: #10b981; --text-main: #f8fafc; --text-muted: #94a3b8; }
+        /* ==========================================
+           🎨 پالت رنگی یکپارچه و استاندارد راهینو
+           ========================================== */
+        :root { 
+            --primary: #639889; --primary-hover: #4d7a6e; --primary-fade: rgba(99, 152, 137, 0.05);
+            --accent: #d9858a; --accent-hover: #c4727c;
+            --bg-color: #f7f9f8; --surface: #ffffff; --border-color: #e2e8f0;
+            --text-main: #2d3748; --text-muted: #718096;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444; 
+        }
+
+        [data-theme="dark"] { 
+            --primary: #77bba9; --primary-hover: #8fd0bf; --primary-fade: rgba(119, 187, 169, 0.1);
+            --accent: #e59ea3; --bg-color: #121918; --surface: #1b2624; --border-color: #2d3d3a;
+            --text-main: #f1f5f9; --text-muted: #94a3b8; 
+        }
         
-        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
-        body { background: var(--vip-bg); color: var(--text-main); line-height: 1.6; padding-bottom: 90px; }
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+        body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 90px; }
         .app-container { max-width: 700px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .theme-toggle { background: var(--vip-surface); border: 1px solid var(--vip-border); color: var(--text-main); width: 45px; height: 45px; border-radius: 14px; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; }
+        .theme-toggle { background: var(--surface); border: 1px solid var(--border-color); color: var(--text-main); width: 45px; height: 45px; border-radius: 14px; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; }
 
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .action-btn { background: var(--vip-surface); border: 1px solid var(--vip-border); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; }
-        .page-title { font-size: 18px; font-weight: 900; color: var(--gold); }
+        .action-btn { background: var(--surface); border: 1px solid var(--border-color); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; }
+        .page-title { font-size: 18px; font-weight: 900; color: var(--primary); }
 
-        .tabs-container { display: flex; background: var(--vip-surface); border-radius: 16px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--vip-border); }
+        .tabs-container { display: flex; background: var(--surface); border-radius: 16px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--border-color); }
         .tab-btn { flex: 1; text-align: center; padding: 12px 2px; font-size: 13px; font-weight: bold; color: var(--text-muted); text-decoration: none; border-radius: 12px; transition: 0.3s; }
-        .tab-btn.active { background: var(--gold); color: #000; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); }
+        .tab-btn.active { background: var(--primary-fade); color: var(--primary); border: 1px solid rgba(99, 152, 137, 0.3); }
 
-        .friday-box { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 24px; padding: 30px 20px; text-align: center; }
+        .friday-box { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 30px 20px; text-align: center; }
         .friday-icon { font-size: 60px; margin-bottom: 15px; display: block; }
-        .friday-title { font-size: 20px; font-weight: 900; color: var(--gold); margin-bottom: 10px; }
+        .friday-title { font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 10px; }
         
-        .toggle-row { display: flex; justify-content: space-between; align-items: center; background: var(--vip-bg); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--vip-border); text-align: right; }
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.03); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border-color); text-align: right; cursor: pointer; }
+        [data-theme="dark"] .toggle-row { background: rgba(255,255,255,0.03); }
+        
         .toggle-switch { position: relative; width: 44px; height: 24px; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--vip-border); transition: .4s; border-radius: 34px; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-color); transition: .4s; border-radius: 34px; }
         .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--success); }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        textarea.modern-input { width: 100%; padding: 15px; border-radius: 16px; border: 1px solid var(--vip-border); background: var(--vip-bg); color: var(--text-main); font-size: 13px; resize: none; outline: none; margin-top: 10px; margin-bottom: 20px; }
-        .btn-gold { background: linear-gradient(135deg, var(--gold), #d97706); color: #000; width: 100%; padding: 18px; border-radius: 16px; border: none; font-size: 16px; font-weight: 900; cursor: pointer; }
+        textarea.modern-input { width: 100%; padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); background: var(--surface); color: var(--text-main); font-size: 13px; resize: none; outline: none; margin-top: 10px; margin-bottom: 20px; transition: 0.3s; }
+        textarea.modern-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-fade); }
+        
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; width: 100%; padding: 18px; border-radius: 16px; border: none; font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 25px rgba(99, 152, 137, 0.2); }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(99, 152, 137, 0.4); }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
     </style>
 </head>
-<body data-theme="dark">
+<body>
 
     <div class="app-container">
         <div class="nav-header">
-            <a href="menu.html" class="action-btn">🔙</a>
+            <a href="menu" class="action-btn">🔙</a>
             <div class="page-title">قطب‌نمای راهینو</div>
             <div style="display: flex; gap: 10px;">
-                <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
-                <a href="vip-setup.html" class="action-btn">⚙️</a>
+                <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️</button>
+                <a href="vip-setup" class="action-btn">⚙️</a>
             </div>
         </div>
 
         <div class="tabs-container">
-            <a href="schedule.html" class="tab-btn">🎯 عملیات امروز</a>
-            <a href="week.html" class="tab-btn">🗓️ تقویم هفته</a>
-            <a href="request.html" class="tab-btn active">🎁 اتاق فکر</a>
+            <a href="schedule" class="tab-btn">🎯 عملیات امروز</a>
+            <a href="week" class="tab-btn">🗓️ تقویم هفته</a>
+            <a href="request" class="tab-btn active">🎁 اتاق فکر</a>
         </div>
 
         <div class="friday-box" id="fridayActionBox">
@@ -75,7 +95,7 @@
                 <div id="requestFormContent" style="display: none;">
                     <div id="dynamicSwitchesArea"></div>
                     <textarea class="modern-input" id="nextWeekNote" rows="3" placeholder="یادداشت برای مشاور (مثلاً: سه‌شنبه امتحان فارسی دارم یا جمعه مهمونی دعوتیم...)"></textarea>
-                    <button class="btn-gold" id="btnRequestPlan" onclick="requestNewSchedule()">ارسال پرونده به اتاق مشاور 🚀</button>
+                    <button class="btn-primary" id="btnRequestPlan" onclick="requestNewSchedule()">ارسال پرونده به اتاق مشاور 🚀</button>
                     <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: center;">
                         ⚠️ فقط یک‌بار فرصت ارسال دارید.
                     </div>
@@ -95,27 +115,26 @@
             if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
         };
         // ==========================================
-        // 🌓 سیستم تغییر تم (دارک و لایت مود)
+        // 🌓 سیستم تغییر تم استاندارد
         // ==========================================
         const themeBtn = document.getElementById('themeBtn');
-        const currentTheme = localStorage.getItem('theme') || 'dark'; // پیش‌فرض دارک
+        const currentTheme = localStorage.getItem('theme') || 'light'; 
         
-        // تنظیم اولیه موقع لود صفحه
         if (currentTheme === 'dark') {
-            document.body.setAttribute('data-theme', 'dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
             if (themeBtn) themeBtn.innerText = '☀️';
         } else {
-            document.body.removeAttribute('data-theme');
             if (themeBtn) themeBtn.innerText = '🌙';
         }
 
         function toggleTheme() {
-            if (document.body.getAttribute('data-theme') === 'dark') {
-                document.body.removeAttribute('data-theme');
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
                 localStorage.setItem('theme', 'light');
                 if (themeBtn) themeBtn.innerText = '🌙';
             } else {
-                document.body.setAttribute('data-theme', 'dark');
+                document.documentElement.setAttribute('data-theme', 'dark');
                 localStorage.setItem('theme', 'dark');
                 if (themeBtn) themeBtn.innerText = '☀️';
             }
@@ -144,13 +163,6 @@
                 alert("❌ خطای احراز هویت!"); return;
             }
 
-            // 🌟 ۱. بررسی قفل زمانی (Time Lock) - غیرفعال شده برای تست
-            // const now = new Date();
-            // const dayOfWeek = now.getDay(); 
-            // const hour = now.getHours();
-            // const isWindowOpen = (dayOfWeek === 1 && hour >= 22) || (dayOfWeek === 7 && hour < 20);
-
-            // همیشه True است تا فرم باز بماند
             const isWindowOpen = true; 
 
             if (!isWindowOpen) {
@@ -162,7 +174,6 @@
                 document.getElementById('requestFormContent').style.display = 'block';
             }
 
-            // 🌟 ۲.۵: بررسی اینکه آیا در این هفته قبلاً درخواست داده یا نه (جلوگیری از تقلب!)
             try {
                 let twoDaysAgo = new Date();
                 twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
@@ -171,24 +182,23 @@
                     .from('ai_schedules')
                     .select('status')
                     .eq('national_id', String(userId))
-                    .gte('created_at', twoDaysAgo.toISOString()) // فقط برنامه‌هایی که تو این بازه (پنجشنبه/جمعه) ساخته شده
-                    .neq('status', 'rejected'); // اگر رد شده باشه، مجازه دوباره بفرسته
+                    .gte('created_at', twoDaysAgo.toISOString()) 
+                    .neq('status', 'rejected'); 
                 
                 if (existingRequest && existingRequest.length > 0) {
                     document.getElementById('requestFormContent').innerHTML = `
-                        <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; padding: 30px; border-radius: 16px; text-align: center;">
+                        <div style="background: var(--primary-fade); border: 1px solid var(--primary); padding: 30px; border-radius: 16px; text-align: center;">
                             <div style="font-size: 40px; margin-bottom: 15px;">⏳</div>
-                            <h3 style="color: #3b82f6; margin-bottom: 10px;">درخواست شما در اتاق مشاور است</h3>
+                            <h3 style="color: var(--primary); margin-bottom: 10px;">درخواست شما در اتاق مشاور است</h3>
                             <p style="font-size: 13px; color: var(--text-muted); line-height: 1.8;">
                                 استراتژی شما با موفقیت ثبت شده است. لطفاً منتظر چینش برنامه بمانید. برنامه جدید شما از <strong>بامداد شنبه</strong> در تقویم ظاهر خواهد شد.
                             </p>
                         </div>
                     `;
-                    return; // توقف اجرای بقیه کدها
+                    return; 
                 }
             } catch(e) { console.warn("خطا در بررسی درخواست قبلی", e); }
 
-            // 🌟 ۲. اگر پنجره باز بود، اطلاعات رو لود کن
             let studentExams = [];
             try {
                 const { data: stData } = await supabaseClient.from('students').select('grade, major').eq('national_id', String(userId)).maybeSingle();
@@ -219,20 +229,18 @@
                 container.innerHTML = ''; 
                 
                 if (data && data.length > 0) {
-                    // جایگزین این بخش در تابع loadDynamicSwitches
-let validSwitches = data.filter(sw => {
-    // از آنجا که هدف‌ها حالا آرایه هستند، باید از includes استفاده کنیم
-    let gradeTargets = sw.target_grade || [];
-    let examTargets = sw.target_exam || [];
+                    let validSwitches = data.filter(sw => {
+                        let gradeTargets = sw.target_grade || [];
+                        let examTargets = sw.target_exam || [];
 
-    let gradeMatch = gradeTargets.includes('all') || gradeTargets.includes(studentGrade);
-    
-    let examMatch = examTargets.includes('all') || 
-                    examTargets.includes('بدون آزمون') || 
-                    studentExams.some(ex => examTargets.includes(ex));
-                    
-    return gradeMatch && examMatch;
-});
+                        let gradeMatch = gradeTargets.includes('all') || gradeTargets.includes(studentGrade);
+                        
+                        let examMatch = examTargets.includes('all') || 
+                                        examTargets.includes('بدون آزمون') || 
+                                        studentExams.some(ex => examTargets.includes(ex));
+                                        
+                        return gradeMatch && examMatch;
+                    });
 
                     if (validSwitches.length > 0) {
                         validSwitches.forEach(sw => {
@@ -259,13 +267,12 @@ let validSwitches = data.filter(sw => {
         }
 
         // ==========================================
-        // 🚀 ارسال درخواست برنامه به هسته مرکزی (نسخه هوشمند با محاسبه میانگین)
+        // 🚀 ارسال درخواست برنامه به هسته مرکزی
         // ==========================================
         async function requestNewSchedule() {
             const noteInput = document.getElementById('nextWeekNote'); 
             const note = noteInput ? noteInput.value : '';
 
-            // 🎛️ جمع‌آوری هوشمند وضعیت سوئیچ‌ها
             let studentOptions = {};
             let activeSwitchTitles = []; 
             const toggles = document.querySelectorAll('.dynamic-toggle-input');
@@ -282,15 +289,12 @@ let validSwitches = data.filter(sw => {
                 btn.disabled = true;
             }
 
-            // 📊 محاسبه میانگین مطالعه و تست از گزارش‌های روزانه دانش‌آموز
             let avgStudyHours = 0;
             let avgTestCount = 0;
             try {
-                // دریافت گزارش‌های قبلی (دقیقاً مثل منطق داشبورد)
                 const { data: reports } = await supabaseClient
                     .from('daily_reports')
                     .select('courses')
-                    // در داشبورد با chat_id ذخیره شده، پس اینجا هم همون کلید رو چک می‌کنیم
                     .eq('chat_id', String(localStorage.getItem('qotbnama_user_id') || userId));
 
                 if (reports && reports.length > 0) {
@@ -304,7 +308,6 @@ let validSwitches = data.filter(sw => {
                             });
                         }
                     });
-                    // گرد کردن اعداد
                     avgStudyHours = Math.round((totalTime / reports.length) * 10) / 10;
                     avgTestCount = Math.round(totalTests / reports.length);
                 }
@@ -313,10 +316,9 @@ let validSwitches = data.filter(sw => {
             }
 
             try {
-                // 🌟 ارسال درخواست به صورت Fire-and-Forget (خفه کردن ارور امنیتی CORS)
                 await fetch(GAS_WEBAPP_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // 🎯 این دستور جادویی باعث میشه مرورگر ارور قرمز CORS رو دیگه نده
+                    mode: 'no-cors', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ 
                         action: 'generate_schedule_auto', 
@@ -329,7 +331,6 @@ let validSwitches = data.filter(sw => {
                     })
                 });
                 
-                // چون ارور CORS رو خفه کردیم، همیشه فرض رو بر موفقیت می‌ذاریم (چون گوگل کارش رو انجام میده)
                 const formContainer = document.getElementById('fridayForm') || document.body;
                 formContainer.innerHTML = `
                     <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px; text-align: center; margin-top: 20px; animation: fadeIn 0.5s;">
@@ -342,10 +343,8 @@ let validSwitches = data.filter(sw => {
                 `;
 
             } catch (error) {
-                // خطای واقعی رو برای خودت تو پس‌زمینه نگه دار
                 console.error("System Error (Submit Request):", error);
                 
-                // پیام شیک و امن برای کاربر
                 alert('⚠️ در ارتباط با سرور مشکلی پیش آمده است. لطفاً چند لحظه دیگر مجدداً تلاش کنید.');
                 if(btn) {
                     btn.innerHTML = 'ارسال پرونده به اتاق مشاور 🚀'; 
