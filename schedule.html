@@ -9,64 +9,70 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
+        /* ==========================================
+           🎨 پالت رنگی یکپارچه و استاندارد راهینو
+           ========================================== */
         :root { 
-            --vip-bg: #f8fafc; --vip-surface: #ffffff; --vip-border: #e2e8f0;
-            --gold: #d97706; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
-            --info: #3b82f6; --purple: #8b5cf6; --text-main: #0f172a; --text-muted: #64748b;
+            --primary: #639889; --primary-hover: #4d7a6e; --primary-fade: rgba(99, 152, 137, 0.05);
+            --accent: #d9858a; --accent-hover: #c4727c;
+            --bg-color: #f7f9f8; --surface: #ffffff; --border-color: #e2e8f0;
+            --text-main: #2d3748; --text-muted: #718096;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --info: #3b82f6;
         }
 
         [data-theme="dark"] { 
-            --vip-bg: #0f172a; --vip-surface: #1e293b; --vip-border: #334155;
-            --gold: #f59e0b; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
-            --info: #3b82f6; --purple: #8b5cf6; --text-main: #f8fafc; --text-muted: #94a3b8;
+            --primary: #77bba9; --primary-hover: #8fd0bf; --primary-fade: rgba(119, 187, 169, 0.1);
+            --accent: #e59ea3; --bg-color: #121918; --surface: #1b2624; --border-color: #2d3d3a;
+            --text-main: #f1f5f9; --text-muted: #94a3b8;
         }
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; user-select: none; transition: background-color 0.3s, color 0.3s; }
-        body { background: var(--vip-bg); color: var(--text-main); line-height: 1.6; padding-bottom: 90px; }
+        body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 90px; }
         .app-container { max-width: 700px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s ease-out; position: relative; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .theme-toggle { background: var(--vip-surface); border: 1px solid var(--vip-border); color: var(--text-main); width: 45px; height: 45px; border-radius: 14px; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; }
+        .theme-toggle { background: var(--surface); border: 1px solid var(--border-color); color: var(--text-main); width: 45px; height: 45px; border-radius: 14px; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; }
 
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .action-btn { background: var(--vip-surface); border: 1px solid var(--vip-border); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; cursor: pointer; }
-        .page-title { font-size: 18px; font-weight: 900; color: var(--gold); display: flex; flex-direction: column; align-items: center;}
+        .action-btn { background: var(--surface); border: 1px solid var(--border-color); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: var(--text-main); font-size: 20px; cursor: pointer; }
+        .page-title { font-size: 18px; font-weight: 900; color: var(--primary); display: flex; flex-direction: column; align-items: center;}
         .page-subtitle { font-size: 12px; color: var(--text-muted); font-weight: normal; }
         
-        .tabs-container { display: flex; background: var(--vip-surface); border-radius: 16px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--vip-border); }
+        .tabs-container { display: flex; background: var(--surface); border-radius: 16px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--border-color); }
         .tab-btn { flex: 1; text-align: center; padding: 12px 2px; font-size: 13px; font-weight: bold; color: var(--text-muted); text-decoration: none; border-radius: 12px; transition: 0.3s; }
-        .tab-btn.active { background: var(--gold); color: #000; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); }
+        .tab-btn.active { background: var(--primary-fade); color: var(--primary); border: 1px solid rgba(99, 152, 137, 0.3); }
 
-        .daily-note { background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.05)); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 20px; padding: 20px 20px 20px 50px; margin-bottom: 20px; position: relative; }
+        .daily-note { background: var(--primary-fade); border: 1px solid rgba(99, 152, 137, 0.3); border-radius: 20px; padding: 20px 20px 20px 50px; margin-bottom: 20px; position: relative; }
         .daily-note-icon { position: absolute; left: 15px; top: 18px; font-size: 28px; }
-        .daily-note-title { font-size: 12px; color: var(--gold); font-weight: bold; margin-bottom: 5px; }
+        .daily-note-title { font-size: 12px; color: var(--primary); font-weight: bold; margin-bottom: 5px; }
         .daily-note-text { font-size: 13px; color: var(--text-main); font-weight: bold; }
 
-        .progress-box { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 16px; padding: 15px 20px; margin-bottom: 20px; }
+        .progress-box { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 15px 20px; margin-bottom: 20px; }
         .progress-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 10px; }
-        .progress-bar-bg { width: 100%; height: 8px; background: var(--vip-bg); border-radius: 10px; overflow: hidden; }
+        .progress-bar-bg { width: 100%; height: 8px; background: var(--bg-color); border-radius: 10px; overflow: hidden; }
         .progress-bar-fill { height: 100%; background: var(--success); width: 0%; transition: 1s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        .quest-card { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 20px; padding: 18px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid var(--vip-border); }
+        .quest-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 20px; padding: 18px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid var(--border-color); }
         .quest-card.completed { background: rgba(16, 185, 129, 0.05); border-color: var(--success); border-right-color: var(--success); opacity: 0.6; }
-        .type-bio { border-right-color: var(--success); } .type-math { border-right-color: var(--warning); } .type-chem { border-right-color: var(--info); } .type-phys { border-right-color: var(--purple); }
+        .type-bio { border-right-color: var(--success); } .type-math { border-right-color: var(--warning); } .type-chem { border-right-color: var(--info); } .type-phys { border-right-color: var(--accent); }
         .quest-info { flex: 1; padding-left: 10px; }
-        .quest-time { font-size: 11px; color: var(--text-muted); font-weight: bold; background: var(--vip-bg); padding: 4px 8px; border-radius: 6px; display: inline-block; margin-bottom: 8px; }
+        .quest-time { font-size: 11px; color: var(--text-muted); font-weight: bold; background: var(--bg-color); padding: 4px 8px; border-radius: 6px; display: inline-block; margin-bottom: 8px; }
         .quest-title { font-size: 15px; font-weight: 900; margin-bottom: 5px; }
         .quest-card.completed .quest-title { text-decoration: line-through; color: var(--success); }
         .quest-desc { font-size: 11px; color: var(--text-muted); }
         .quest-actions { display: flex; gap: 8px; flex-direction: column; justify-content: center; }
-        .action-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 1px solid var(--vip-border); background: var(--vip-bg); font-size: 14px; }
+        .action-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 1px solid var(--border-color); background: var(--bg-color); font-size: 14px; }
         .btn-check:hover, .quest-card.completed .btn-check { background: var(--success); border-color: var(--success); color: white; }
 
-        /* مدال‌ها */
+        /* مدال‌ها و دکمه‌ها */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(5px); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
-        .modal-box { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 24px; padding: 25px; width: 100%; max-width: 400px; position: relative;}
-        .btn-gold { background: linear-gradient(135deg, var(--gold), #d97706); color: #000; width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; }
+        .modal-box { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 25px; width: 100%; max-width: 400px; position: relative;}
         
-        .streak-badge { background: rgba(245, 158, 11, 0.1); border: 1px solid var(--gold); color: var(--gold); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-        .quiz-input { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid var(--vip-border); background: var(--vip-bg); color: var(--text-main); font-size: 16px; outline: none; margin: 20px 0; text-align: center; font-weight: bold; }
-        .quiz-input:focus { border-color: var(--gold); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; }
+        
+        .streak-badge { background: var(--primary-fade); border: 1px solid var(--primary); color: var(--primary); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
+        .quiz-input { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid var(--border-color); background: var(--bg-color); color: var(--text-main); font-size: 16px; outline: none; margin: 20px 0; text-align: center; font-weight: bold; }
+        .quiz-input:focus { border-color: var(--primary); }
         .close-modal-btn { position: absolute; top: 15px; left: 15px; background: transparent; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; }
     </style>
 </head>
@@ -81,7 +87,7 @@
             
             <div id="gameTimerDisplay" style="font-size: 30px; font-weight: 900; color: var(--danger); margin: 15px 0; font-family: monospace;">⏳ --:--</div>
             
-            <div id="quizContainer" style="background: var(--vip-bg); padding: 20px; border-radius: 12px; margin-top: 10px; border: 1px solid var(--vip-border); min-height: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <div id="quizContainer" style="background: var(--bg-color); padding: 20px; border-radius: 12px; margin-top: 10px; border: 1px solid var(--border-color); min-height: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
                 <div style="color: var(--text-muted); font-weight: bold;">در حال آماده‌سازی بازی... ⏳</div>
             </div>
         </div>
@@ -97,9 +103,9 @@
                 </div>
             </div>
 
-            <div class="timer-display" id="timerDisplay" style="display: none; font-size: 55px; font-weight: 900; color: var(--gold); font-family: monospace; margin: 10px 0;">00:00</div>
+            <div class="timer-display" id="timerDisplay" style="display: none; font-size: 55px; font-weight: 900; color: var(--primary); font-family: monospace; margin: 10px 0;">00:00</div>
             
-            <div style="background: var(--vip-bg); border-radius: 16px; padding: 12px; margin-bottom: 20px; border: 1px solid var(--vip-border);">
+            <div style="background: var(--bg-color); border-radius: 16px; padding: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);">
                 <div id="musicTrackName" style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; font-weight: bold;">موسیقی: در حال بارگذاری...</div>
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; direction: ltr; padding: 0 10px;">
@@ -107,7 +113,7 @@
                     
                     <div style="display: flex; justify-content: center; gap: 20px; align-items: center;">
                         <button onclick="prevMusic()" style="background:none;border:none;font-size:22px;cursor:pointer;" title="آهنگ قبلی">⏭</button>
-                        <button id="playPauseBtn" onclick="toggleMusic()" style="background:var(--vip-surface); border:2px solid var(--vip-border); border-radius:50%; width:45px; height:45px; font-size:18px; cursor:pointer; display:flex; justify-content:center; align-items:center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">▶️</button>
+                        <button id="playPauseBtn" onclick="toggleMusic()" style="background:var(--surface); border:2px solid var(--border-color); border-radius:50%; width:45px; height:45px; font-size:18px; cursor:pointer; display:flex; justify-content:center; align-items:center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">▶️</button>
                         <button onclick="nextMusic()" style="background:none;border:none;font-size:22px;cursor:pointer;" title="آهنگ بعدی">⏮</button>
                     </div>
                     
@@ -124,13 +130,13 @@
             <div style="font-size: 50px;">🏆</div>
             <h2 style="color: var(--success); margin: 10px 0;">فوق‌العاده بودی!</h2>
             <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">مأموریت‌های امروز رو کامل کردی.</p>
-            <button class="btn-gold" onclick="document.getElementById('celebrationModal').style.display='none'">بستن</button>
+            <button class="btn-primary" onclick="document.getElementById('celebrationModal').style.display='none'">بستن</button>
         </div>
     </div>
 
     <div class="app-container">
         <div class="nav-header">
-            <a href="menu.html" class="action-btn">🔙</a>
+            <a href="menu" class="action-btn">🔙</a>
             <div class="page-title">
                 قطب‌نمای راهینو
                 <span class="page-subtitle" id="todayDateLabel">...</span>
@@ -138,28 +144,28 @@
             <div style="display: flex; gap: 10px; align-items: center;">
                 <div class="streak-badge" id="streakBadge" title="زنجیره بیداری شما">🔥 <span id="streakCount">0</span></div>
                 <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
-                <a href="vip-setup.html" class="action-btn">⚙️</a>
+                <a href="vip-setup" class="action-btn">⚙️</a>
             </div>
         </div>
 
         <div class="tabs-container">
-            <a href="schedule.html" class="tab-btn active">🎯 عملیات امروز</a>
-            <a href="week.html" class="tab-btn">🗓️ تقویم هفته</a>
-            <a href="request.html" class="tab-btn">🎁 اتاق فکر</a>
+            <a href="schedule" class="tab-btn active">🎯 عملیات امروز</a>
+            <a href="week" class="tab-btn">🗓️ تقویم هفته</a>
+            <a href="request" class="tab-btn">🎁 اتاق فکر</a>
         </div>
 
-        <div id="aiMotivationBox" style="display: none; background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1)); border: 1px solid var(--purple); border-radius: 16px; padding: 15px; margin-bottom: 20px; position: relative; animation: fadeIn 0.5s;">
+        <div id="aiMotivationBox" style="display: none; background: var(--primary-fade); border: 1px solid rgba(99, 152, 137, 0.3); border-radius: 16px; padding: 15px; margin-bottom: 20px; position: relative; animation: fadeIn 0.5s;">
             <button onclick="dismissDailyMotivation()" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.05); border: none; width: 24px; height: 24px; border-radius: 50%; font-size: 10px; color: var(--text-muted); cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s;">❌</button>
             
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                 <span style="font-size: 20px;">✨</span>
-                <span style="font-size: 13px; font-weight: 900; color: var(--purple);">انرژیِ امروزت:</span>
+                <span style="font-size: 13px; font-weight: 900; color: var(--primary);">انرژیِ امروزت:</span>
             </div>
             <p id="aiMotivationText" style="font-size: 12px; color: var(--text-main); line-height: 1.8; margin-right: 28px; font-weight: 500;"></p>
         </div>
 
         <div class="progress-box">
-            <div class="progress-header"><span>پیشرفت مأموریت‌ها</span><span id="progressText" style="color:var(--gold);">0%</span></div>
+            <div class="progress-header"><span>پیشرفت مأموریت‌ها</span><span id="progressText" style="color:var(--primary);">0%</span></div>
             <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
         </div>
 
@@ -185,7 +191,6 @@
         
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); 
         
-        // 💡 اصلاح شد: خواندن کد ملی به عنوان آیدی اصلی
         const userId = localStorage.getItem('qotbnama_user_id');
         
         const todayNameFa = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(new Date());
@@ -211,29 +216,26 @@
         // ==========================================
         async function checkVipSetup(userId) {
             try {
-                // 💡 اصلاح ۱: اسم جدول دقیقاً شد همونی که گفتی
                 const { data, error } = await supabaseClient
                     .from('vip_settings') 
-                    .select('*') // 💡 اصلاح ۲: گذاشتیم روی * که اگر ستون id رو نساخته بودی ارور نده
+                    .select('*') 
                     .eq('national_id', String(userId))
                     .maybeSingle(); 
 
-                // 💡 برای اینکه دقیقاً بفهمیم دردش چیه، ارور رو تو کنسول چاپ می‌کنیم
                 if (error) {
                     console.error("ارور امنیتی یا ارتباطی سوپابیس:", error);
                 }
 
-                // اگر هیچ دیتایی پیدا نکرد یعنی فرم پر نشده یا RLS روشنه
                 if (!data) {
                     alert("⚠️ رفیق! هنوز فرم استراتژی، کلاس‌ها و آزمون‌هات رو تکمیل نکردی!\nبدون این اطلاعات که نمی‌تونیم برات برنامه خفن بچینیم. اول این فرم رو پر کن.");
-                    window.location.replace('vip-setup.html');
+                    window.location.replace('vip-setup');
                     return false;
                 }
                 
                 return true; 
             } catch (err) {
                 console.error("خطا در بررسی دروازه VIP:", err);
-                return true; // اگر اینترنت قطع بود، گیر نده
+                return true; 
             }
         }
 
@@ -241,30 +243,28 @@
         // 🚀 راه‌اندازی اولیه صفحه (لودینگ)
         // ==========================================
         window.onload = async function() {
-            // ۱. شناسایی هویت دقیق دانش‌آموز
             const userId = localStorage.getItem('national_id') || 
                            localStorage.getItem('qotbnama_user_id') || 
                            localStorage.getItem('student_id') || 
                            localStorage.getItem('chat_id');
 
             if (!userId || userId === 'null' || userId === 'undefined') {
-                window.location.replace('index.html');
+                window.location.replace('index');
                 return;
             }
 
-            // ۲. ⛔ توقف اجباری: فراخوانی دروازه‌بان امنیتی
             const isSetupComplete = await checkVipSetup(userId);
-            if (!isSetupComplete) return; // اگر فرم پر نشده بود، کدهای زیر اصلاً اجرا نمیشن!
+            if (!isSetupComplete) return; 
 
-            // ۳. اگر از دروازه رد شد، تاریخ امروز و بقیه چیزها لود میشه
             const todayShamsi = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
             document.getElementById('todayDateLabel').innerText = todayShamsi;
             
             await checkMorningStatus();
             await loadCurrentSchedule();
         };
+
         // ==========================================
-        // ☀️ سیستم بررسی و اجرای مینی‌گیم بیدارباش (محدودیت زمانی)
+        // ☀️ سیستم بررسی و اجرای مینی‌گیم بیدارباش
         // ==========================================
         async function checkMorningStatus() {
             try {
@@ -275,34 +275,28 @@
                 const now = new Date();
                 const timeInMinutes = now.getHours() * 60 + now.getMinutes();
                 
-                // تعریف پنجره زمانی مجاز (۵:۰۰ تا ۷:۳۰ صبح)
-                const startWindow = 5 * 60;       // 300 minutes
-                const endWindow = 7 * 60 + 30;    // 450 minutes
+                const startWindow = 5 * 60;       
+                const endWindow = 7 * 60 + 30;    
 
                 if (!data || data.last_wakeup_date !== todayStr) {
                     
                     if (timeInMinutes >= startWindow && timeInMinutes <= endWindow) {
-                        // 🟢 در بازه مجاز -> نمایش مودال بیدارباش
                         document.getElementById('wakeupModal').style.display = 'flex';
                         fetchMorningQuiz();
                     } 
                     else if (timeInMinutes > endWindow) {
-                        // 🔴 خواب مونده! -> بررسی اینکه آیا امروز جریمه براش ثبت شده یا نه
                         const missedFlag = localStorage.getItem(`missed_wakeup_${todayStr}`);
                         
                         if (!missedFlag) {
-                            // ۱. ثبت پیام هشدار در صندوق پیام‌ها
                             await supabaseClient.from('messages').insert({
                                 student_nid: String(userId),
                                 title: '⏰ خواب موندی رفیق!',
                                 body: 'امروز خواب موندی و چالش بیدارباش رو از دست دادی! حواست باشه فردا خواب نمونی قهرمان.'
                             });
                             
-                            // ۲. صفر کردن زنجیره بیداری به عنوان جریمه
                             await supabaseClient.from('students').update({ wake_streak: 0 }).eq('national_id', String(userId));
                             document.getElementById('streakCount').innerText = '0';
                             
-                            // ۳. ثبت در حافظه محلی تا امروز دیگه پیام تکراری نده
                             localStorage.setItem(`missed_wakeup_${todayStr}`, 'true');
                         }
                     }
@@ -333,7 +327,6 @@
                 }
             } catch (e) {
                 console.error("خطا در ارتباط با سرور:", e);
-                // بازی اورژانسی اگر اینترنت ضعیف بود
                 renderMiniGame({ type: 'tap_fast', timeLimit: 10, target: 20 });
             }
         }
@@ -346,7 +339,6 @@
             const container = document.getElementById('quizContainer');
             container.innerHTML = '';
 
-            // رندر بازی ایموجی
             if (gameData.type === 'odd_emoji') {
                 container.innerHTML = `<div style="margin-bottom: 15px; font-weight: 900; font-size: 14px;">ایموجی متفاوت رو سریع پیدا کن!</div>`;
                 let grid = document.createElement('div');
@@ -354,8 +346,8 @@
                 
                 for (let i = 0; i < gameData.total; i++) {
                     let btn = document.createElement('button');
-                    btn.style.fontSize = '26px'; btn.style.background = 'var(--vip-surface)';
-                    btn.style.border = '2px solid var(--vip-border)'; btn.style.borderRadius = '12px';
+                    btn.style.fontSize = '26px'; btn.style.background = 'var(--surface)';
+                    btn.style.border = '2px solid var(--border-color)'; btn.style.borderRadius = '12px';
                     btn.style.padding = '5px'; btn.style.cursor = 'pointer'; btn.style.transition = '0.2s';
                     
                     if (i === gameData.targetIndex) {
@@ -363,18 +355,17 @@
                         btn.onclick = () => winGame();
                     } else {
                         btn.innerText = gameData.normalEmoji;
-                        btn.onclick = () => { btn.style.opacity = '0.3'; } // وقتی اشتباه میزنه ایموجی کمرنگ میشه
+                        btn.onclick = () => { btn.style.opacity = '0.3'; } 
                     }
                     grid.appendChild(btn);
                 }
                 container.appendChild(grid);
             } 
-            // رندر بازی کلیک سرعتی
             else if (gameData.type === 'tap_fast') {
                 tapCount = 0;
                 container.innerHTML = `<div style="margin-bottom: 15px; font-weight: 900; font-size: 14px;">سریع ${gameData.target} بار روی دکمه ضربه بزن!</div>`;
                 let btn = document.createElement('button');
-                btn.className = 'btn-gold';
+                btn.className = 'btn-primary';
                 btn.innerText = `ضربه بزن! (0 / ${gameData.target})`;
                 btn.style.height = '90px'; btn.style.fontSize = '22px'; btn.style.userSelect = 'none';
                 
@@ -382,13 +373,12 @@
                     tapCount++;
                     btn.innerText = `ضربه بزن! (${tapCount} / ${gameData.target})`;
                     btn.style.transform = 'scale(0.95)';
-                    setTimeout(() => btn.style.transform = 'scale(1)', 50); // افکت کلیک
+                    setTimeout(() => btn.style.transform = 'scale(1)', 50); 
                     if (tapCount >= gameData.target) winGame();
                 };
                 container.appendChild(btn);
             }
 
-            // شمارش معکوس تایمر
             gameTimerInterval = setInterval(() => {
                 timeLeft--;
                 if (timeLeft <= 0) {
@@ -397,7 +387,7 @@
                     container.innerHTML = `
                         <div style="color: var(--danger); font-weight: bold; font-size: 16px;">زمان تموم شد! 😴</div>
                         <p style="font-size:12px; color:var(--text-muted); margin-top:5px;">یه آبی به دست و روت بزن دوباره امتحان کن.</p>
-                        <button class="btn-gold" style="margin-top:15px; padding: 10px;" onclick="fetchMorningQuiz()">تلاش مجدد 🔄</button>
+                        <button class="btn-primary" style="margin-top:15px; padding: 10px;" onclick="fetchMorningQuiz()">تلاش مجدد 🔄</button>
                     `;
                 } else {
                     document.getElementById('gameTimerDisplay').innerText = `⏳ 00:${timeLeft.toString().padStart(2, '0')}`;
@@ -410,7 +400,6 @@
             document.getElementById('quizContainer').innerHTML = `<div style="color: var(--success); font-weight: 900; font-size: 22px; text-align: center;">ایول! خواب از سرت پرید! 🔥<br><span style="font-size:12px; color:var(--text-muted); font-weight:normal;">در حال ثبت بیداری...</span></div>`;
             
             try {
-                // ثبت مستقیم بیداری در سوپابیس
                 const { data: stData } = await supabaseClient.from('students').select('wake_streak').eq('national_id', String(userId)).single();
                 let newStreak = (stData.wake_streak || 0) + 1;
                 const todayStr = new Date().toISOString().split('T')[0];
@@ -421,7 +410,7 @@
                 
                 setTimeout(() => {
                     document.getElementById('wakeupModal').style.display = 'none';
-                    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#f59e0b', '#ef4444', '#10b981'] });
+                    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#639889', '#d9858a', '#10b981'] });
                 }, 1500);
 
             } catch(e) {
@@ -430,8 +419,9 @@
                 document.getElementById('wakeupModal').style.display = 'none';
             }
         }
+
         const daysArr = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
-        let renderDayFa = todayNameFa; // روزی که قراره رو صفحه نشون داده بشه
+        let renderDayFa = todayNameFa; 
 
         function timeStrToMins(timeStr) {
             if(!timeStr) return 0;
@@ -440,14 +430,13 @@
         }
 
         async function loadCurrentSchedule() {
-            const nowIso = new Date().toISOString(); // 🌟 گرفتن زمان دقیق سیستم
+            const nowIso = new Date().toISOString(); 
             
-            // 🌟 فراخوانی هوشمند با اعمال قفل زمانی
             const { data, error } = await supabaseClient.from('ai_schedules').select('*')
                 .eq('national_id', String(userId))
                 .eq('status', 'approved')
-                .lte('target_start_date', nowIso) // 🔒 قفل زمانی: نمایش فقط در صورت رسیدن به بامداد شنبه
-                .order('target_start_date', { ascending: false }) // 🎯 مرتب‌سازی بر اساس تاریخ شروع برنامه
+                .lte('target_start_date', nowIso) 
+                .order('target_start_date', { ascending: false }) 
                 .limit(1);
             
             if (data && data.length > 0) { 
@@ -456,12 +445,10 @@
                 renderTodayTab(); 
             } else { 
                 document.getElementById('questsContainer').innerHTML = '<div style="text-align:center;color:var(--text-muted); padding:40px;">هنوز برنامه‌ی فعالی برای این هفته آغاز نشده است. ⏳</div>'; 
-                updateProgressBar(); // 🌟 برای جلوگیری از باگ‌های احتمالی پر شدن نوار وضعیت
+                updateProgressBar(); 
             }
         }
 
-        // 🌟 سیستم تشخیص روزهای عقب‌افتاده + اطلاعیه
-        // 🌟 سیستم تشخیص روزهای عقب‌افتاده + اطلاعیه (اصلاح شده برای حفظ تاریخ کامل)
         function determineRenderDay() {
             let todayIdx = daysArr.indexOf(todayNameFa);
             if(todayIdx === -1) todayIdx = 6; 
@@ -484,7 +471,6 @@
                 }
             }
 
-            // هشدار برای روزهای تلنبار شده
             if (renderDayFa !== todayNameFa && previousRenderDay !== renderDayFa) {
                 if(!sessionStorage.getItem('backlogAlert_' + renderDayFa)) {
                     alert(`⚠️ توجه: هنوز تکالیفِ ${renderDayFa} کامل نشده!\nلطفاً تیک بزن یا به جبرانی منتقل کن تا به برنامه‌ی امروز (${todayNameFa}) برسی.`);
@@ -493,18 +479,17 @@
                 document.getElementById('todayDateLabel').innerText = `⚠️ در حال پاکسازی عقب‌افتادگی‌های ${renderDayFa}`;
                 document.getElementById('todayDateLabel').style.color = 'var(--danger)';
             } else if (renderDayFa === todayNameFa) {
-                // 🎯 اصلاح اصلی: بازسازی تاریخ کامل به جای اسمِ خالیِ روز
                 const todayShamsiFull = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
                 document.getElementById('todayDateLabel').innerText = todayShamsiFull;
                 document.getElementById('todayDateLabel').style.color = 'var(--text-muted)';
             }
         }
+
         function renderTodayTab() {
             const planArr = currentScheduleObj.raw_plan || [];
             const container = document.getElementById('questsContainer'); 
             container.innerHTML = '';
-            // 🌟 نمایش پیام انگیزشی مخصوص همین روز
-            // 🌟 نمایش پیام انگیزشی مخصوص همین روز (با سیستم حافظه)
+            
             const motivationBox = document.getElementById('aiMotivationBox');
             const motivationText = document.getElementById('aiMotivationText');
             
@@ -516,13 +501,12 @@
                 let todaysMessage = aiMotivations.daily_motivations ? aiMotivations.daily_motivations[renderDayFa] : null;
 
                 if (todaysMessage) {
-                    // چک می‌کنیم آیا کاربر قبلاً دقیقاً همین پیام رو بسته یا نه؟
                     let dismissedMsg = localStorage.getItem(`dismissed_daily_${userId}`);
                     if (dismissedMsg === todaysMessage) {
-                        motivationBox.style.display = 'none'; // اگر قبلاً بسته، مخفی بمونه
+                        motivationBox.style.display = 'none'; 
                     } else {
                         motivationText.innerText = todaysMessage;
-                        motivationBox.style.display = 'block'; // اگر جدیده، نشون بده
+                        motivationBox.style.display = 'block'; 
                     }
                 } else {
                     motivationBox.style.display = 'none';
@@ -543,7 +527,6 @@
 
             let pendingTasks = todaysBlocks.filter(p => p.status === 'pending');
 
-            // 🌟 پیام جدید و کامل برای زمانی که ۱۰۰٪ تیک‌ها زده شده (حل مشکل باکس‌های خالی)
             if (todaysBlocks.length > 0 && pendingTasks.length === 0) {
                 container.innerHTML = `
                     <div style="text-align:center; padding: 40px 20px; background: rgba(16, 185, 129, 0.05); border: 1px solid var(--success); border-radius: 20px; margin-top: 20px;">
@@ -587,8 +570,6 @@
             isInitialLoad = false;
         }
 
-        // 🌟 ذخیره ایمن دیتابیس (جلوگیری از پریدن تیک موقع رفرش سریع)
-        // 🌟 ذخیره ایمن دیتابیس (جدا شدن بخش دیتابیس از خطاهای احتمالی گرافیکی)
         async function savePlanToDB() { 
             const { error } = await supabaseClient.from('ai_schedules')
                 .update({ raw_plan: currentScheduleObj.raw_plan })
@@ -606,10 +587,8 @@
 
             block.status = block.status === 'completed' ? 'pending' : 'completed';
             
-            // ۱. اول فقط دیتابیس رو آپدیت می‌کنیم
             try {
                 await savePlanToDB(); 
-            // ... داخل بخش catch اول
             } catch (err) {
                 console.error("System Error (Toggle Quest DB):", err);
                 alert("⚠️ مشکلی در ارتباط با سرور پیش آمده است. لطفاً چند دقیقه دیگر مجدداً تلاش کنید.");
@@ -619,7 +598,6 @@
                 return;
             }
 
-            // ۲. آپدیت ظاهر سایت (خارج از محدوده خطای دیتابیس)
             try {
                 updateProgressBar(); 
                 renderTodayTab(); 
@@ -648,11 +626,9 @@
                 }
             }
 
-            // 🌟 منطق هوشمند جبرانی و نیمکت (اصلاح شده)
             if(availableMakeups.length < neededMakeups) { 
                 alert(`متاسفانه جبرانی خالی نمونده! این درس به عنوان بدهی رفت رو «نیمکت» برای هفته‌ی بعد.`); 
                 
-                // ۱. ایجاد یک کپیِ دقیق از این باکس برای نیمکت
                 let benchClone = JSON.parse(JSON.stringify(origBlock));
                 benchClone.block_id = 'blk_bnch_' + Math.random().toString(36).substr(2, 6);
                 benchClone.day = 'bench';
@@ -660,7 +636,6 @@
                 benchClone.is_benched = true;
                 planArr.push(benchClone);
 
-                // ۲. قرمز کردن (Shift) باکس اصلی تا تقویم سوراخ و زشت نشود
                 origBlock.status = 'shifted'; 
                 
             } else {
@@ -683,16 +658,14 @@
             }
         }
         
-        // 🌟 آپدیت نوار پیشرفت عملیات امروز (با فیلترهای دقیق)
         function updateProgressBar() {
-            // 🎯 فقط تسک‌های واقعیِ امروز رو می‌شماریم
             const activeToday = currentScheduleObj.raw_plan.filter(p => 
                 p.day === renderDayFa && 
                 p.subject !== 'بانک جبرانی' && 
                 !p.subject.includes('ناهار') && 
                 !p.subject.includes('شام') && 
                 (p.type !== 'class' || p.topic === 'کلاس آنلاین') && 
-                p.status !== 'shifted' && // منتقل‌شده‌ها از بار کاری امروز کم میشن
+                p.status !== 'shifted' && 
                 p.day !== 'bench' 
             );
             
@@ -702,7 +675,6 @@
             document.getElementById('progressText').innerText = percent + '%';
             document.getElementById('progressBar').style.width = percent + '%';
             
-            // 🏆 پخش انیمیشن فقط در صورت رسیدن به ۱۰۰٪ کارهای واقعی
             if(percent === 100 && activeToday.length > 0) { 
                 if (!isInitialLoad && !hasCelebratedToday) {
                     hasCelebratedToday = true;
@@ -710,7 +682,7 @@
                     if (celebModal) celebModal.style.display = 'flex'; 
                     
                     try { 
-                        confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 }, colors: ['#f59e0b', '#ef4444', '#10b981', '#3b82f6'] }); 
+                        confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 }, colors: ['#639889', '#d9858a', '#10b981'] }); 
                     } catch(e) {
                         console.error("System Error (Confetti):", e);
                     } 
@@ -725,14 +697,14 @@
                 hasCelebratedToday = false; 
             }
         }
+
         // ==========================================
-        // 🎵 سیستم تایمر، تنفس بادکنکی و موسیقی (نسخه پایدار و نهایی)
+        // 🎵 سیستم تایمر، تنفس بادکنکی و موسیقی
         // ==========================================
         let timerInterval;
         let startTimeout;
         let breathInterval;
         
-        // 🌟 لینک‌های مستقیم و تضمینی MP3 برای مطالعه (بدون فیلتر)
         const playlist = [
             { name: '🎧 white noise', url: 'https://etlutqwwqeahevsskjih.supabase.co/storage/v1/object/public/music/03-White-Noise-10min.mp3' },
             { name: '🌧️ باران آرامش‌بخش', url: 'https://etlutqwwqeahevsskjih.supabase.co/storage/v1/object/public/music/unknown%20-%20OST%20(320).mp3' },
@@ -743,16 +715,14 @@
         let audioPlayer = new Audio();
         let playbackMode = 'single'; 
 
-        // 🌟 رویداد پایان آهنگ: وقتی یه آهنگ تموم میشه چه اتفاقی بیفته؟
         audioPlayer.onended = function() {
             if (playbackMode === 'playlist') {
-                nextMusic(); // برو آهنگ بعدی و پخشش کن
+                nextMusic(); 
             } else {
-                audioPlayer.play(); // همین آهنگ رو از اول بخون
+                audioPlayer.play(); 
             }
         };
 
-        // 🌟 تابع تغییر حالت پخش با زدن روی دکمه
         function toggleLoopMode() {
             let btn = document.getElementById('loopModeBtn');
             if (playbackMode === 'single') {
@@ -767,7 +737,6 @@
         }
 
         function toggleMusic() {
-            // اگر آهنگی ست نشده، آهنگ دیفالت رو بذار
             if (!audioPlayer.src || audioPlayer.src === window.location.href) {
                 audioPlayer.src = playlist[currentTrack].url;
                 document.getElementById('musicTrackName').innerText = `موسیقی: ${playlist[currentTrack].name}`;
@@ -810,18 +779,15 @@
         function openTimer(subject, topic, startTime, endTime) {
             document.getElementById('timerModal').style.display = 'flex';
             
-            // ریست کردن ظاهر مودال برای شروع
             document.getElementById('breathContainer').style.display = 'flex';
             document.getElementById('timerDisplay').style.display = 'none';
             
             let sName = localStorage.getItem('student_name') ? localStorage.getItem('student_name').split(' ')[0] : 'قهرمان';
             
-            // 🌟 اضافه شدن اسم مبحث (topic) به نمایشگر تایمر
             document.getElementById('timerSubjectName').innerHTML = `${sName} جان، ذهنت رو آزاد کن...<br>
-            <span style="color:var(--gold); font-size: 18px; display:block; margin-top:8px;">${subject}</span>
+            <span style="color:var(--primary); font-size: 18px; display:block; margin-top:8px;">${subject}</span>
             <span style="color:var(--text-muted); font-size: 13px;">${topic && topic !== 'undefined' ? topic : ''}</span>`;
             
-            // آماده‌سازی موسیقی اول
             audioPlayer.src = playlist[currentTrack].url;
             document.getElementById('musicTrackName').innerText = `موسیقی: ${playlist[currentTrack].name}`;
             document.getElementById('playPauseBtn').innerText = '▶️'; 
@@ -829,7 +795,6 @@
             let circle = document.getElementById('breathCircle');
             let bText = document.getElementById('breathText');
             
-            // 🌟 انیمیشن تنفس بادکنکی (فقط یک دور، جمعاً ۵ ثانیه)
             bText.innerText = 'نفس عمیق...';
             setTimeout(() => { circle.style.transform = 'scale(1.4)'; }, 100);
             
@@ -838,12 +803,10 @@
                 bText.innerText = 'رها کن...';
             }, 2500);
 
-            // بعد از ۵ ثانیه انیمیشن محو و تایمر ظاهر میشه
             startTimeout = setTimeout(() => {
                 document.getElementById('breathContainer').style.display = 'none';
                 document.getElementById('timerDisplay').style.display = 'block';
                 
-                // پخش خودکار موسیقی اگر مرورگر اجازه بده
                 toggleMusic();
 
                 let t = (timeStrToMins(endTime) - timeStrToMins(startTime)) * 60;
@@ -868,15 +831,14 @@
             audioPlayer.currentTime = 0; 
             document.getElementById('playPauseBtn').innerText = '▶️';
             
-            // برگرداندن تنظیمات به حالت اولیه
             document.getElementById('breathCircle').style.transform = 'scale(1)';
             document.getElementById('timerModal').style.display = 'none'; 
         }
-        // 🔒 تابع مخفی کردن و ذخیره در حافظه
+
         function dismissDailyMotivation() {
             const msgText = document.getElementById('aiMotivationText').innerText;
-            localStorage.setItem(`dismissed_daily_${userId}`, msgText); // ذخیره پیام در حافظه
-            document.getElementById('aiMotivationBox').style.display = 'none'; // مخفی کردن باکس
+            localStorage.setItem(`dismissed_daily_${userId}`, msgText); 
+            document.getElementById('aiMotivationBox').style.display = 'none'; 
         }
     </script>
 </body>
