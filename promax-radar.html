@@ -9,19 +9,20 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
     <style>
         :root { 
-            --bg-dark: #0f172a; --surface-dark: #1e293b; --surface-light: #334155; --border-color: #475569;
-            --accent: #8b5cf6; --accent-glow: rgba(139, 92, 246, 0.2); --gold: #f59e0b;
-            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
-            --text-main: #f8fafc; --text-muted: #94a3b8;
-            --chart-grid: rgba(255, 255, 255, 0.05);
-        }
+    --primary: #639889; --primary-hover: #4d7a6e; --primary-fade: rgba(99, 152, 137, 0.05);
+    --accent: #d9858a; --accent-hover: #c4727c;
+    --bg-color: #f7f9f8; --surface: #ffffff; --border-color: #e2e8f0;
+    --text-main: #2d3748; --text-muted: #718096;
+    --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+    --chart-grid: rgba(0, 0, 0, 0.05);
+}
 
-        /* 🌓 متغیرهای لایت مود */
-        [data-theme="light"] {
-            --bg-dark: #f8fafc; --surface-dark: #ffffff; --surface-light: #e2e8f0; --border-color: #cbd5e1;
-            --text-main: #0f172a; --text-muted: #64748b;
-            --chart-grid: rgba(0, 0, 0, 0.05);
-        }
+[data-theme="dark"] {
+    --primary: #77bba9; --primary-hover: #8fd0bf; --primary-fade: rgba(119, 187, 169, 0.1);
+    --accent: #e59ea3; --bg-color: #121918; --surface: #1b2624; --border-color: #2d3d3a;
+    --text-main: #f1f5f9; --text-muted: #94a3b8;
+    --chart-grid: rgba(255, 255, 255, 0.05);
+}
 
         /* اضافه کردن انیمیشن نرم برای تغییر رنگ‌ها */
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
