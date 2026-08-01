@@ -26,37 +26,34 @@
 
         /* اضافه کردن انیمیشن نرم برای تغییر رنگ‌ها */
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
-        body { background: var(--bg-dark); color: var(--text-main); line-height: 1.6; padding-bottom: 90px; }
+        body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 90px; }
         
         .app-container { max-width: 800px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* هدر و تب‌ها (مشترک) */
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn-back { background: var(--surface-light); border: 1px solid var(--border-color); color: var(--text-main); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 20px; cursor: pointer; }
+        .btn-back { background: var(--surface); border: 1px solid var(--border-color); color: var(--text-main);
         .page-title { font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
-        .pro-badge { background: linear-gradient(135deg, var(--accent), #6d28d9); color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
-
-        .tabs-container { display: flex; background: var(--surface-dark); border-radius: 16px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--border-color); }
+        .pro-badge { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
+        .tabs-container { display: flex; background: var(--surface); border-radius: 16px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--border-color); }
         .tab-btn { flex: 1; text-align: center; padding: 12px 5px; font-size: 13px; font-weight: bold; color: var(--text-muted); text-decoration: none; border-radius: 12px; transition: 0.3s; }
-        .tab-btn.active { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(139, 92, 246, 0.3); }
-
+        .tab-btn.active { background: var(--primary-fade); color: var(--primary); border: 1px solid rgba(99, 152, 137, 0.3); }
         /* کارت‌های آماری (HUD Stats) */
         .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; }
-        .stat-card { background: var(--surface-dark); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); text-align: center; position: relative; overflow: hidden; }
-        .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 100%; height: 3px; background: var(--accent); opacity: 0.5; }
+        .stat-card { background: var(--surface); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); text-align: center; position: relative; overflow: hidden; }
+        .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 100%; height: 3px; background: var(--primary); opacity: 0.5; }
         .stat-title { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
         .stat-value { font-size: 22px; font-weight: 900; text-shadow: 0 0 10px rgba(255,255,255,0.1); }
         
         [data-theme="light"] .stat-value { text-shadow: none; }
 
-        .val-gold { color: var(--gold); }
+        .val-gold { color: var(--accent); } 
+        .val-accent { color: var(--primary); }
         .val-success { color: var(--success); }
         .val-danger { color: var(--danger); }
-        .val-accent { color: var(--accent); }
-
         /* باکس نمودارها */
-        .chart-box { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 15px; margin-bottom: 20px; position: relative; overflow: hidden; }
+        .chart-box { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 15px; margin-bottom: 20px; position: relative; overflow: hidden; }
         .chart-title { font-size: 14px; font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
         .chart-desc { font-size: 11px; color: var(--text-muted); margin-bottom: 15px; }
         .chart-container { position: relative; height: 220px; width: 100%; }
@@ -154,32 +151,32 @@
 
         let appCharts = []; // آرایه برای نگهداری نمودارها جهت آپدیت تم
 
-        // 🌓 سیستم تم
-        const themeBtn = document.getElementById('themeBtn');
-        const currentTheme = localStorage.getItem('theme') || 'dark';
-        
-        if (currentTheme === 'light') { 
-            document.documentElement.setAttribute('data-theme', 'light'); 
-            themeBtn.innerText = '🌙'; 
-        } else {
-            themeBtn.innerText = '☀️';
-        }
+        // 🌓 سیستم تم استاندارد
+const themeBtn = document.getElementById('themeBtn');
+const currentTheme = localStorage.getItem('theme') || 'light';
 
-        function toggleTheme() {
-            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-            if (isLight) { 
-                document.documentElement.removeAttribute('data-theme'); 
-                localStorage.setItem('theme', 'dark'); 
-                themeBtn.innerText = '☀️'; 
-                updateChartsTheme('dark');
-            } else { 
-                document.documentElement.setAttribute('data-theme', 'light'); 
-                localStorage.setItem('theme', 'light'); 
-                themeBtn.innerText = '🌙'; 
-                updateChartsTheme('light');
-            }
-        }
+if (currentTheme === 'dark') { 
+    document.documentElement.setAttribute('data-theme', 'dark'); 
+    if(themeBtn) themeBtn.innerText = '☀️'; 
+} else {
+    document.documentElement.removeAttribute('data-theme');
+    if(themeBtn) themeBtn.innerText = '🌙';
+}
 
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) { 
+        document.documentElement.removeAttribute('data-theme'); 
+        localStorage.setItem('theme', 'light'); 
+        if(themeBtn) themeBtn.innerText = '🌙'; 
+        updateChartsTheme('light');
+    } else { 
+        document.documentElement.setAttribute('data-theme', 'dark'); 
+        localStorage.setItem('theme', 'dark'); 
+        if(themeBtn) themeBtn.innerText = '☀️'; 
+        updateChartsTheme('dark');
+    }
+}
         // تابع آپدیت رنگ نمودارها موقع تغییر تم
         function updateChartsTheme(theme) {
             const textColor = theme === 'light' ? '#64748b' : '#94a3b8';
@@ -306,15 +303,13 @@
             // --- رسم نمودار ۱: نبض پیشرفت ---
             const chart1 = new Chart(document.getElementById('trendChart').getContext('2d'), {
                 type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'تراز کل',
-                        data: tarazTrend,
-                        borderColor: '#8b5cf6',
-                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                        borderWidth: 3, tension: 0.4, fill: true, pointBackgroundColor: '#fff', pointRadius: 5
-                    }]
+                datasets: [{
+    label: 'تراز کل',
+    data: tarazTrend,
+    borderColor: '#639889', /* سبز اصلی */
+    backgroundColor: 'rgba(99, 152, 137, 0.1)',
+    borderWidth: 3, tension: 0.4, fill: true, pointBackgroundColor: '#fff', pointRadius: 5
+}]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } }
             });
@@ -325,10 +320,10 @@
                 data: {
                     labels: labels,
                     datasets: [
-                        { label: 'درست', data: correctData, backgroundColor: '#10b981' },
-                        { label: 'غلط', data: incorrectData, backgroundColor: '#ef4444' },
-                        { label: 'نزده', data: unattemptedData, backgroundColor: '#475569' }
-                    ]
+    { label: 'درست', data: correctData, backgroundColor: '#10b981' },
+    { label: 'غلط', data: incorrectData, backgroundColor: '#ef4444' },
+    { label: 'نزده', data: unattemptedData, backgroundColor: '#94a3b8' } /* تغییر به خاکستری استاندارد متن */
+]
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
@@ -343,15 +338,15 @@
                 data: {
                     labels: labels,
                     datasets: [
-                        { type: 'line', label: 'تراز آزمون', data: tarazTrend, borderColor: '#f59e0b', backgroundColor: '#f59e0b', borderWidth: 3, pointRadius: 5, tension: 0.3, yAxisID: 'y1' },
-                        { type: 'bar', label: 'مجموع تست دو هفته', data: totalTestsData, backgroundColor: 'rgba(59, 130, 246, 0.6)', borderRadius: 4, yAxisID: 'y' }
-                    ]
+    { type: 'line', label: 'تراز آزمون', data: tarazTrend, borderColor: '#d9858a', backgroundColor: '#d9858a', borderWidth: 3, pointRadius: 5, tension: 0.3, yAxisID: 'y1' }, /* تغییر به رزگلد */
+    { type: 'bar', label: 'مجموع تست دو هفته', data: totalTestsData, backgroundColor: '#639889', borderRadius: 4, yAxisID: 'y' } /* تغییر به سبز اصلی */
+]
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
                     scales: { 
-                        y: { type: 'linear', position: 'right', grid: { display: false }, ticks: { color: '#3b82f6' } },
-                        y1: { type: 'linear', position: 'left', ticks: { color: '#f59e0b' } },
+                        y: { type: 'linear', position: 'right', grid: { display: false }, ticks: { color: '#d9858a' } },
+                        y1: { type: 'linear', position: 'left', ticks: { color: '#639889' } },
                         x: { grid: { display: false } }
                     },
                     plugins: { legend: { position: 'bottom' } }
