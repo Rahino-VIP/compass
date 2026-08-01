@@ -7,88 +7,100 @@
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     
     <style>
-        /* 🎨 پالت رنگی داینامیک (دارک و لایت مود) */
+        /* ==========================================
+           🎨 پالت رنگی یکپارچه و استاندارد راهینو
+           ========================================== */
         :root { 
-            --vip-bg: #f8fafc; --vip-surface: #ffffff; --vip-border: #e2e8f0;
-            --gold: #d97706; --gold-light: #f59e0b; --gold-fade: rgba(217, 119, 6, 0.1);
-            --text-main: #0f172a; --text-muted: #64748b;
-            --danger: #ef4444; --shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --primary: #639889; --primary-hover: #4d7a6e; --primary-fade: rgba(99, 152, 137, 0.05);
+            --accent: #d9858a; --accent-hover: #c4727c;
+            --bg-color: #f7f9f8; --surface: #ffffff; --border-color: #e2e8f0;
+            --text-main: #2d3748; --text-muted: #718096;
+            --danger: #ef4444; --success: #10b981; --shadow: 0 10px 30px rgba(0,0,0,0.05);
         }
 
         [data-theme="dark"] { 
-            --vip-bg: #0f172a; --vip-surface: #1e293b; --vip-border: #334155;
-            --gold: #f59e0b; --gold-light: #fbbf24; --gold-fade: rgba(245, 158, 11, 0.1);
-            --text-main: #f8fafc; --text-muted: #94a3b8;
+            --primary: #77bba9; --primary-hover: #8fd0bf; --primary-fade: rgba(119, 187, 169, 0.1);
+            --accent: #e59ea3; --bg-color: #121918; --surface: #1b2624; --border-color: #2d3d3a;
+            --text-main: #f1f5f9; --text-muted: #94a3b8;
             --shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
-        body { background: var(--vip-bg); color: var(--text-main); line-height: 1.6; padding-bottom: 80px; }
+        body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 80px; }
         
         .app-container { max-width: 600px; margin: 0 auto; padding: 20px; animation: fadeIn 0.5s ease-out; position: relative; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
         /* دکمه تم */
-        .theme-toggle { position: absolute; top: 20px; left: 20px; background: var(--vip-surface); border: 2px solid var(--vip-border); color: var(--text-main); width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; box-shadow: var(--shadow); z-index: 100; }
+        .theme-toggle { position: absolute; top: 20px; left: 20px; background: var(--surface); border: 2px solid var(--border-color); color: var(--text-main); width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; box-shadow: var(--shadow); z-index: 100; }
 
         /* 👑 هدر VIP */
-        .vip-header { text-align: center; margin-top: 50px; margin-bottom: 30px; position: relative; padding: 25px 20px; background: linear-gradient(135deg, var(--vip-surface), rgba(245, 158, 11, 0.05)); border-radius: 24px; border: 1px solid var(--gold-fade); box-shadow: var(--shadow); overflow: hidden; }
+        .vip-header { text-align: center; margin-top: 50px; margin-bottom: 30px; position: relative; padding: 25px 20px; background: linear-gradient(135deg, var(--surface), var(--primary-fade)); border-radius: 24px; border: 1px solid var(--primary-fade); box-shadow: var(--shadow); overflow: hidden; }
         .vip-header::before { content: '👑'; position: absolute; font-size: 100px; opacity: 0.05; right: -10px; top: -20px; transform: rotate(15deg); }
-        .vip-title { font-size: 22px; font-weight: 900; color: var(--gold); margin-bottom: 8px; }
+        .vip-title { font-size: 22px; font-weight: 900; color: var(--primary); margin-bottom: 8px; }
         .vip-desc { font-size: 13px; color: var(--text-muted); line-height: 1.8; }
 
-        .section-title { font-size: 16px; font-weight: bold; color: var(--gold-light); margin: 35px 0 15px 0; display: flex; align-items: center; gap: 8px; border-bottom: 1px dashed var(--vip-border); padding-bottom: 10px; }
+        .section-title { font-size: 16px; font-weight: bold; color: var(--primary); margin: 35px 0 15px 0; display: flex; align-items: center; gap: 8px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; }
         
         /* 💊 سیستم کپسولی (Chips) */
         .chips-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
-        .chip { padding: 10px 16px; border-radius: 20px; border: 2px solid var(--vip-border); background: var(--vip-surface); color: var(--text-muted); font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; user-select: none; }
-        .chip.active { background: var(--gold); border-color: var(--gold); color: #fff; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); transform: translateY(-2px); }
+        .chip { padding: 10px 16px; border-radius: 20px; border: 2px solid var(--border-color); background: var(--surface); color: var(--text-muted); font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; user-select: none; }
+        .chip.active { background: var(--primary); border-color: var(--primary); color: #fff; box-shadow: 0 5px 15px rgba(99, 152, 137, 0.3); transform: translateY(-2px); }
         [data-theme="dark"] .chip.active { color: #000; }
 
         /* استایل خاص برای کپسول آنلاین/حضوری */
         .type-chip { flex: 1; text-align: center; }
 
-        input.modern-input { width: 100%; padding: 15px; border-radius: 16px; border: 2px solid var(--vip-border); background: var(--vip-bg); color: var(--text-main); font-size: 14px; font-weight: bold; outline: none; transition: 0.3s; margin-top: 10px; }
-        input.modern-input:focus { border-color: var(--gold); box-shadow: 0 0 0 4px var(--gold-fade); }
+        input.modern-input { width: 100%; padding: 15px; border-radius: 16px; border: 2px solid var(--border-color); background: var(--bg-color); color: var(--text-main); font-size: 14px; font-weight: bold; outline: none; transition: 0.3s; margin-top: 10px; }
+        input.modern-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-fade); }
 
         /* 🏫 کارت برنامه‌های کلاسی */
-        .class-card { background: var(--vip-surface); border: 1px solid var(--vip-border); border-radius: 20px; padding: 20px; margin-bottom: 15px; position: relative; box-shadow: var(--shadow); }
+        .class-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 20px; padding: 20px; margin-bottom: 15px; position: relative; box-shadow: var(--shadow); }
         .del-btn { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s; font-size: 18px;}
         .del-btn:hover { background: var(--danger); color: white; }
         
         /* 🔵 دایره‌های روزهای هفته */
         .days-container { display: flex; justify-content: space-between; gap: 5px; margin: 15px 0 25px 0; direction: rtl; }
-        .day-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--vip-bg); border: 1px solid var(--vip-border); color: var(--text-muted); font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; user-select: none; }
-        .day-circle.active { background: var(--gold); border-color: var(--gold); color: #fff; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); transform: scale(1.1); }
+        .day-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-muted); font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; user-select: none; }
+        .day-circle.active { background: var(--primary); border-color: var(--primary); color: #fff; box-shadow: 0 5px 15px rgba(99, 152, 137, 0.3); transform: scale(1.1); }
         [data-theme="dark"] .day-circle.active { color: #000; }
 
         /* 🎚️ اسلایدرها */
-        .slider-group { background: var(--vip-surface); padding: 15px; border-radius: 14px; margin-bottom: 12px; border: 1px solid var(--vip-border); }
+        .slider-group { background: var(--surface); padding: 15px; border-radius: 14px; margin-bottom: 12px; border: 1px solid var(--border-color); }
         .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .slider-val { background: var(--vip-bg); color: var(--gold); padding: 4px 12px; border-radius: 10px; font-size: 14px; font-weight: 900; border: 1px solid var(--vip-border); }
-        input[type="range"] { width: 100%; accent-color: var(--gold); }
-        .skill-slider-val { background: var(--gold-fade); color: var(--gold); padding: 4px 10px; border-radius: 8px; font-size: 13px; font-weight: bold; }
+        .slider-val { background: var(--bg-color); color: var(--primary); padding: 4px 12px; border-radius: 10px; font-size: 14px; font-weight: 900; border: 1px solid var(--border-color); }
+        input[type="range"] { width: 100%; accent-color: var(--primary); }
+        .skill-slider-val { background: var(--primary-fade); color: var(--primary); padding: 4px 10px; border-radius: 8px; font-size: 13px; font-weight: bold; }
 
-        .btn-add { background: transparent; border: 2px dashed var(--gold); color: var(--gold); width: 100%; padding: 15px; border-radius: 16px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
-        .btn-add:hover { background: var(--gold-fade); }
+        .btn-add { background: transparent; border: 2px dashed var(--primary); color: var(--primary); width: 100%; padding: 15px; border-radius: 16px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
+        .btn-add:hover { background: var(--primary-fade); }
 
-        .btn-submit { background: linear-gradient(135deg, var(--gold), #d97706); color: #fff; width: 100%; padding: 18px; border-radius: 20px; border: none; font-size: 18px; font-weight: 900; cursor: pointer; box-shadow: 0 15px 30px rgba(245, 158, 11, 0.2); margin-top: 40px; transition: 0.3s; }
-        [data-theme="dark"] .btn-submit { color: #000; }
+        .btn-submit { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: #fff; width: 100%; padding: 18px; border-radius: 20px; border: none; font-size: 18px; font-weight: 900; cursor: pointer; box-shadow: 0 15px 30px rgba(99, 152, 137, 0.2); margin-top: 40px; transition: 0.3s; }
+        .btn-submit:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 20px 40px rgba(99, 152, 137, 0.4); }
         .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
 
-        .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--vip-bg); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
+        .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
         .spinner { font-size: 50px; animation: spin 1.5s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* استایل سوئیچ فرهنگیان */
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); cursor: pointer; margin-bottom: 15px;}
+        .toggle-switch { position: relative; width: 44px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-color); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        .toggle-switch input:checked + .slider { background-color: var(--success); }
+        .toggle-switch input:checked + .slider:before { transform: translateX(20px); }
     </style>
 </head>
 <body>
 
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
-    <a href="schedule.html" title="بازگشت به برنامه" style="position: absolute; top: 20px; right: 20px; background: var(--vip-surface); border: 2px solid var(--vip-border); color: var(--text-main); width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; box-shadow: var(--shadow); z-index: 100; text-decoration: none;">🔙</a>
+    <a href="schedule" title="بازگشت به برنامه" style="position: absolute; top: 20px; right: 20px; background: var(--surface); border: 2px solid var(--border-color); color: var(--text-main); width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; box-shadow: var(--shadow); z-index: 100; text-decoration: none;">🔙</a>
 
     <div class="loader-overlay" id="mainLoader">
         <div class="spinner">⚙️</div>
-        <h3 style="color: var(--gold);">در حال بارگذاری تنظیمات...</h3>
+        <h3 style="color: var(--primary);">در حال بارگذاری تنظیمات...</h3>
     </div>
 
     <div class="app-container" id="appContent" style="display: none;">
@@ -128,6 +140,17 @@
         </div>
         <input type="text" id="customExam" class="modern-input" placeholder="آزمون دیگری می‌دهی؟ (مثلاً سنجش یا مرآت) اینجا بنویس...">
 
+        <div class="section-title">🎓 ۵. مسیر ویژه (انتخابی)</div>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">اگر متقاضی دانشگاه فرهنگیان هستی، این گزینه رو فعال کن تا دروس تخصصی فرهنگیان (تعلیم و تربیت اسلامی، هوش و استعداد معلمی) به برنامه‌ت اضافه بشه.</p>
+        
+        <label class="toggle-row">
+            <span style="font-size:13px; font-weight:bold; color: var(--text-main);">متقاضی کنکور فرهنگیان هستم</span>
+            <div class="toggle-switch">
+                <input type="checkbox" id="farhangianToggle">
+                <span class="slider"></span>
+            </div>
+        </label>
+
         <button class="btn-submit" id="submitBtn" onclick="saveVipSettings()">ذخیره و ورود به داشبورد برنامه 🚀</button>
 
     </div>
@@ -138,11 +161,11 @@
         // ==========================================
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
-            if(e.keyCode == 123) return false; // F12
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; // Ctrl+Shift+I
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false; // Ctrl+Shift+C
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false; // Ctrl+Shift+J
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; // Ctrl+U
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false; 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
         };
         // ==========================================
         // 🔗 تنظیمات اتصال سوپابیس
@@ -151,18 +174,18 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
 
         const userId = localStorage.getItem('qotbnama_user_id');
-        if (!userId) window.location.href = 'index.html';
+        if (!userId) window.location.href = 'index';
 
-        // 🌗 سیستم دارک مود
+        // 🌗 سیستم دارک مود استاندارد
         const themeBtn = document.getElementById('themeBtn');
-        const currentTheme = localStorage.getItem('theme') || 'dark'; // پیش فرض دارک
+        const currentTheme = localStorage.getItem('theme') || 'light';
         
         if (currentTheme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
-            themeBtn.innerText = '☀️';
+            if (themeBtn) themeBtn.innerText = '☀️';
         } else {
             document.documentElement.removeAttribute('data-theme');
-            themeBtn.innerText = '🌙';
+            if (themeBtn) themeBtn.innerText = '🌙';
         }
 
         function toggleTheme() {
@@ -170,11 +193,11 @@
             if (isDark) {
                 document.documentElement.removeAttribute('data-theme');
                 localStorage.setItem('theme', 'light');
-                themeBtn.innerText = '🌙';
+                if (themeBtn) themeBtn.innerText = '🌙';
             } else {
                 document.documentElement.setAttribute('data-theme', 'dark');
                 localStorage.setItem('theme', 'dark');
-                themeBtn.innerText = '☀️';
+                if (themeBtn) themeBtn.innerText = '☀️';
             }
         }
 
@@ -218,7 +241,6 @@
         async function fetchUserDetails() {
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
-                // 💡 اصلاح شد: دریافت پایه و رشته بر اساس national_id
                 const response = await fetch(`${cleanUrl}/rest/v1/students?national_id=eq.${userId}&select=grade,major`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
                 const data = await response.json();
                 if(data.length > 0) {
@@ -233,7 +255,6 @@
         async function fetchExistingSettings() {
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
-                // 💡 اصلاح شد: دریافت تنظیمات قبلی بر اساس national_id
                 const response = await fetch(`${cleanUrl}/rest/v1/vip_settings?national_id=eq.${userId}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
                 const data = await response.json();
                 if (data.length > 0) existingSettings = data[0];
@@ -245,6 +266,11 @@
                 selectedStartSubjects = existingSettings.start_subject || [];
                 selectedEndSubjects = existingSettings.end_subject || [];
                 
+                // خواندن وضعیت توگل فرهنگیان
+                if(existingSettings.is_farhangian) {
+                    document.getElementById('farhangianToggle').checked = true;
+                }
+
                 if(existingSettings.exam_type) {
                     document.querySelectorAll('.exam-chip').forEach(chip => {
                         if(existingSettings.exam_type.includes(chip.dataset.exam)) chip.classList.add('active');
@@ -267,7 +293,7 @@
                 let isEnd = selectedEndSubjects.includes(subj) ? 'active' : '';
                 endContainer.innerHTML += `<div class="chip ${isEnd}" onclick="toggleSubject(this, '${subj}', 'end')">${subj}</div>`;
             });
-                // خواندن نقاط قوت و ضعف از دیتابیس قبلی
+                
             if (existingSettings && existingSettings.subject_skills) {
                 existingSettings.subject_skills.forEach(s => {
                     if (s.score === 5) selectedStrengths.push(s.subject);
@@ -279,11 +305,9 @@
             let weakContainer = document.getElementById('weaknessesContainer');
             
             globalSubjects.forEach((subj) => {
-                // کپسول‌های نقاط قوت
                 let isStr = selectedStrengths.includes(subj) ? 'active' : '';
                 strContainer.innerHTML += `<div class="chip ${isStr}" onclick="toggleEvalSubject(this, '${subj}', 'strength')">${subj}</div>`;
                 
-                // کپسول‌های نقاط ضعف
                 let isWeak = selectedWeaknesses.includes(subj) ? 'active' : '';
                 weakContainer.innerHTML += `<div class="chip ${isWeak}" onclick="toggleEvalSubject(this, '${subj}', 'weakness')">${subj}</div>`;
             });
@@ -332,7 +356,6 @@
             }
         }
 
-        // تابع انتخاب حضوری/آنلاین
         function selectClassType(element, isOnline) {
             let parent = element.closest('.class-type-container');
             parent.querySelectorAll('.type-chip').forEach(c => c.classList.remove('active'));
@@ -340,7 +363,6 @@
             parent.setAttribute('data-online', isOnline);
         }
 
-        // 🏫 مدیریت کلاس‌ها
         function addClassCard(existingClass = null) {
             classCount++;
             const container = document.getElementById('classesContainer');
@@ -352,7 +374,7 @@
             let startNum = existingClass ? existingClass.startNum : 16;
             let endNum = existingClass ? existingClass.endNum : 17.5;
             let days = existingClass ? existingClass.days : [];
-            let isOnline = existingClass ? existingClass.isOnline : false; // وضعیت پیش‌فرض
+            let isOnline = existingClass ? existingClass.isOnline : false; 
 
             let startLabel = formatTimeDisplay(startNum);
             let endLabel = formatTimeDisplay(endNum);
@@ -416,6 +438,9 @@
             let customEx = document.getElementById('customExam').value.trim();
             if(customEx !== "") selectedExams.push(customEx);
 
+            // استخراج وضعیت توگل فرهنگیان
+            const isFarhangian = document.getElementById('farhangianToggle').checked;
+
             let skills = [];
             globalSubjects.forEach(subj => {
                 let score = 3; 
@@ -428,7 +453,6 @@
             document.querySelectorAll('.class-card').forEach(card => {
                 let name = card.querySelector('.c-name').value.trim();
                 
-                // استخراج وضعیت آنلاین بودن
                 let isOnlineStr = card.querySelector('.class-type-container').getAttribute('data-online');
                 let isOnline = (isOnlineStr === 'true');
 
@@ -438,7 +462,7 @@
                 if (name !== "" && activeDays.length > 0) {
                     classesData.push({
                         name: name, 
-                        isOnline: isOnline, // <--- اطلاعات جدید اضافه شد
+                        isOnline: isOnline, 
                         days: activeDays,
                         start: document.getElementById('v_start_' + card.id.split('_')[1]).innerText,
                         end: document.getElementById('v_end_' + card.id.split('_')[1]).innerText,
@@ -448,7 +472,6 @@
                 }
             });
 
-            // 💡 اصلاح شد: ذخیره تنظیمات با ستون national_id
             const payload = {
                 national_id: userId, 
                 exam_type: selectedExams, 
@@ -456,12 +479,12 @@
                 end_subject: selectedEndSubjects, 
                 subject_skills: skills,
                 class_schedule: classesData,
+                is_farhangian: isFarhangian, // 🎓 مقدار فرهنگیان اضافه شد
                 updated_at: new Date().toISOString()
             };
 
             try {
                 let cleanUrl = SUPABASE_URL.endsWith('/') ? SUPABASE_URL.slice(0, -1) : SUPABASE_URL;
-                // 💡 اصلاح شد: قانون On Conflict روی ستون national_id تنظیم شد
                 const response = await fetch(`${cleanUrl}/rest/v1/vip_settings?on_conflict=national_id`, {
                     method: 'POST',
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
@@ -473,7 +496,7 @@
                 document.getElementById('appContent').style.opacity = '0';
                 setTimeout(() => { 
                     alert("👑 تنظیمات شما با موفقیت در هسته مرکزی ثبت شد."); 
-                    window.location.href = 'schedule.html'; 
+                    window.location.href = 'schedule'; 
                 }, 500);
 
             } catch (error) {
