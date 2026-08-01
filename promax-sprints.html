@@ -8,69 +8,76 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
     <style>
+        /* ==========================================
+           🎨 پالت رنگی یکپارچه و استاندارد
+           ========================================== */
         :root { 
-            --bg-dark: #0f172a; --surface-dark: #1e293b; --surface-light: #334155; --border-color: #475569;
-            --accent: #8b5cf6; --accent-glow: rgba(139, 92, 246, 0.2); --gold: #f59e0b;
+            --primary: #639889; --primary-hover: #4d7a6e; --primary-fade: rgba(99, 152, 137, 0.05);
+            --accent: #d9858a; --accent-hover: #c4727c;
+            --bg-color: #f7f9f8; --surface: #ffffff; --border-color: #e2e8f0;
+            --text-main: #2d3748; --text-muted: #718096;
             --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
-            --text-main: #f8fafc; --text-muted: #94a3b8;
         }
 
-        [data-theme="light"] {
-            --bg-dark: #f8fafc; --surface-dark: #ffffff; --surface-light: #e2e8f0; --border-color: #cbd5e1;
-            --text-main: #0f172a; --text-muted: #64748b;
+        [data-theme="dark"] {
+            --primary: #77bba9; --primary-hover: #8fd0bf; --primary-fade: rgba(119, 187, 169, 0.1);
+            --accent: #e59ea3; --bg-color: #121918; --surface: #1b2624; --border-color: #2d3d3a;
+            --text-main: #f1f5f9; --text-muted: #94a3b8;
         }
 
-        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s;}
-        body { background: var(--bg-dark); color: var(--text-main); line-height: 1.6; padding-bottom: 90px; }
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s, border-color 0.3s;}
+        body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 90px; }
         
         .app-container { max-width: 800px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn-back { background: var(--surface-light); border: 1px solid var(--border-color); color: var(--text-main); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 20px; cursor: pointer;}
+        .btn-back { background: var(--surface); border: 1px solid var(--border-color); color: var(--text-main); width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 20px; cursor: pointer;}
         .page-title { font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
-        .pro-badge { background: linear-gradient(135deg, var(--accent), #6d28d9); color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
+        .pro-badge { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
 
-        .tabs-container { display: flex; background: var(--surface-dark); border-radius: 16px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--border-color); }
+        .tabs-container { display: flex; background: var(--surface); border-radius: 16px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--border-color); }
         .tab-btn { flex: 1; text-align: center; padding: 12px 5px; font-size: 13px; font-weight: bold; color: var(--text-muted); text-decoration: none; border-radius: 12px; transition: 0.3s; }
-        .tab-btn.active { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(139, 92, 246, 0.3); }
+        .tab-btn.active { background: var(--primary-fade); color: var(--primary); border: 1px solid rgba(99, 152, 137, 0.3); }
 
         .dossier-list { display: flex; flex-direction: column; gap: 15px; }
-        .dossier-card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; transition: 0.3s; }
-        .dossier-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: rgba(255,255,255,0.02); }
-        .dossier-header:hover { background: rgba(255,255,255,0.05); }
+        .dossier-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; transition: 0.3s; }
+        .dossier-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: rgba(119, 187, 169, 0.03); }
+        .dossier-header:hover { background: var(--primary-fade); }
         
         .dossier-info h3 { font-size: 15px; color: var(--text-main); margin-bottom: 5px; }
         .dossier-dates { font-size: 11px; color: var(--text-muted); }
         .dossier-badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
-        .badge-exam { background: rgba(245, 158, 11, 0.1); color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.3); }
-        .badge-routine { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-exam { background: rgba(217, 133, 138, 0.1); color: var(--accent); border: 1px solid rgba(217, 133, 138, 0.3); }
+        .badge-routine { background: var(--primary-fade); color: var(--primary); border: 1px solid rgba(99, 152, 137, 0.3); }
 
-        .dossier-body { padding: 0 20px; max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, padding 0.4s ease-out; background: var(--bg-dark); border-top: 1px dashed transparent; }
+        .dossier-body { padding: 0 20px; max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, padding 0.4s ease-out; background: var(--bg-color); border-top: 1px dashed transparent; }
         .dossier-card.open .dossier-body { max-height: 2500px; padding: 20px; border-top-color: var(--border-color); }
 
         .lock-screen { text-align: center; padding: 30px 10px; display: none; }
         .lock-icon { font-size: 40px; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(239,68,68,0.5)); }
         
         .surgery-form { display: none; }
-        .file-upload-wrapper { position: relative; width: 100%; height: 100px; border: 2px dashed var(--accent); border-radius: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--accent-glow); margin-bottom: 15px; cursor: pointer; transition: 0.3s; }
-        .file-upload-wrapper:hover { background: rgba(139, 92, 246, 0.25); }
+        .file-upload-wrapper { position: relative; width: 100%; height: 100px; border: 2px dashed var(--primary); border-radius: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--primary-fade); margin-bottom: 15px; cursor: pointer; transition: 0.3s; }
+        .file-upload-wrapper:hover { background: rgba(99, 152, 137, 0.15); }
         .file-upload-wrapper input[type="file"] { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
         
-        textarea.modern-input { width: 100%; padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-main); font-size: 13px; resize: none; outline: none; margin-bottom: 15px; transition: 0.3s; }
-        textarea.modern-input:focus { border-color: var(--accent); }
+        textarea.modern-input { width: 100%; padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); background: var(--surface); color: var(--text-main); font-size: 13px; resize: none; outline: none; margin-bottom: 15px; transition: 0.3s; }
+        textarea.modern-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-fade); }
 
-        .btn-submit { background: linear-gradient(135deg, var(--accent), #6d28d9); color: white; width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-submit { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(99, 152, 137, 0.3); }
         
         .loader { display: none; text-align: center; padding: 20px; }
         .spinner { font-size: 30px; animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        .ai-analysis-box { background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 16px; padding: 20px; margin-top: 15px; line-height: 1.8; font-size: 14px; }
-        .chart-container { position: relative; height: 340px; width: 100%; margin-top: 20px; background: var(--surface-dark); padding: 25px 15px; border-radius: 16px; border: 1px solid var(--border-color); }
+        .ai-analysis-box { background: var(--primary-fade); border: 1px solid rgba(99, 152, 137, 0.3); border-radius: 16px; padding: 20px; margin-top: 15px; line-height: 1.8; font-size: 14px; }
+        .chart-container { position: relative; height: 340px; width: 100%; margin-top: 20px; background: var(--surface); padding: 25px 15px; border-radius: 16px; border: 1px solid var(--border-color); }
         
         /* استایل سوئیچ آزمون */
-        .toggle-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); cursor: pointer;}
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.03); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); cursor: pointer;}
+        [data-theme="dark"] .toggle-row { background: rgba(255,255,255,0.03); }
         .toggle-switch { position: relative; width: 44px; height: 24px; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-color); transition: .4s; border-radius: 34px; }
@@ -83,18 +90,18 @@
 
     <div class="app-container">
         <div class="nav-header">
-            <a href="menu.html" class="btn-back">🔙</a>
+            <a href="menu" class="btn-back">🔙</a>
             <div class="page-title">آزمایشگاه <span class="pro-badge">PROMAX</span></div>
-            <button class="btn-back" onclick="toggleTheme()" id="themeBtn">🌙</button>
+            <button class="btn-back" onclick="toggleTheme()" id="themeBtn">☀️</button>
         </div>
 
         <div class="tabs-container">
-            <a href="promax-sprints.html" class="tab-btn active">🎯 پرونده‌ها و جراحی</a>
-            <a href="promax-radar.html" class="tab-btn">📈 رادار عملکرد کلی</a>
+            <a href="promax-sprints" class="tab-btn active">🎯 پرونده‌ها و جراحی</a>
+            <a href="promax-radar" class="tab-btn">📈 رادار عملکرد کلی</a>
         </div>
 
-        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; text-align: center; background: var(--surface-dark); padding: 10px; border-radius: 10px; border: 1px solid var(--border-color);">
-            برای بررسی دقیق پرونده و تحلیل حرفه ای توسط تیم مشاوره، باید حداقل <span style="color:var(--gold); font-weight:bold;">۶ گزارش شبانه</span> در آن هفته ثبت کرده باشید.
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; text-align: center; background: var(--surface); padding: 10px; border-radius: 10px; border: 1px solid var(--border-color);">
+            برای بررسی دقیق پرونده و تحلیل حرفه ای توسط تیم مشاوره، باید حداقل <span style="color:var(--accent); font-weight:bold;">۶ گزارش شبانه</span> در آن هفته ثبت کرده باشید.
         </p>
 
         <div class="dossier-list" id="dossiersContainer">
@@ -123,18 +130,31 @@
         let selectedMimeType = {};
         let chartInstances = {}; 
 
-        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.color = '#718096';
         Chart.defaults.font.family = 'Vazirmatn';
 
-        // 🌓 سیستم تم
+        // 🌓 سیستم تم استاندارد
         const themeBtn = document.getElementById('themeBtn');
-        const currentTheme = localStorage.getItem('theme') || 'dark';
-        if (currentTheme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeBtn.innerText = '🌙'; }
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        
+        if (currentTheme === 'dark') { 
+            document.documentElement.setAttribute('data-theme', 'dark'); 
+            if(themeBtn) themeBtn.innerText = '☀️'; 
+        } else {
+            if(themeBtn) themeBtn.innerText = '🌙'; 
+        }
 
         function toggleTheme() {
-            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-            if (isLight) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'dark'); themeBtn.innerText = '☀️'; } 
-            else { document.documentElement.setAttribute('data-theme', 'light'); localStorage.setItem('theme', 'light'); themeBtn.innerText = '🌙'; }
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) { 
+                document.documentElement.removeAttribute('data-theme'); 
+                localStorage.setItem('theme', 'light'); 
+                if(themeBtn) themeBtn.innerText = '🌙'; 
+            } else { 
+                document.documentElement.setAttribute('data-theme', 'dark'); 
+                localStorage.setItem('theme', 'dark'); 
+                if(themeBtn) themeBtn.innerText = '☀️'; 
+            }
         }
 
         // 🌟 مترجم ضدگلوله‌ی تاریخ میلادی به شمسیِ استاندارد دیتابیس (YYYY/MM/DD)
@@ -145,32 +165,25 @@
             let m = parts.find(p => p.type === 'month').value;
             let d = parts.find(p => p.type === 'day').value;
             
-            // ۱. اجبار به دو رقمی بودن ماه و روز (اگر یک رقمی بود، صفر بچسبون پشتش)
             m = m.toString().padStart(2, '0');
             d = d.toString().padStart(2, '0');
             
-            // ۲. ترکیب با اسلش دقیقاً مثل دیتابیس
             let dateStr = `${y}/${m}/${d}`;
-            
-            // ۳. فیلتر امنیتی: تبدیل اجباری اعداد فارسی به انگلیسی (برای اطمینان ۱۰۰٪)
             dateStr = dateStr.replace(/[۰-۹]/g, c => '۰۱۲۳۴۵۶۷۸۹'.indexOf(c));
             
             return dateStr;
         }
 
         window.onload = async function() { 
-            if(!userId) { alert('خطای احراز هویت'); return; }
+            if(!userId) { window.location.href = 'index'; return; }
             await loadDossiers(); 
         };
 
-        // 🌟 خواندن برنامه‌ها (پرونده‌ها) از جدول واقعی ai_schedules
-        // 🌟 خواندن برنامه‌ها و تطبیق با تقویم مرجع
-        // 🌟 خواندن برنامه‌ها با استفاده از ستون مستقل week_type
+        // 🌟 خواندن برنامه‌ها از جدول
         async function loadDossiers() {
             const container = document.getElementById('dossiersContainer');
             const nowIso = new Date().toISOString();
             
-            // ۱. دریافت برنامه‌ها به همراه ستون جدید week_type
             const { data: schedules, error: schError } = await supabaseClient
                 .from('ai_schedules')
                 .select('id, week_label, target_start_date, created_at, week_type')
@@ -199,7 +212,6 @@
                 let shamsiStart = new Intl.DateTimeFormat('fa-IR', faOpt).format(sDate);
                 let shamsiEnd = new Intl.DateTimeFormat('fa-IR', faOpt).format(eDate);
 
-                // 🧠 تشخیص مستقیم از روی ستون جدید
                 let type = (sch.week_type || "").trim().toLowerCase();
                 let isExamWeek = (type === 'exam' || type === 'آزمون');
 
@@ -220,7 +232,7 @@
                         <div class="dossier-body">
                             <div id="loader_${sch.id}" class="loader">
                                 <div class="spinner">⏳</div>
-                                <div style="font-size:11px; margin-top:10px;">در حال بررسی بایگانی گزارش‌های شما...</div>
+                                <div style="font-size:11px; margin-top:10px; color:var(--primary);">در حال بررسی بایگانی گزارش‌های شما...</div>
                             </div>
 
                             <div id="lock_${sch.id}" class="lock-screen">
@@ -237,7 +249,7 @@
                                     </div>
                                     <div id="uploadBox_${sch.id}" class="file-upload-wrapper">
                                         <div style="font-size: 24px; margin-bottom: 5px;">📥</div>
-                                        <div style="font-size: 11px; font-weight: bold; color: var(--accent);" id="fileName_${sch.id}">کارنامه (PDF یا عکس) را اینجا آپلود کنید</div>
+                                        <div style="font-size: 11px; font-weight: bold; color: var(--primary);" id="fileName_${sch.id}">کارنامه (PDF یا عکس) را اینجا آپلود کنید</div>
                                         <input type="file" accept="image/*, application/pdf" onchange="handleFileSelect(this, '${sch.id}')">
                                     </div>
                                 ` : `
@@ -250,8 +262,8 @@
                                 <button class="btn-submit" id="btn_${sch.id}" onclick="submitAnalysis('${sch.id}', '${startStr}', '${endStr}', ${isExamWeek})">🚀 ارسال به آزمایشگاه</button>
                             </div>
                             
-                            <div id="pending_${sch.id}" style="display:none; text-align:center; padding:20px; background:rgba(59,130,246,0.1); border:1px solid #3b82f6; border-radius:12px; margin-top:10px;">
-                                <h4 style="color:#3b82f6; margin-bottom:5px;">⏳ پرونده در دستِ مشاور است</h4>
+                            <div id="pending_${sch.id}" style="display:none; text-align:center; padding:20px; background:var(--primary-fade); border:1px solid var(--primary); border-radius:12px; margin-top:10px;">
+                                <h4 style="color:var(--primary); margin-bottom:5px;">⏳ پرونده در دستِ مشاور است</h4>
                                 <p style="font-size:11px; color:var(--text-muted);">تحلیل شما در صف بررسی است و به زودی اینجا نمایان می‌شود.</p>
                             </div>
 
@@ -298,7 +310,6 @@
                 document.getElementById(`pending_${id}`).style.display = 'none';
                 document.getElementById(`approved_result_${id}`).style.display = 'none';
 
-                // ۱. بررسی اینکه آیا قبلاً ثبت شده یا نه (در جدول exam_results که حالا نقش پرونده رو داره)
                 const { data: existingAnalysis } = await supabaseClient
                     .from('exam_results')
                     .select('status, consultant_analysis, extracted_data, lifestyle_snapshot')
@@ -329,10 +340,7 @@
                         document.getElementById(`lock_${id}`).innerHTML = `<h4 style="color:var(--danger);">⚠️ کارنامه ناخوانا بود یا اطلاعات ناقص است.</h4><p style="font-size:11px;color:var(--text-muted);">لطفاً در نوبت بعدی با دقت بیشتری ارسال کنید.</p>`;
                     }
                 }
-
-                console.log("🕵️‍♂️ دیتابیس رو بگرد از تاریخ: " + startDateStr + " تا تاریخ: " + endDateStr);
                 
-                // ۲. بررسی قانون 6 روز گزارش
                 const { count, error } = await supabaseClient
                     .from('daily_reports')
                     .select('*', { count: 'exact', head: true })
@@ -359,37 +367,33 @@
 
             const labels = examData.map(l => l.name);
             
-            // --- دیتای نمودار مدیریت زمان ---
             const corrects = examData.map(l => Number(l.correct || 0));
             const incorrects = examData.map(l => Number(l.incorrect || 0));
             const unattempteds = examData.map(l => Number(l.unattempted || 0));
 
-            // --- دیتای نمودار رادار (فرمول نرمال‌سازی شما) ---
             let rawTaraz = examData.map(l => Number(l.taraz || 0));
-            let maxTaraz = Math.max(...rawTaraz) || 1; // جلوگیری از تقسیم بر صفر
+            let maxTaraz = Math.max(...rawTaraz) || 1; 
             let normalizedTaraz = rawTaraz.map(t => Math.round((t / maxTaraz) * 100));
 
             let rawStudyHours = [];
             let subjectStats = lifestyle.subject_stats || {};
             
-            // مچ کردن اسم دروس تو کارنامه با اسم دروس تو گزارش‌های روزانه
             labels.forEach(lessonName => {
                 let foundKey = Object.keys(subjectStats).find(k => lessonName.includes(k) || k.includes(lessonName));
                 if (foundKey) {
                     rawStudyHours.push(subjectStats[foundKey].study + subjectStats[foundKey].edu);
                 } else {
-                    rawStudyHours.push(0); // اگر دیتایی نداشت یعنی نخونده
+                    rawStudyHours.push(0); 
                 }
             });
 
             let maxStudy = Math.max(...rawStudyHours) || 1;
             let normalizedStudy = rawStudyHours.map(s => Math.round((s / maxStudy) * 100));
 
-            // پاک کردن نمودارهای قبلی برای جلوگیری از باگِ هاور (Hover)
             if (chartInstances[`radar_${id}`]) chartInstances[`radar_${id}`].destroy(); 
             if (chartInstances[`bar_${id}`]) chartInstances[`bar_${id}`].destroy(); 
 
-            // 🌟 رسم نمودار رادار (تلاش vs نتیجه)
+            // 🌟 رسم نمودار رادار با رنگ‌های جدید
             const ctxRadar = document.getElementById(`radarChart_${id}`).getContext('2d');
             chartInstances[`radar_${id}`] = new Chart(ctxRadar, {
                 type: 'radar',
@@ -399,17 +403,17 @@
                         {
                             label: 'تلاش (ساعت مطالعه)',
                             data: normalizedStudy,
-                            backgroundColor: 'rgba(139, 92, 246, 0.2)', // رنگ بنفش
-                            borderColor: '#8b5cf6',
-                            pointBackgroundColor: '#8b5cf6',
+                            backgroundColor: 'rgba(99, 152, 137, 0.2)', // سبز راهینو
+                            borderColor: '#639889',
+                            pointBackgroundColor: '#639889',
                             borderWidth: 2
                         },
                         {
                             label: 'نتیجه (تراز کارنامه)',
                             data: normalizedTaraz,
-                            backgroundColor: 'rgba(245, 158, 11, 0.2)', // رنگ طلایی
-                            borderColor: '#f59e0b',
-                            pointBackgroundColor: '#f59e0b',
+                            backgroundColor: 'rgba(217, 133, 138, 0.2)', // رزگلد راهینو
+                            borderColor: '#d9858a',
+                            pointBackgroundColor: '#d9858a',
                             borderWidth: 2
                         }
                     ]
@@ -419,11 +423,11 @@
                     layout: { padding: 35 },
                     scales: { 
                         r: { 
-                            angleLines: { color: 'rgba(100, 116, 139, 0.2)' }, // خطوط طوسی ملایم
+                            angleLines: { color: 'rgba(100, 116, 139, 0.2)' }, 
                             grid: { color: 'rgba(100, 116, 139, 0.2)' }, 
                             pointLabels: { 
                                 font: { size: 11, family: 'Vazirmatn', weight: 'bold' }, 
-                                color: '#64748b' // 🎯 طوسی خنثی (عالی برای دارک و لایت)
+                                color: '#718096' 
                             }, 
                             ticks: { display: false, max: 100, min: 0 } 
                         } 
@@ -431,13 +435,13 @@
                     plugins: { 
                         legend: { 
                             position: 'bottom', 
-                            labels: { color: '#64748b', font: { family: 'Vazirmatn', weight: 'bold' } } 
+                            labels: { color: '#718096', font: { family: 'Vazirmatn', weight: 'bold' } } 
                         } 
                     }
                 }
             });
 
-            // 🌟 رسم نمودار مدیریت زمان (Stacked Bar)
+            // 🌟 رسم نمودار مدیریت زمان
             const ctxBar = document.getElementById(`barChart_${id}`).getContext('2d');
             chartInstances[`bar_${id}`] = new Chart(ctxBar, {
                 type: 'bar',
@@ -446,7 +450,7 @@
                     datasets: [
                         { label: 'درست', data: corrects, backgroundColor: '#10b981', borderRadius: 4 },
                         { label: 'غلط', data: incorrects, backgroundColor: '#ef4444', borderRadius: 4 },
-                        { label: 'نزده', data: unattempteds, backgroundColor: '#475569', borderRadius: 4 }
+                        { label: 'نزده', data: unattempteds, backgroundColor: '#94a3b8', borderRadius: 4 } // خاکستری استاندارد
                     ]
                 },
                 options: { 
@@ -456,18 +460,18 @@
                         x: { 
                             stacked: true, 
                             grid: { display: false }, 
-                            ticks: { color: '#64748b', font: { size: 10, family: 'Vazirmatn', weight: 'bold' } } // طوسی خنثی
+                            ticks: { color: '#718096', font: { size: 10, family: 'Vazirmatn', weight: 'bold' } } 
                         }, 
                         y: { 
                             stacked: true, 
                             grid: { color: 'rgba(100, 116, 139, 0.1)' }, 
-                            ticks: { color: '#64748b', font: { family: 'Vazirmatn' } } 
+                            ticks: { color: '#718096', font: { family: 'Vazirmatn' } } 
                         } 
                     },
                     plugins: { 
                         legend: { 
                             position: 'bottom', 
-                            labels: { color: '#64748b', font: { family: 'Vazirmatn', weight: 'bold' } } 
+                            labels: { color: '#718096', font: { family: 'Vazirmatn', weight: 'bold' } } 
                         } 
                     }
                 }
@@ -487,7 +491,6 @@
         }
 
         async function submitAnalysis(id, startDate, endDate, isExamWeek) {
-            // استفاده مستقیم از دیتای سرور به جای جستجوی المان ناموجود در HTML
             const hasExam = isExamWeek; 
             const reflection = document.getElementById(`reflection_${id}`).value.trim();
             
@@ -498,7 +501,6 @@
             btn.innerHTML = 'در حال پرواز به سمت سرور... ⏳'; btn.disabled = true;
 
             try {
-                // ارسال بصورت no-cors برای جلوگیری از ارور قرمز مرورگر (فقط ارسال و فراموشی)
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
