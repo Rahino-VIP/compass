@@ -83,7 +83,7 @@
         <div class="friday-box" id="fridayActionBox">
             <span class="friday-icon">📨</span>
             <h2 class="friday-title">فرم استراتژی اتاق فکر</h2>
-            <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">اولویت‌های خود را مشخص کنید تا مشاوران بهترین برنامه را تدوین کنند.</p>
+            <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">اولویت‌های خود را مشخص کنید تا هسته برنامه‌ریز بهترین برنامه را تدوین کند.</p>
             
             <div id="fridayForm">
                 <div id="timeLockMessage" style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); padding: 20px; border-radius: 16px; margin-bottom: 20px;">
@@ -95,9 +95,9 @@
                 <div id="requestFormContent" style="display: none;">
                     <div id="dynamicSwitchesArea"></div>
                     <textarea class="modern-input" id="nextWeekNote" rows="3" placeholder="یادداشت برای مشاور (مثلاً: سه‌شنبه امتحان فارسی دارم یا جمعه مهمونی دعوتیم...)"></textarea>
-                    <button class="btn-primary" id="btnRequestPlan" onclick="requestNewSchedule()">ارسال پرونده به اتاق مشاور 🚀</button>
+                    <button class="btn-primary" id="btnRequestPlan" onclick="sendRequestToGoogle()">ارسال پرونده به اتاق مشاور 🚀</button>
                     <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: center;">
-                        ⚠️ فقط یک‌بار فرصت ارسال دارید.
+                        ⚠️ فقط یک‌بار فرصت ارسال دارید. برنامه پس از تایید مشاور وارد تقویم شما می‌شود.
                     </div>
                 </div>
             </div>
@@ -105,18 +105,13 @@
     </div>
 
     <script>
-        // ==========================================
-        // 🔒 لایه‌های امنیتی (جلوگیری از کپی و Inspect)
-        // ==========================================
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
             if(e.keyCode == 123) return false; 
             if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false; 
             if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
         };
-        // ==========================================
-        // 🌓 سیستم تغییر تم استاندارد
-        // ==========================================
+
         const themeBtn = document.getElementById('themeBtn');
         const currentTheme = localStorage.getItem('theme') || 'light'; 
         
@@ -141,15 +136,15 @@
         }
 
         // ==========================================
-        // تنظیمات پایه و اتصال به سوپابیس
+        // تنظیمات اتصال
         // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+        
+        // ⚠️ لینک جدید دیپلوی گوگل اسکریپت خود را اینجا قرار بده
         const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
 
-        // 🌟 سیستم هوشمند استخراج آیدی
         const userId = localStorage.getItem('national_id') || 
                        localStorage.getItem('qotbnama_user_id') || 
                        localStorage.getItem('student_id') || 
@@ -216,9 +211,6 @@
             await loadDynamicSwitches(globalStudentGrade, studentExams);
         };
 
-        // ==========================================
-        // 🎛️ لود کردن و فیلتر کردن سوئیچ‌ها از دیتابیس
-        // ==========================================
         async function loadDynamicSwitches(studentGrade, studentExams) {
             const container = document.getElementById('dynamicSwitchesArea');
             container.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--text-muted);">در حال بررسی گزینه‌های اختصاصی شما... ⏳</div>';
@@ -234,10 +226,7 @@
                         let examTargets = sw.target_exam || [];
 
                         let gradeMatch = gradeTargets.includes('all') || gradeTargets.includes(studentGrade);
-                        
-                        let examMatch = examTargets.includes('all') || 
-                                        examTargets.includes('بدون آزمون') || 
-                                        studentExams.some(ex => examTargets.includes(ex));
+                        let examMatch = examTargets.includes('all') || examTargets.includes('بدون آزمون') || studentExams.some(ex => examTargets.includes(ex));
                                         
                         return gradeMatch && examMatch;
                     });
@@ -267,58 +256,31 @@
         }
 
         // ==========================================
-        // 🚀 ارسال درخواست برنامه به هسته مرکزی
+        // 🚀 ارسال امن به گوگل اسکریپت (بدون no-cors)
         // ==========================================
-        async function requestNewSchedule() {
+        async function sendRequestToGoogle() {
+            const btn = document.getElementById('btnRequestPlan');
             const noteInput = document.getElementById('nextWeekNote'); 
             const note = noteInput ? noteInput.value : '';
 
             let studentOptions = {};
             let activeSwitchTitles = []; 
-            const toggles = document.querySelectorAll('.dynamic-toggle-input');
-            toggles.forEach(toggle => {
+            document.querySelectorAll('.dynamic-toggle-input').forEach(toggle => {
                 let key = toggle.getAttribute('data-key');
                 let title = toggle.getAttribute('data-title');
                 studentOptions[key] = toggle.checked; 
                 if (toggle.checked) activeSwitchTitles.push(title); 
             });
 
-            const btn = document.getElementById('btnRequestPlan');
             if(btn) {
-                btn.innerHTML = 'در حال ارسال پرونده به اتاق مشاور... ⏳'; 
+                btn.innerHTML = 'در حال ساخت هوشمند برنامه... ⏳'; 
                 btn.disabled = true;
             }
 
-            let avgStudyHours = 0;
-            let avgTestCount = 0;
             try {
-                const { data: reports } = await supabaseClient
-                    .from('daily_reports')
-                    .select('courses')
-                    .eq('chat_id', String(localStorage.getItem('qotbnama_user_id') || userId));
-
-                if (reports && reports.length > 0) {
-                    let totalTime = 0;
-                    let totalTests = 0;
-                    reports.forEach(r => {
-                        if(r.courses) {
-                            r.courses.forEach(c => {
-                                totalTime += (c.edu || 0) + (c.study || 0);
-                                totalTests += (c.tests || 0);
-                            });
-                        }
-                    });
-                    avgStudyHours = Math.round((totalTime / reports.length) * 10) / 10;
-                    avgTestCount = Math.round(totalTests / reports.length);
-                }
-            } catch(e) {
-                console.warn("خطا در محاسبه میانگین گزارش‌ها:", e);
-            }
-
-            try {
-                await fetch(GAS_WEBAPP_URL, {
+                // ارسال درخواست خوانا (بدون no-cors)
+                const response = await fetch(GAS_WEBAPP_URL, {
                     method: 'POST',
-                    mode: 'no-cors', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ 
                         action: 'generate_schedule_auto', 
@@ -326,32 +288,38 @@
                         student_note: note, 
                         student_options: studentOptions, 
                         active_switch_titles: activeSwitchTitles,
-                        avg_study_hours: avgStudyHours, 
-                        avg_test_count: avgTestCount    
+                        avg_study_hours: 0, 
+                        avg_test_count: 0    
                     })
                 });
                 
-                const formContainer = document.getElementById('fridayForm') || document.body;
-                formContainer.innerHTML = `
-                    <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px; text-align: center; margin-top: 20px; animation: fadeIn 0.5s;">
-                        <div style="font-size: 40px; margin-bottom: 10px;">✅</div>
-                        <h3 style="color: var(--success); margin-bottom: 10px;">پرونده ارسال شد!</h3>
-                        <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">
-                            اطلاعات شما روی میز مشاور قرار گرفت. مشاور شما پس از بررسی وضعیت این هفته، بهترین برنامه را برایتان تدوین خواهد کرد. 
-                        </p>
-                    </div>
-                `;
+                const result = await response.json();
+                
+                // بررسی دقیق پاسخ گوگل
+                if (result.success) {
+                    const formContainer = document.getElementById('fridayForm');
+                    formContainer.innerHTML = `
+                        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 20px; border-radius: 16px; text-align: center; margin-top: 20px; animation: fadeIn 0.5s;">
+                            <div style="font-size: 40px; margin-bottom: 10px;">✅</div>
+                            <h3 style="color: var(--success); margin-bottom: 10px;">پرونده با موفقیت ارسال شد!</h3>
+                            <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">
+                                اطلاعات شما مستقیماً در دیتابیس مرکزی و روی میز مشاور قرار گرفت. لطفاً منتظر بمانید. 
+                            </p>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(result.error || "خطای ناشناخته در بک‌اند");
+                }
 
             } catch (error) {
-                console.error("System Error (Submit Request):", error);
-                
-                alert('⚠️ در ارتباط با سرور مشکلی پیش آمده است. لطفاً چند لحظه دیگر مجدداً تلاش کنید.');
+                console.error("System Error (Google Script):", error);
+                alert(`⚠️ خطا در ساخت برنامه: ${error.message}`);
                 if(btn) {
                     btn.innerHTML = 'ارسال پرونده به اتاق مشاور 🚀'; 
                     btn.disabled = false;
                 }
             }
-        }  
+        }
     </script>
 </body>
 </html>
